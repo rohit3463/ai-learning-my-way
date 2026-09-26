@@ -31,6 +31,22 @@
       "videos": [],
       "lab": "logistic-regression",
       "labVersion": 1
+    },
+    {
+      "slug": "support-vector-machines",
+      "title": "Support Vector Machines",
+      "summary": "Finding the safest border: margins, the widest street, support vectors and the hinge loss.",
+      "minutes": 45,
+      "film": {
+        "file": "support-vector-machines.html?v=1",
+        "title": "The Widest Street",
+        "note": "2 min 22 s, best with sound and narration on"
+      },
+      "doc": true,
+      "code": [],
+      "videos": [],
+      "lab": "support-vector-machines",
+      "labVersion": 1
     }
   ]
 }

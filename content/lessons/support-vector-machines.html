@@ -1,0 +1,175 @@
+<!--
+  Lesson notes: Support Vector Machines.
+  This file is inserted into lesson.html below the film.
+  Math: write \( ... \) for inline math and \[ ... \] for a centered equation.
+  Every <h2> automatically appears in the "On this page" list.
+-->
+
+<h2>The goal</h2>
+<p>Like logistic regression, a support vector machine (SVM) sorts points into two groups. The difference is in what it cares about. Logistic regression asks "how sure should I be?" An SVM asks a different question: <strong>where is the safest place to draw the border?</strong></p>
+<p>In this lesson each point has two measurements, \(x_1\) and \(x_2\), so we can draw everything on a flat page. The same ideas work with any number of measurements.</p>
+
+<h2>Labels: +1 and −1</h2>
+<p>In Lesson 2 the answers were 1 and 0. SVMs use \(+1\) and \(-1\) instead:</p>
+\[ y = +1 \quad \text{or} \quad y = -1 \]
+<p>This small change makes the math tidier, because it lets us write "is this point on its own side?" as a single multiplication. You'll see why in a moment.</p>
+
+<h2>Many borders, which one?</h2>
+<p>The border is a straight line, written exactly as in Lesson 2:</p>
+\[ w_1 \times x_1 + w_2 \times x_2 + b = 0 \]
+<p>When the two groups can be separated, there are usually <em>many</em> lines that split them perfectly. Every one of them makes zero mistakes on the data we have, so counting mistakes can't choose between them.</p>
+<p>But they aren't equally good. A line that passes very close to some points is fragile: a new point that lands just a little off will be put on the wrong side. The film shows this in <a href="films/support-vector-machines.html?t=8">Act I</a>.</p>
+<p>The SVM's answer is to choose the border that stays <strong>as far as possible from the closest points on both sides</strong>.</p>
+
+<h2>The street</h2>
+<p>Picture the border as the middle line of a street. The street has two edges, one on each side, and no training point is allowed to stand on the street. The SVM makes this street as wide as it can.</p>
+<p>In math, the middle line and the two edges are:</p>
+<table>
+  <thead><tr><th>Line</th><th>Equation</th></tr></thead>
+  <tbody>
+    <tr><td>middle (the border)</td><td>\(w_1 x_1 + w_2 x_2 + b = 0\)</td></tr>
+    <tr><td>edge on the \(+1\) side</td><td>\(w_1 x_1 + w_2 x_2 + b = +1\)</td></tr>
+    <tr><td>edge on the \(-1\) side</td><td>\(w_1 x_1 + w_2 x_2 + b = -1\)</td></tr>
+  </tbody>
+</table>
+<p>The width of the street is</p>
+\[ \text{width} = \frac{2}{\sqrt{w_1^2 + w_2^2}} \]
+<blockquote>
+  <p><strong>Why smaller weights mean a wider street.</strong> The weights control how fast the score changes as you walk across the page. With big weights the score rushes from 0 to 1 in a short distance, so the edges sit close to the middle. With small weights it takes a long walk to get from 0 to 1, so the edges are far apart. <em>Making the street wide is the same as keeping the weights small.</em></p>
+</blockquote>
+
+<h3>Support vectors</h3>
+<p>When the street is as wide as it can be, a few points end up standing exactly on its edges. These points are the <strong>support vectors</strong>. They alone decide where the street goes.</p>
+<p>Every other point could move around freely on its own side, and the street would not change at all. That is where the name comes from: the street is "supported" by these few points (<a href="films/support-vector-machines.html?t=32">Act II</a>).</p>
+
+<h2>Step 1: score and margin</h2>
+<p>For any point, compute its score, just as in Lesson 2:</p>
+\[ z = w_1 \times x_1 + w_2 \times x_2 + b \]
+<p>Then multiply by the label. The result is the point's <strong>margin</strong>:</p>
+\[ m = y \times z \]
+<p>This is the tidy trick from the \(\pm 1\) labels. A \(+1\) point wants a positive score, and a \(-1\) point wants a negative score. Multiplying by \(y\) turns both wishes into one: <strong>every point wants a large, positive margin</strong>.</p>
+<table>
+  <thead><tr><th>Margin \(m\)</th><th>Where the point is</th></tr></thead>
+  <tbody>
+    <tr><td>\(m \ge 1\)</td><td>on its own side and off the street: safe</td></tr>
+    <tr><td>\(0 \le m &lt; 1\)</td><td>on its own side, but standing on the street: too close</td></tr>
+    <tr><td>\(m &lt; 0\)</td><td>on the wrong side of the border: a mistake</td></tr>
+  </tbody>
+</table>
+<p>See every point's margin laid out on a line in <a href="films/support-vector-machines.html?t=50">Act III</a>.</p>
+
+<h2>Step 2: the hinge cost</h2>
+<p>Each point pays a cost based on its margin:</p>
+\[ \text{cost} = \max(0,\ 1 - m) \]
+<p>"max" means "take the bigger of the two". So:</p>
+<table>
+  <thead><tr><th>Margin \(m\)</th><th>Cost</th><th>In words</th></tr></thead>
+  <tbody>
+    <tr><td>\(2.5\)</td><td>\(0\)</td><td>safe, pays nothing</td></tr>
+    <tr><td>\(1\)</td><td>\(0\)</td><td>exactly on the edge, still free</td></tr>
+    <tr><td>\(0.4\)</td><td>\(0.6\)</td><td>on the street, pays a little</td></tr>
+    <tr><td>\(0\)</td><td>\(1\)</td><td>right on the border</td></tr>
+    <tr><td>\(-1\)</td><td>\(2\)</td><td>wrong side, pays more</td></tr>
+  </tbody>
+</table>
+<p>Drawn as a graph, the cost is flat at zero and then rises in a straight line, like a door hinge. That is why it is called the <strong>hinge</strong> cost (<a href="films/support-vector-machines.html?t=64">Act IV</a>).</p>
+<blockquote>
+  <p><strong>Compare with logistic regression.</strong> The log loss never quite reaches zero: even very confident, correct points keep pulling a tiny bit. The hinge cost is exactly zero once a point is safely off the street. Those points stop pulling entirely, which is why only a few points (the support vectors) end up deciding the border.</p>
+</blockquote>
+
+<h2>Step 3: the loss</h2>
+<p>We want two things at once: a wide street (small weights) and few points on the street or the wrong side (small costs). The loss adds them together:</p>
+\[ L = \lambda \times (w_1^2 + w_2^2) + \frac{\text{cost}_1 + \text{cost}_2 + \dots + \text{cost}_n}{n} \]
+<p>The first part is the <strong>penalty</strong>. It pushes the weights toward zero, which widens the street. The Greek letter \(\lambda\) ("lambda") is a small number you choose, such as \(0.05\). It sets the balance:</p>
+<ul>
+  <li><strong>Small \(\lambda\):</strong> costs matter most. The street stays narrow if it has to, to keep points off it.</li>
+  <li><strong>Large \(\lambda\):</strong> width matters most. The street gets wider, even if a few points end up on it or on the wrong side.</li>
+</ul>
+
+<h2>Step 4: the gradient</h2>
+<p>A point with \(m \ge 1\) has zero cost, and nudging the weights a little doesn't change that, so it contributes nothing to the slopes. Only points with \(m &lt; 1\) pull. Call them the <strong>pulling points</strong>.</p>
+<p>For a pulling point, the cost is \(1 - y \times (w_1 x_1 + w_2 x_2 + b)\). Its slope with respect to \(w_1\) is \(-y \times x_1\), with respect to \(w_2\) it is \(-y \times x_2\), and with respect to \(b\) it is \(-y\). The penalty \(\lambda \times w_j^2\) has slope \(2\lambda \times w_j\). Putting it together:</p>
+\[ \frac{dL}{dw_1} = 2\lambda \times w_1 - \frac{\text{sum of } y \times x_1 \text{ over the pulling points}}{n} \]
+\[ \frac{dL}{dw_2} = 2\lambda \times w_2 - \frac{\text{sum of } y \times x_2 \text{ over the pulling points}}{n} \]
+\[ \frac{dL}{db} = -\frac{\text{sum of } y \text{ over the pulling points}}{n} \]
+<p>Here \(n\) is the total number of points, including the ones that aren't pulling.</p>
+<p>Read it as a tug of war. Each pulling point drags the border away from itself, toward the side where it would be safe. Meanwhile the penalty quietly shrinks the weights, which widens the street.</p>
+
+<h2>Step 5: take a step</h2>
+<p>The update is the same as in every lesson so far:</p>
+\[ w_j \leftarrow w_j - \eta \times \frac{dL}{dw_j} \qquad b \leftarrow b - \eta \times \frac{dL}{db} \]
+<p>The whole recipe:</p>
+<ol>
+  <li>Start with \(w_1 = w_2 = 0\) and \(b = 0\).</li>
+  <li>For every point, compute its margin \(m = y \times z\).</li>
+  <li>Find the pulling points, the ones with \(m &lt; 1\).</li>
+  <li>Compute the three slopes.</li>
+  <li>Update \(w_1\), \(w_2\) and \(b\).</li>
+  <li>Repeat until the loss stops falling.</li>
+</ol>
+<p>In the film (<a href="films/support-vector-machines.html?t=82">Act V</a>), the street first <em>narrows</em> while it fixes the mistakes, then <em>widens</em> as the penalty takes over, and finally settles held by a few support vectors.</p>
+
+<h2>A worked example by hand</h2>
+<p>Four points, \(\lambda = 0.05\), and a learning rate \(\eta = 0.1\):</p>
+<table>
+  <thead><tr><th>Point</th><th>\(x_1\)</th><th>\(x_2\)</th><th>\(y\)</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>2</td><td>2</td><td>+1</td></tr>
+    <tr><td>B</td><td>3</td><td>1</td><td>+1</td></tr>
+    <tr><td>C</td><td>0</td><td>0</td><td>−1</td></tr>
+    <tr><td>D</td><td>1</td><td>−1</td><td>−1</td></tr>
+  </tbody>
+</table>
+<p><strong>Round 1.</strong> Start with \(w_1 = w_2 = 0\) and \(b = 0\). Every score is 0, so every margin is 0 and every point pays a cost of 1. All four points are pulling.</p>
+\[ L = 0.05 \times (0^2 + 0^2) + \frac{1 + 1 + 1 + 1}{4} = 1.000 \]
+<p>The pulls \(y \times x_1\) are \(2, 3, 0, -1\), which add up to 4. The pulls \(y \times x_2\) are \(2, 1, 0, 1\), which also add up to 4. The labels add up to \(1 + 1 - 1 - 1 = 0\).</p>
+\[ \frac{dL}{dw_1} = 0 - \frac{4}{4} = -1 \qquad \frac{dL}{dw_2} = 0 - \frac{4}{4} = -1 \qquad \frac{dL}{db} = -\frac{0}{4} = 0 \]
+<p>Update:</p>
+\[ w_1 = 0 - 0.1 \times (-1) = 0.1 \qquad w_2 = 0.1 \qquad b = 0 \]
+<p><strong>Round 2.</strong> Now \(z = 0.1 \times x_1 + 0.1 \times x_2\):</p>
+<table>
+  <thead><tr><th>Point</th><th>\(z\)</th><th>\(m = y \times z\)</th><th>cost</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>0.4</td><td>0.4</td><td>0.6</td></tr>
+    <tr><td>B</td><td>0.4</td><td>0.4</td><td>0.6</td></tr>
+    <tr><td>C</td><td>0</td><td>0</td><td>1</td></tr>
+    <tr><td>D</td><td>0</td><td>0</td><td>1</td></tr>
+  </tbody>
+</table>
+\[ L = 0.05 \times (0.1^2 + 0.1^2) + \frac{0.6 + 0.6 + 1 + 1}{4} = 0.001 + 0.8 = 0.801 \]
+<p>The loss fell from <strong>1.000 to 0.801</strong>. Keep going and it settles at the widest street for these points: \(w_1 = w_2 = 0.5\) and \(b = -1\). The border is the line \(x_1 + x_2 = 2\), and the street is \(2 \div \sqrt{0.5^2 + 0.5^2} = 2.83\) wide.</p>
+<p>At that point every margin is exactly 1, so all four points sit on the edges: all four are support vectors. Nobody pays a cost, and the loss is just the penalty, \(0.05 \times 0.5 = 0.025\).</p>
+
+<h2>When points are on the wrong side</h2>
+<p>Real data is rarely perfectly separable. Some points sit among the other group, and no straight street can avoid them.</p>
+<p>The hinge cost handles this gracefully. The stubborn point simply pays its cost, and the rest of the street stays wide. Trying to squeeze the street around it would force the weights to grow, and the penalty would cost more than the one mistake. This is called a <strong>soft margin</strong> (<a href="films/support-vector-machines.html?t=112">Act VI</a>). The balance between "wide street" and "few mistakes" is set by \(\lambda\).</p>
+
+<h2>SVM or logistic regression?</h2>
+<table>
+  <thead><tr><th></th><th>Logistic regression</th><th>Support vector machine</th></tr></thead>
+  <tbody>
+    <tr><td>Labels</td><td>1 and 0</td><td>+1 and −1</td></tr>
+    <tr><td>Output</td><td>a probability between 0 and 1</td><td>a side: the sign of the score</td></tr>
+    <tr><td>Cost of one point</td><td>log loss, never exactly zero</td><td>hinge, exactly zero once safe</td></tr>
+    <tr><td>Which points shape the border</td><td>all of them, a little</td><td>only the support vectors</td></tr>
+    <tr><td>What it is good at</td><td>saying how sure it is</td><td>finding the safest border</td></tr>
+  </tbody>
+</table>
+<p>Both use a straight-line score, and both are trained by the same loop of gradient descent you have now written three times.</p>
+
+<h2>Symbols at a glance</h2>
+<table>
+  <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\(x_1,\ x_2\)</td><td>the two measurements of a point</td></tr>
+    <tr><td>\(y = \pm 1\)</td><td>the label: which group the point belongs to</td></tr>
+    <tr><td>\(z = w_1 x_1 + w_2 x_2 + b\)</td><td>the score</td></tr>
+    <tr><td>\(m = y \times z\)</td><td>the margin: positive means the right side, 1 or more means safe</td></tr>
+    <tr><td>\(\max(0,\ 1 - m)\)</td><td>the hinge cost of one point</td></tr>
+    <tr><td>\(2 \div \sqrt{w_1^2 + w_2^2}\)</td><td>the width of the street</td></tr>
+    <tr><td>\(\lambda\)</td><td>how much we care about a wide street versus few mistakes</td></tr>
+    <tr><td>\(L\)</td><td>loss: penalty plus average hinge cost</td></tr>
+    <tr><td>support vectors</td><td>the points on the edges of the street, which alone decide where it goes</td></tr>
+    <tr><td>\(\eta\)</td><td>learning rate: how big each step is</td></tr>
+  </tbody>
+</table>

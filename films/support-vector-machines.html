@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Widest Street</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --void: #05070d;
+    --ink: #0b1120;
+    --bone: #eee6d6;
+    --dim: #8d93a6;
+    --amber: #f4b860;
+    --rose: #ef8193;
+    --star: #a9d6f5;
+    --lilac: #c4b3ff;
+    --hair: rgba(238, 230, 214, .16);
+    --bar: 24px;
+    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--void);
+    color: var(--bone);
+    font: 15px/1.45 var(--sans);
+    overflow: hidden;
+  }
+  .theatre { height: 100%; display: flex; flex-direction: column; }
+
+  .stage {
+    position: relative;
+    flex: 1;
+    min-height: 420px;
+    overflow: hidden;
+    background: var(--ink);
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas: "plot panel" "plot math" "sub sub";
+    gap: 14px clamp(20px, 3vw, 40px);
+    padding: calc(var(--bar) + 20px) clamp(16px, 4vw, 56px) calc(var(--bar) + 10px);
+  }
+  #film { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .slot, .math, .sub { position: relative; z-index: 1; min-height: 0; }
+  .plot { grid-area: plot; }
+  .panel { grid-area: panel; }
+
+  .math { grid-area: math; height: 9.4em; font-size: 16px; transition: none; }
+  .math .lbl, .kicker, .chapter .act {
+    font: 600 10.5px/1.2 var(--sans);
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0 0 .5em;
+  }
+  .eq { font-family: var(--serif); font-weight: 500; font-size: 1.55em; line-height: 1.3; white-space: nowrap; font-variant-numeric: lining-nums; }
+  .nt { text-transform: none; letter-spacing: 0; }
+  .eq.sm { font-size: 1.28em; }
+  .eq i { font-style: italic; }
+  .eq sub, .eq sup { font-size: .6em; font-style: italic; }
+  .a { color: var(--amber); } .r { color: var(--rose); } .g { color: var(--lilac); } .s { color: var(--star); }
+  .num {
+    font: 500 .6em/1 var(--mono);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    padding: .18em .4em;
+    border-radius: 4px;
+    background: rgba(238, 230, 214, .08);
+    vertical-align: .18em;
+  }
+  .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .66em; line-height: 1.08; margin: 0 .1em; }
+  .fr > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .2em; }
+  .note { color: var(--dim); font-size: .9em; max-width: 46ch; margin: .45em 0 0; }
+
+  .sub {
+    grid-area: sub;
+    justify-self: center;
+    text-align: center;
+    max-width: 54ch;
+    min-height: 2.9em;
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.45;
+    text-wrap: balance;
+    text-shadow: 0 1px 14px #000, 0 0 2px #000;
+  }
+
+  .titlecard {
+    position: absolute; inset: 0; z-index: 2;
+    display: grid; place-content: center; gap: 14px;
+    text-align: center; pointer-events: none; padding-inline: 16px;
+  }
+  .titlecard h1 {
+    margin: 0;
+    font: italic 500 clamp(44px, 7.4vw, 104px)/1 var(--serif);
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    text-shadow: 0 0 48px rgba(244, 184, 96, .35);
+  }
+  .titlecard .by { font: italic 500 clamp(17px, 1.8vw, 22px)/1.3 var(--serif); color: var(--dim); }
+
+  .chapter {
+    position: absolute; z-index: 2; pointer-events: none;
+    left: clamp(16px, 4vw, 56px); top: calc(var(--bar) + 14px);
+  }
+  .chapter .act { color: var(--amber); }
+  .chapter .name { font: italic 500 clamp(28px, 3.2vw, 42px)/1.05 var(--serif); text-shadow: 0 2px 20px #000; }
+
+  .endcard {
+    position: absolute; inset: 0; z-index: 3;
+    display: grid; place-content: center; justify-items: center; gap: 16px;
+    padding-inline: 16px; pointer-events: none;
+  }
+  .endcard > * { pointer-events: auto; }
+  .endcard .fin { font: italic 500 clamp(34px, 4.6vw, 60px)/1 var(--serif); text-shadow: 0 0 40px rgba(244, 184, 96, .4); }
+
+  button {
+    font: 500 13px/1 var(--sans);
+    color: var(--bone);
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover { border-color: rgba(238, 230, 214, .4); }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  button.on, button[aria-pressed="true"] { color: var(--amber); border-color: rgba(244, 184, 96, .55); }
+  .endcard button { font-size: 14px; padding: 10px 20px; }
+
+  .controls { display: flex; align-items: center; gap: 12px; padding: 10px 16px 6px; }
+  .scrubwrap { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+  #scrub { width: 100%; accent-color: var(--amber); margin: 0; }
+  .ticks { position: absolute; inset: 0; pointer-events: none; }
+  .ticks span { position: absolute; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: rgba(238, 230, 214, .35); }
+  .home { font: 500 13px/1 var(--sans); color: var(--dim); white-space: nowrap; }
+  .home:hover { color: var(--amber); }
+  .time { font: 12px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--dim); }
+  .chapters { display: flex; gap: 6px; overflow-x: auto; padding: 4px 16px 12px; scrollbar-width: none; }
+  .chapters button { font-size: 12px; padding: 6px 11px; color: var(--dim); }
+  .chapters button.on { color: var(--amber); }
+
+  @media (max-aspect-ratio: 1/1), (max-width: 760px) {
+    .stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) auto auto;
+      grid-template-areas: "plot" "panel" "math" "sub";
+      gap: 10px;
+    }
+    .math { font-size: 13px; height: 8.8em; }
+    .sub { font-size: 14.5px; }
+    .time, .home { display: none; }
+    .controls { flex-wrap: wrap; row-gap: 8px; }
+    .scrubwrap { order: -1; flex-basis: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="theatre">
+  <div class="stage" id="stage">
+    <canvas id="film" aria-label="Animated film about support vector machines: margins, the hinge loss and the widest street"></canvas>
+    <div class="slot plot" id="slotPlot"></div>
+    <div class="slot panel" id="slotPanel"></div>
+    <div class="math" id="math" aria-live="off"></div>
+    <div class="sub" id="sub"></div>
+
+    <div class="titlecard" id="titlecard">
+      <div class="kicker">A short film about support vector machines</div>
+      <h1>The Widest Street</h1>
+      <div class="by">two kinds of points, one border, and all the room between them</div>
+    </div>
+    <div class="chapter" id="chapter"><div class="act" id="chapAct"></div><div class="name" id="chapName"></div></div>
+    <div class="endcard" id="endcard" hidden>
+      <div class="fin">fin.</div>
+      <button id="replay" type="button">Watch again</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="play" type="button">Pause</button>
+    <div class="scrubwrap">
+      <input id="scrub" type="range" min="0" max="142" step="0.01" value="0" aria-label="Film position">
+      <div class="ticks" id="ticks"></div>
+    </div>
+    <span class="time" id="time">0:00 / 2:22</span>
+    <button id="sound" type="button" aria-pressed="false">Sound off</button>
+    <button id="narrate" type="button" aria-pressed="false">Narration off</button>
+    <a class="home" href="../" target="_top">All lessons</a>
+  </div>
+  <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
+</div>
+
+<script>
+(() => {
+  // ───────── utilities ─────────
+  const DUR = 142, TAU = Math.PI * 2;
+  const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const E = (t, a, b) => ease(seg(t, a, b));
+  const win = (t, a, b, f = .6) => Math.min(E(t, a, a + f), 1 - E(t, b - f, b));
+  const fmt = (v, d = 2) => { const s = Math.abs(v).toFixed(d); return (v < 0 && +s !== 0 ? '−' : '') + s; };
+  const paren = (v, d = 3) => v < 0 ? `(${fmt(v, d)})` : fmt(v, d);
+
+  const COL = { ink: '#0b1120', bone: '#eee6d6', dim: '#8d93a6', amber: '#f4b860', rose: '#ef8193', star: '#a9d6f5', lilac: '#c4b3ff' };
+  const hexRGB = hex => { const n = parseInt(hex.slice(1), 16); return [n >> 16, n >> 8 & 255, n & 255]; };
+  const rgba = (hex, a) => { const [r, g, b] = hexRGB(hex); return `rgba(${r},${g},${b},${a})`; };
+  const mixHex = (h1, h2, t) => { const a = hexRGB(h1), b = hexRGB(h2); return `rgb(${a.map((v, i) => Math.round(lerp(v, b[i], t))).join(',')})`; };
+  const POS = COL.rose, NEG = COL.star;          // +1 and −1
+  const classCol = c => c > 0 ? POS : NEG;
+
+  function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const rnd = mulberry32(909);
+  const gauss = () => { let u = 0; while (!u) u = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * rnd()); };
+
+  // ───────── data: two separable groups, labels +1 and −1 ─────────
+  const P = [];
+  while (P.length < 28) {
+    const c = P.length % 2 ? 1 : -1;
+    const x = (c > 0 ? 1.4 : -1.5) + gauss() * .8, y = (c > 0 ? 1.0 : -1.0) + gauss() * .8;
+    if (c * (x + y) / Math.SQRT2 < .55) continue;
+    P.push({ x, y, c });
+  }
+  const N = P.length;
+  const OUT = { x: -0.9, y: -0.4, c: 1 };        // the stubborn point in Act VI
+
+  const LAM = 0.05, ETA = 0.3;
+  const zOf = (m, p) => m.w1 * p.x + m.w2 * p.y + m.b;
+  const lossOf = (m, pts = P) => LAM * (m.w1 * m.w1 + m.w2 * m.w2) + pts.reduce((s, p) => s + Math.max(0, 1 - p.c * zOf(m, p)), 0) / pts.length;
+  function gradOf(m, pts = P) {
+    let g1 = 2 * LAM * m.w1, g2 = 2 * LAM * m.w2, gb = 0;
+    pts.forEach(p => { if (p.c * zOf(m, p) < 1) { g1 -= p.c * p.x / pts.length; g2 -= p.c * p.y / pts.length; gb -= p.c / pts.length; } });
+    return { g1, g2, gb };
+  }
+  function run(m, steps, eta, pts, decay = false) {
+    const H = []; let cur = { ...m };
+    for (let k = 0; k <= steps; k++) {
+      const g = gradOf(cur, pts);
+      H.push({ ...cur, ...g, L: lossOf(cur, pts), viol: pts.filter(p => p.c * zOf(cur, p) < 1).length });
+      const e = decay ? eta / Math.sqrt(k + 1) : eta;
+      cur = { w1: cur.w1 - e * g.g1, w2: cur.w2 - e * g.g2, b: cur.b - e * g.gb };
+    }
+    return H;
+  }
+  // the widest street, found once with a slowly shrinking step
+  const OPT = (() => { const H = run({ w1: 0, w2: 0, b: 0 }, 40000, .5, P, true); const h = H[H.length - 1]; return { w1: h.w1, w2: h.w2, b: h.b }; })();
+  const SV = P.map(p => p.c * zOf(OPT, p) < 1.06);
+  const W0 = { w1: -0.3, w2: 0.9, b: 0.8 };
+  const STEPS = 60, hist = run(W0, STEPS, ETA, P);
+  const FINAL = hist[STEPS];
+  const P3 = P.concat([OUT]);
+  const STEPS3 = 50, hist3 = run({ w1: FINAL.w1, w2: FINAL.w2, b: FINAL.b }, STEPS3, ETA, P3);
+  const FINAL3 = hist3[STEPS3];
+  const width = m => 2 / Math.hypot(m.w1, m.w2);
+
+  // Act I: borders that make zero mistakes but hug the data
+  const CANDS = (() => {
+    const out = [];
+    for (const deg of [18, 38, 62, 84, 108]) {
+      const th = deg * Math.PI / 180, n1 = Math.cos(th), n2 = Math.sin(th);
+      let best = null;
+      for (let o = -1.6; o <= 1.6; o += .02) {
+        const mm = Math.min(...P.map(p => p.c * (n1 * p.x + n2 * p.y - o)));
+        if (mm > .04 && mm < .3 && (!best || mm < best.mm)) best = { w1: n1, w2: n2, b: -o, mm };
+      }
+      if (best) out.push(best);
+    }
+    return out.slice(0, 4);
+  })();
+  const RISKY = CANDS[CANDS.length - 1] || null;
+  const NEWPT = (() => {    // a point the risky border gets wrong but the street gets right
+    if (!RISKY) return null;
+    let best = null;
+    for (const c of [1, -1]) for (let x = -2.5; x <= 3; x += .05) for (let y = -2.5; y <= 3; y += .05) {
+      const p = { x, y }, zo = c * zOf(OPT, p), zr = c * zOf(RISKY, p);
+      if (zo > .3 && zo < .95 && zr < -.35) { const d = Math.hypot(x - .2, y - .2); if (!best || d < best.d) best = { x, y, d, c }; }
+    }
+    return best;
+  })();
+  const FAR = P.reduce((bi, p, i) => (p.c > 0 && p.c * zOf(OPT, p) > P[bi].c * zOf(OPT, P[bi]) ? i : bi), P.findIndex(p => p.c > 0));
+
+  // decorative seeds
+  const STARS = Array.from({ length: 170 }, () => ({ x: rnd(), y: rnd(), r: rnd() * 1.1 + .3, a: rnd() * .4 + .08, sp: .4 + rnd() * 1.4, ph: rnd() * TAU, z: rnd() }));
+  const START = P.map(() => ({ fx: .06 + rnd() * .88, fy: .12 + rnd() * .72, ph: rnd() * TAU }));
+  const ORD = [...P.keys()]; for (let i = ORD.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [ORD[i], ORD[j]] = [ORD[j], ORD[i]]; }
+  const RANK = []; ORD.forEach((i, k) => RANK[i] = k);
+
+  // ───────── timeline ─────────
+  const CHAPTERS = [
+    { t: 0, act: '', name: 'Opening' },
+    { t: 8, act: 'Act I', name: 'Many Borders' },
+    { t: 24, act: 'Act II', name: 'The Street' },
+    { t: 44, act: 'Act III', name: 'Measuring the Margin' },
+    { t: 64, act: 'Act IV', name: 'The Hinge' },
+    { t: 82, act: 'Act V', name: 'Learning' },
+    { t: 112, act: 'Act VI', name: 'A Stubborn Point' },
+    { t: 128, act: 'Epilogue', name: 'Room for Doubt' },
+  ];
+  const SUBS = [
+    [0.6, 7.4, 'Two kinds of points, and a question: where exactly should the border go?'],
+    [8.6, 13.4, 'Each point has two measurements, and a side: plus one, or minus one.'],
+    [13.8, 19.6, 'Many borders split them perfectly. Every one of these makes zero mistakes.'],
+    [20.0, 23.6, 'But a border that hugs the data is fragile. A new point arrives, and it guesses wrong.'],
+    [24.6, 31.6, 'So we ask for more than a border. We ask for a street, as wide as the data allows.'],
+    [32.0, 37.6, 'Only the points on the edge of the street hold it in place. They are the support vectors.'],
+    [38.0, 43.6, 'Move any other point, and nothing changes. The street does not care about them.'],
+    [44.6, 50.0, 'To find the street from scratch, start with a bad guess, and measure.'],
+    [50.4, 56.6, 'The score z tells us which side a point is on. Multiply it by the label y to get the margin.'],
+    [57.0, 63.4, 'A margin of one or more means safely off the street. Less than one means too close, or on the wrong side.'],
+    [64.6, 70.6, 'The cost is a hinge: zero for points that are safe, growing the deeper a point intrudes.'],
+    [71.0, 76.6, 'Safe points pay nothing, so they stop pulling. Only the troublemakers are heard.'],
+    [77.0, 81.6, 'One more push: keep the weights small, because smaller weights make a wider street.'],
+    [82.6, 88.0, 'Now let it learn.'],
+    [88.4, 95.0, 'First it fixes the mistakes. The street narrows as it squeezes past them.'],
+    [95.4, 102.0, 'Then the gentle push on the weights takes over, and the street widens again.'],
+    [102.4, 110.6, 'It settles where the widest street fits, held in place by just a few points.'],
+    [112.6, 118.0, 'Real data is messy. Here is a point on the wrong side.'],
+    [118.4, 126.6, 'Instead of squeezing the street to nothing, it accepts one mistake and pays its cost.'],
+    [128.6, 133.0, 'It did not just find a border.'],
+    [133.4, 141.4, 'It found the one that leaves the most room for doubt, and listened only to the points that mattered.'],
+  ];
+
+  const trainK = t => STEPS * Math.pow(seg(t, 85, 110), 1.6);
+  const trainK3 = t => STEPS3 * Math.pow(seg(t, 117, 126), 1.4);
+  function interp(H, kf, steps) {
+    const k = Math.min(steps - 1, Math.floor(kf)), f = kf >= steps ? 1 : ease(kf - k);
+    const a = H[k], b = H[k + 1];
+    return { w1: lerp(a.w1, b.w1, f), w2: lerp(a.w2, b.w2, f), b: lerp(a.b, b.b, f), k, kf };
+  }
+  const lerpM = (a, b, u) => ({ w1: lerp(a.w1, b.w1, u), w2: lerp(a.w2, b.w2, u), b: lerp(a.b, b.b, u) });
+  // The model on screen at time t, the points it is judged on, and how much of the street is drawn.
+  function model(t) {
+    if (t < 24.3) return null;
+    if (t < 44) return { m: OPT, street: E(t, 27, 32), pts: P };
+    if (t < 85) return { m: lerpM(OPT, W0, E(t, 44.2, 46.6)), street: 1, pts: P };
+    if (t < 112) return { m: interp(hist, trainK(t), STEPS), street: 1, pts: P, train: true };
+    return { m: interp(hist3, trainK3(t), STEPS3), street: 1, pts: P3, train: t < 128 };
+  }
+
+  // ───────── math cards ─────────
+  const num = s => `<span class="num">${s}</span>`;
+  const sub = (v, i) => `<i${v === 'w' || v === 'b' ? ' class="a"' : ''}>${v}</i><sub>${i}</sub>`;
+  const zHTML = `${sub('w', 1)}${sub('x', 1)} + ${sub('w', 2)}${sub('x', 2)} + <i class="a">b</i>`;
+  const MATH = [
+    { t0: 8.4, t1: 24, html: () =>
+      `<p class="lbl">Two sides</p>
+       <div class="eq sm">label <i class="s">y</i> = <span class="r">+1</span> or <span class="s">−1</span></div>
+       <div class="eq sm">border: ${zHTML} = 0</div>
+       <p class="note">Every border drawn here makes zero mistakes on these points, so counting mistakes can't choose between them.</p>` },
+    { t0: 24.4, t1: 44, html: t =>
+      `<p class="lbl">The street</p>
+       <div class="eq sm">edges: ${zHTML} = <span class="r">+1</span> and = <span class="s">−1</span></div>
+       <div class="eq sm">width = 2 ÷ √(${sub('w', 1)}<sup>2</sup> + ${sub('w', 2)}<sup>2</sup>) = ${num(fmt(width(OPT) * E(t, 27, 32)))}</div>
+       <p class="note">${t > 32 ? `${SV.filter(Boolean).length} support vectors touch the edges. The other ${N - SV.filter(Boolean).length} points could move freely.` : 'Smaller weights mean a wider street.'}</p>` },
+    { t0: 44.4, t1: 64, html: t => {
+      const md = model(t), ms = P.map(p => p.c * zOf(md.m, p));
+      return `<p class="lbl">Score and margin</p>
+       <div class="eq sm"><i class="g">z</i> = ${zHTML}</div>
+       <div class="eq sm">margin <i class="g">m</i> = <i class="s">y</i> × <i class="g">z</i></div>
+       <p class="note">${t > 57 ? `Safe (m ≥ 1): ${ms.filter(m => m >= 1).length}. Too close (0 ≤ m < 1): ${ms.filter(m => m >= 0 && m < 1).length}. Wrong side (m < 0): ${ms.filter(m => m < 0).length}.` : 'Positive margin: right side. Negative: wrong side.'}</p>`; } },
+    { t0: 64.4, t1: 82, html: t => {
+      const md = model(t), hinge = md.pts.reduce((s, p) => s + Math.max(0, 1 - p.c * zOf(md.m, p)), 0) / md.pts.length;
+      const pen = LAM * (md.m.w1 ** 2 + md.m.w2 ** 2);
+      return `<p class="lbl">The hinge cost</p>
+       <div class="eq sm"><span class="r">cost</span> = max(0, 1 − <i class="g">m</i>)</div>
+       <div class="eq sm"><i>L</i> = <i>λ</i> × (${sub('w', 1)}<sup>2</sup> + ${sub('w', 2)}<sup>2</sup>) + average cost</div>
+       <p class="note">${t > 77 ? `With λ = ${LAM}: ${fmt(pen, 3)} + ${fmt(hinge, 3)} = L = ${fmt(pen + hinge, 3)}` : 'A point with margin 1 or more costs nothing at all.'}</p>`; } },
+    { t0: 82.4, t1: 112, html: t => {
+      const k = Math.min(STEPS - 1, Math.floor(trainK(t))), h = hist[k], h1 = hist[k + 1];
+      return `<p class="lbl">Step ${k + 1} of ${STEPS} · <span class="nt">η</span> = ${ETA} · L = ${fmt(h.L, 3)} · pulling: ${h.viol}</p>
+       <div class="eq sm">${sub('w', 1)} ← ${fmt(h.w1, 3)} − ${ETA} × ${paren(h.g1)} = ${num(fmt(h1.w1, 3))}</div>
+       <div class="eq sm">${sub('w', 2)} ← ${fmt(h.w2, 3)} − ${ETA} × ${paren(h.g2)} = ${num(fmt(h1.w2, 3))}</div>
+       <div class="eq sm"><i class="a">b</i> ← ${fmt(h.b, 3)} − ${ETA} × ${paren(h.gb)} = ${num(fmt(h1.b, 3))}</div>`; } },
+    { t0: 112.4, t1: 128, html: t => {
+      const md = model(t), mo = OUT.c * zOf(md.m, OUT);
+      return `<p class="lbl">A soft margin</p>
+       <div class="eq sm">stubborn point: <i class="g">m</i> = ${num(fmt(mo))} &nbsp; <span class="r">cost</span> = ${num(fmt(Math.max(0, 1 - mo)))}</div>
+       <div class="eq sm">street width = ${num(fmt(width(md.m)))}</div>
+       <p class="note">Squeezing the street around it would cost more through λ × (w₁² + w₂²) than paying for one mistake.</p>`; } },
+    { t0: 128.4, t1: 142.5, html: () =>
+      `<p class="lbl">What it learned</p>
+       <div class="eq sm">border: ${num(fmt(FINAL3.w1))}<i>x</i><sub>1</sub> + ${num(fmt(FINAL3.w2))}<i>x</i><sub>2</sub> ${FINAL3.b < 0 ? '−' : '+'} ${num(fmt(Math.abs(FINAL3.b)))} = 0</div>
+       <p class="note">A street ${fmt(width(FINAL3))} wide, held by the few points on its edges. Everything else was free to be anywhere on its own side.</p>` },
+  ];
+
+  // ───────── canvas setup ─────────
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), cvs = $('film'), ctx = cvs.getContext('2d');
+  let W = 0, H = 0, DPR = 1, BAR = 24, RP = null, RM = null, vig = null;
+  function measure() {
+    const st = stage.getBoundingClientRect();
+    BAR = Math.round(Math.min(44, Math.max(10, st.height * .055)));
+    stage.style.setProperty('--bar', BAR + 'px');
+    W = st.width; H = st.height; DPR = Math.min(2, window.devicePixelRatio || 1);
+    cvs.width = Math.round(W * DPR); cvs.height = Math.round(H * DPR);
+    const rel = el => { const r = el.getBoundingClientRect(); return { x: r.left - st.left, y: r.top - st.top, w: r.width, h: r.height }; };
+    RM = rel($('slotPlot')); RP = rel($('slotPanel'));
+    vig = null;
+  }
+  new ResizeObserver(measure).observe(stage);
+  if (document.fonts) document.fonts.ready.then(measure);
+  measure();
+
+  const grain = document.createElement('canvas');
+  grain.width = grain.height = 160;
+  { const g = grain.getContext('2d'), id = g.createImageData(160, 160);
+    for (let i = 0; i < id.data.length; i += 4) { const v = Math.random() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+    g.putImageData(id, 0, 0); }
+  const grainPat = ctx.createPattern(grain, 'repeat');
+
+  function txt(s, x, y, o = {}) {
+    ctx.save();
+    ctx.globalAlpha *= o.a ?? 1;
+    ctx.fillStyle = o.c || COL.dim;
+    ctx.font = `${o.it ? 'italic ' : ''}${o.w || 500} ${o.s || 10.5}px ${o.mono ? '"IBM Plex Mono", ui-monospace, monospace' : o.serif ? '"Cormorant Garamond", Georgia, serif' : '"Instrument Sans", system-ui, sans-serif'}`;
+    ctx.textAlign = o.al || 'left';
+    ctx.textBaseline = o.bl || 'alphabetic';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = o.ls || '0px';
+    ctx.fillText(s, x, y);
+    ctx.restore();
+  }
+  const cap = (s, x, y, o = {}) => txt(s, x, y, { s: 9.5, w: 600, ls: '2px', ...o });
+  function scaler(R, xd, yd, p) {
+    const ix = R.x + p.l, iy = R.y + p.t, iw = Math.max(10, R.w - p.l - p.r), ih = Math.max(10, R.h - p.t - p.b);
+    const sx = iw / (xd[1] - xd[0]), sy = ih / (yd[1] - yd[0]);
+    return { ix, iy, iw, ih, sx, sy, xd, yd, X: v => ix + (v - xd[0]) * sx, Y: v => iy + ih - (v - yd[0]) * sy };
+  }
+  function clipTo(S) { ctx.beginPath(); ctx.rect(S.ix, S.iy, S.iw, S.ih); ctx.clip(); }
+  function glowDot(x, y, r, col, blur) {
+    ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = blur; ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.beginPath(); ctx.arc(x, y, r * .45, 0, TAU); ctx.fill(); ctx.restore();
+  }
+  function dashed(x1, y1, x2, y2, col, lw = 1, dash = [3, 5]) {
+    ctx.save(); ctx.setLineDash(dash); ctx.strokeStyle = col; ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore();
+  }
+
+  function drawStars(t) {
+    for (const s of STARS) {
+      const x = ((s.x + t * .0012 * (.3 + s.z)) % 1) * W, y = s.y * H;
+      ctx.globalAlpha = s.a * (.55 + .45 * Math.sin(t * s.sp + s.ph));
+      ctx.fillStyle = COL.bone;
+      ctx.beginPath(); ctx.arc(x, y, s.r, 0, TAU); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ───────── the plane ─────────
+  const XC = .25, YC = .3;
+  function plane() {
+    const R = RM, k = Math.min(R.w / 8.2, R.h / 6.2), cx = R.x + R.w / 2, cy = R.y + R.h / 2;
+    return { R, k, PX: x => cx + (x - XC) * k, PY: y => cy - (y - YC) * k };
+  }
+  // endpoints of the line w·x + b = c, long enough to cross the plot
+  function lineAt(m, c, G) {
+    const nn = Math.hypot(m.w1, m.w2); if (nn < 1e-6) return null;
+    const n1 = m.w1 / nn, n2 = m.w2 / nn, off = (c - m.b) / nn, bx = n1 * off, by = n2 * off, L = 14;
+    return [[G.PX(bx - n2 * L), G.PY(by + n1 * L)], [G.PX(bx + n2 * L), G.PY(by - n1 * L)]];
+  }
+  function strokeLine(m, c, G, col, lw, blur = 0, dash = null) {
+    const l = lineAt(m, c, G); if (!l) return;
+    ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.shadowColor = col; ctx.shadowBlur = blur;
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath(); ctx.moveTo(...l[0]); ctx.lineTo(...l[1]); ctx.stroke(); ctx.restore();
+  }
+  function fillStreet(m, s, G, col) {
+    const a = lineAt(m, s, G), b = lineAt(m, -s, G); if (!a || !b) return;
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.moveTo(...a[0]); ctx.lineTo(...a[1]); ctx.lineTo(...b[1]); ctx.lineTo(...b[0]); ctx.closePath(); ctx.fill();
+  }
+
+  function drawMain(t) {
+    const G = plane(), R = G.R, md = model(t), fin = E(t, 128, 131);
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(R.x, R.y, R.w, R.h, 10) : ctx.rect(R.x, R.y, R.w, R.h); ctx.clip();
+    // faint grid
+    const gA = E(t, 10.5, 13);
+    ctx.globalAlpha = gA; ctx.strokeStyle = rgba(COL.bone, .05); ctx.lineWidth = 1;
+    for (let v = -4; v <= 4; v++) {
+      ctx.beginPath(); ctx.moveTo(G.PX(v), R.y); ctx.lineTo(G.PX(v), R.y + R.h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(R.x, G.PY(v)); ctx.lineTo(R.x + R.w, G.PY(v)); ctx.stroke();
+    }
+    // Act I: candidate borders
+    CANDS.forEach((c, i) => {
+      const t0 = 13.8 + i * 1.5, isRisky = c === RISKY;
+      const a = isRisky ? win(t, t0, 24.6, .5) : win(t, t0, t0 + 1.9, .5);
+      if (a <= 0) return;
+      ctx.globalAlpha = a * gA;
+      strokeLine(c, 0, G, isRisky && t > 20 ? COL.lilac : rgba(COL.bone, .75), 1.8, 8);
+    });
+    if (NEWPT && t > 20.4 && t < 25) {
+      const a = win(t, 20.4, 25, .5);
+      ctx.globalAlpha = a;
+      const x = G.PX(NEWPT.x), y = G.PY(NEWPT.y);
+      glowDot(x, y, 4.5, classCol(NEWPT.c), 16);
+      ctx.strokeStyle = COL.lilac; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 12, 0, TAU); ctx.stroke();
+      txt('new point: guessed wrong', x + 16, y - 10, { c: COL.lilac, s: 13, it: true, serif: true, w: 600 });
+    }
+    // the street
+    if (md) {
+      const m = md.m, s = md.street;
+      ctx.globalAlpha = E(t, 24.3, 25.6);
+      // side wash
+      if (s > 0) fillStreet(m, s, G, rgba(COL.amber, .09 + .04 * fin));
+      strokeLine(m, 0, G, COL.amber, 2.2 + fin, 14 + 16 * fin);
+      if (s > .02) {
+        strokeLine(m, s, G, rgba(POS, .8), 1.3, 0, [6, 6]);
+        strokeLine(m, -s, G, rgba(NEG, .8), 1.3, 0, [6, 6]);
+      }
+    }
+    ctx.globalAlpha = 1;
+    // points
+    const pts = md ? md.pts : P;
+    const svA = win(t, 32, 44, .8), dimOthers = win(t, 35, 44, .8), halos = E(t, 65, 67.5) * (1 - E(t, 128, 131));
+    pts.forEach((p, i) => {
+      const isOut = p === OUT;
+      let x, y, f = 1;
+      if (isOut) {
+        const a = E(t, 112.8, 114.6); if (a <= 0) return;
+        x = G.PX(p.x); y = G.PY(p.y) - (1 - a) * 40; ctx.globalAlpha = a;
+      } else {
+        const st = START[i]; f = E(t, 8.6 + RANK[i] * .08, 11.8 + RANK[i] * .08);
+        let px = p.x, py = p.y;
+        if (i === FAR) { const d = Math.sin(Math.PI * seg(t, 38.4, 43.4)); px += .9 * d; py += .7 * d; }
+        x = lerp(st.fx * W, G.PX(px), f); y = lerp(st.fy * H + Math.sin(t * .4 + st.ph) * 4, G.PY(py), f) - Math.sin(Math.PI * f) * 50;
+        ctx.globalAlpha = lerp(.6 + .4 * Math.sin(t * 1.7 + st.ph), 1, f) * (SV[i] ? 1 : 1 - .6 * dimOthers);
+      }
+      if (md && halos > 0) {
+        const mg = p.c * zOf(md.m, p), cost = Math.max(0, 1 - mg);
+        if (cost > 0) {
+          ctx.save(); ctx.globalAlpha *= halos;
+          ctx.fillStyle = rgba(classCol(p.c), .1); ctx.strokeStyle = rgba(classCol(p.c), .5);
+          ctx.beginPath(); ctx.arc(x, y, Math.min(30, 6 + cost * 9), 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore();
+        }
+      }
+      const col = f < 1 ? mixHex(COL.bone, classCol(p.c), E(t, 11.4, 13)) : classCol(p.c);
+      glowDot(x, y, lerp(1.9, 4, f), col, 12 + fin * 6);
+      if (!isOut && SV[i] && svA > 0) {
+        ctx.save(); ctx.globalAlpha = svA; ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(x, y, 10 + Math.sin(t * 3) * 1.5, 0, TAU); ctx.stroke(); ctx.restore();
+      }
+    });
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha = E(t, 10.5, 13);
+    txt('x₁ →', R.x + R.w - 10, R.y + R.h - 10, { serif: true, it: true, s: 16, c: COL.bone, al: 'right' });
+    txt('x₂ ↑', R.x + 10, R.y + 20, { serif: true, it: true, s: 16, c: COL.bone });
+    cap('+1', R.x + R.w - 12, R.y + 20, { c: POS, al: 'right' });
+    cap('−1', R.x + 12, R.y + R.h - 32, { c: NEG });
+    if (t > 32 && t < 44) txt('support vectors', R.x + R.w - 12, R.y + 38, { c: COL.amber, a: svA, s: 13, it: true, serif: true, w: 600, al: 'right' });
+    ctx.restore();
+  }
+
+  // ───────── panel charts ─────────
+  function drawMarginLine(R, a, t) {
+    const md = model(t);
+    const S = scaler(R, [-3, 4.5], [0, 1], { l: 12, r: 12, t: 30, b: 26 });
+    ctx.save(); ctx.globalAlpha = a;
+    cap('EACH POINT’S MARGIN  m = y × z', R.x + 10, R.y + 12);
+    ctx.fillStyle = rgba(COL.rose, .08); ctx.fillRect(S.ix, S.iy, S.X(1) - S.ix, S.ih);
+    [[-2, ''], [0, 'border'], [1, 'street edge'], [2, ''], [4, '']].forEach(([v, l]) => {
+      ctx.strokeStyle = rgba(COL.bone, v === 0 || v === 1 ? .35 : .08); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(S.X(v), S.iy); ctx.lineTo(S.X(v), S.iy + S.ih); ctx.stroke();
+      txt(v < 0 ? '−' + (-v) : '' + v, S.X(v), S.iy + S.ih + 15, { mono: true, s: 10, al: 'center' });
+      if (l) txt(l, S.X(v) + 4, S.iy + 12, { s: 10, c: v === 1 ? COL.amber : COL.dim });
+    });
+    txt('too close or wrong side', S.ix + 4, S.iy + S.ih - 6, { s: 10, c: COL.rose });
+    txt('safe', S.ix + S.iw - 4, S.iy + S.ih - 6, { s: 10, c: COL.bone, al: 'right' });
+    P.forEach((p, i) => {
+      const m = clamp(p.c * zOf(md.m, p), -2.9, 4.4), row = (RANK[i] % 7 + .5) / 7;
+      ctx.globalAlpha = a * E(t, 50.6 + i * .04, 51.6 + i * .04);
+      glowDot(S.X(m), S.iy + 18 + row * (S.ih - 36), 3.4, classCol(p.c), 8);
+    });
+    ctx.restore();
+  }
+
+  function drawHinge(R, a, t) {
+    const md = model(t);
+    const S = scaler(R, [-2.5, 3.5], [0, 3.6], { l: 28, r: 10, t: 30, b: 24 });
+    ctx.save(); ctx.globalAlpha = a;
+    cap('HINGE COST = max(0, 1 − m)', R.x + 10, R.y + 12);
+    for (let v = 0; v <= 3; v++) {
+      ctx.strokeStyle = rgba(COL.bone, v ? .06 : .25); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(S.ix, S.Y(v)); ctx.lineTo(S.ix + S.iw, S.Y(v)); ctx.stroke();
+      txt('' + v, S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' });
+    }
+    for (let v = -2; v <= 3; v++) txt(v < 0 ? '−' + (-v) : '' + v, S.X(v), S.iy + S.ih + 15, { mono: true, s: 10, al: 'center' });
+    txt('m →', S.ix + S.iw, S.Y(0) - 6, { serif: true, it: true, s: 15, c: COL.lilac, al: 'right' });
+    ctx.strokeStyle = COL.rose; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(S.X(-2.5), S.Y(3.5)); ctx.lineTo(S.X(1), S.Y(0)); ctx.lineTo(S.X(3.5), S.Y(0)); ctx.stroke();
+    dashed(S.X(1), S.iy, S.X(1), S.Y(0), rgba(COL.amber, .6));
+    txt('the hinge', S.X(1) + 6, S.Y(0) - 10, { s: 10.5, c: COL.amber });
+    const pts = md.pts;
+    pts.forEach((p, i) => {
+      const m = clamp(p.c * zOf(md.m, p), -2.4, 3.4);
+      ctx.globalAlpha = a * E(t, 65 + i * .05, 66 + i * .05);
+      glowDot(S.X(m), S.Y(Math.max(0, 1 - m)), 3.2, classCol(p.c), 8);
+    });
+    ctx.restore();
+  }
+
+  function drawLossCurve(R, a, t, H_, steps, kf, label) {
+    if (R.h < 40) return;
+    const top = Math.max(...H_.map(h => h.L)) * 1.08;
+    const S = scaler(R, [0, steps], [0, top], { l: 34, r: 10, t: 30, b: 22 });
+    const k = Math.min(steps - 1, Math.floor(kf)), cur = interp(H_, kf, steps);
+    const pts = H_ === hist3 ? P3 : P, curL = lossOf(cur, pts);
+    ctx.save(); ctx.globalAlpha = a;
+    cap(label, R.x + 10, R.y + 12);
+    [0, top / 2].forEach(v => {
+      ctx.strokeStyle = rgba(COL.bone, .06); ctx.beginPath(); ctx.moveTo(S.ix, S.Y(v)); ctx.lineTo(S.ix + S.iw, S.Y(v)); ctx.stroke();
+      txt(v.toFixed(v ? 2 : 0), S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' });
+    });
+    for (let x = 0; x <= steps; x += 20) txt('' + x, S.X(x), S.iy + S.ih + 15, { mono: true, s: 10, al: 'center' });
+    const line = [];
+    for (let j = 0; j <= k; j++) line.push([j, H_[j].L]);
+    line.push([kf >= steps ? steps : k + ease(kf - k), curL]);
+    const grd = ctx.createLinearGradient(0, S.iy, 0, S.iy + S.ih);
+    grd.addColorStop(0, rgba(COL.amber, .22)); grd.addColorStop(1, rgba(COL.amber, 0));
+    ctx.beginPath(); line.forEach(([x, L], i) => i ? ctx.lineTo(S.X(x), S.Y(L)) : ctx.moveTo(S.X(x), S.Y(L)));
+    ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.8; ctx.stroke();
+    const last = line[line.length - 1];
+    ctx.lineTo(S.X(last[0]), S.Y(0)); ctx.lineTo(S.X(0), S.Y(0)); ctx.closePath(); ctx.fillStyle = grd; ctx.fill();
+    const lx = S.X(last[0]), ly = S.Y(curL);
+    glowDot(lx, ly, 4, COL.amber, 14);
+    const right = lx < S.ix + S.iw - 120;
+    txt(`L = ${fmt(curL, 3)} · width ${fmt(width(cur))}`, lx + (right ? 9 : -9), ly - 9, { mono: true, s: 11, c: COL.bone, al: right ? 'left' : 'right' });
+    ctx.restore();
+  }
+
+  function drawPanel(t) {
+    const R = RP;
+    const a1 = win(t, 50.2, 64.4, .8); if (a1 > 0) drawMarginLine(R, a1, t);
+    const a2 = win(t, 64.6, 82.2, .8); if (a2 > 0) drawHinge(R, a2, t);
+    const a3 = win(t, 82.4, 112.4, .8); if (a3 > 0) drawLossCurve(R, a3, t, hist, STEPS, trainK(t), 'LOSS AFTER EACH STEP');
+    const a4 = win(t, 112.6, 131, .8); if (a4 > 0) drawHinge(R, a4, t);
+  }
+
+  // ───────── frame ─────────
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function currentLossNorm(t) {
+    const md = model(t);
+    if (!md || t < 44) return .3;
+    if (t < 112) return clamp(Math.sqrt((lossOf(md.m) - FINAL.L) / (hist[0].L - FINAL.L)));
+    return clamp(Math.sqrt((lossOf(md.m, P3) - FINAL3.L) / (hist3[0].L - FINAL3.L + 1e-6))) * .6;
+  }
+  function render(t) {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.globalAlpha = 1; ctx.fillStyle = COL.ink; ctx.fillRect(0, 0, W, H);
+    const calm = 1 - currentLossNorm(t);
+    const bloom = ctx.createRadialGradient(RM.x + RM.w / 2, RM.y + RM.h / 2, 0, RM.x + RM.w / 2, RM.y + RM.h / 2, Math.max(RM.w, RM.h) * .8);
+    bloom.addColorStop(0, rgba(COL.amber, .03 + .06 * calm * E(t, 44, 50) + .05 * E(t, 128, 134)));
+    bloom.addColorStop(1, rgba(COL.amber, 0));
+    ctx.fillStyle = bloom; ctx.fillRect(0, 0, W, H);
+    drawStars(t);
+    drawPanel(t);
+    drawMain(t);
+    if (!vig) {
+      vig = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .78);
+      vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,.55)');
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.globalAlpha = .045;
+    const ox = reduce ? 0 : (Math.random() * 160) | 0, oy = reduce ? 0 : (Math.random() * 160) | 0;
+    ctx.translate(ox, oy); ctx.fillStyle = grainPat; ctx.fillRect(-ox, -oy, W, H); ctx.restore();
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, BAR); ctx.fillRect(0, H - BAR, W, BAR);
+  }
+
+  // ───────── DOM overlays ─────────
+  const el = { title: $('titlecard'), chap: $('chapter'), chapAct: $('chapAct'), chapName: $('chapName'), sub: $('sub'), math: $('math'), end: $('endcard'), time: $('time'), scrub: $('scrub'), play: $('play'), sound: $('sound') };
+  const setOp = (node, v) => { const s = v.toFixed(3); if (node._op !== s) { node.style.opacity = s; node._op = s; } };
+  const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  let chapIdx = -1, subIdx = -2, mathHTML = '', dragging = false;
+  const chapBtns = CHAPTERS.map((c, i) => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.textContent = c.act ? (c.act.startsWith('Act ') ? `${c.act.replace('Act ', '')} · ${c.name}` : c.name) : c.name;
+    b.addEventListener('click', () => { t = c.t + .01; narr.stop(); playing = true; syncPlay(); });
+    $('chapters').appendChild(b);
+    const tick = document.createElement('span'); tick.style.left = (c.t / DUR * 100) + '%'; $('ticks').appendChild(tick);
+    return b;
+  });
+  function updateDOM(t) {
+    setOp(el.title, 1 - E(t, 6, 7.6));
+    let ci = 0; CHAPTERS.forEach((c, i) => { if (t >= c.t) ci = i; });
+    if (ci !== chapIdx) {
+      chapIdx = ci; el.chapAct.textContent = CHAPTERS[ci].act; el.chapName.textContent = CHAPTERS[ci].name;
+      chapBtns.forEach((b, i) => b.classList.toggle('on', i === ci));
+    }
+    const c = CHAPTERS[ci];
+    setOp(el.chap, c.act ? win(t, c.t + .3, c.t + 3.4, .5) : 0);
+    const si = SUBS.findIndex(s => t >= s[0] && t < s[1]);
+    if (si !== subIdx) { subIdx = si; el.sub.textContent = si >= 0 ? SUBS[si][2] : ''; }
+    setOp(el.sub, si >= 0 ? win(t, SUBS[si][0], SUBS[si][1], .35) : 0);
+    const m = MATH.find(q => t >= q.t0 && t < q.t1);
+    const html = m ? m.html(t) : '';
+    if (html !== mathHTML) { mathHTML = html; el.math.innerHTML = html; }
+    setOp(el.math, m ? win(t, m.t0, m.t1, .6) : 0);
+    const ea = E(t, 137.5, 139.5);
+    el.end.hidden = ea <= .01; setOp(el.end, ea);
+    el.time.textContent = `${mmss(t)} / ${mmss(DUR)}`;
+    if (!dragging) el.scrub.value = t.toFixed(2);
+  }
+
+  // ───────── sound ─────────
+  let audio = null, soundOn = false;
+  function makeAudio() {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    const ac = new AC();
+    const master = ac.createGain(); master.gain.value = 0;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700; lp.Q.value = .4;
+    const delay = ac.createDelay(1); delay.delayTime.value = .37;
+    const fb = ac.createGain(); fb.gain.value = .33;
+    delay.connect(fb); fb.connect(delay);
+    lp.connect(master); lp.connect(delay); delay.connect(master); master.connect(ac.destination);
+    const freqs = [87.31, 130.81, 174.61, 220, 261.63], signs = [0, 1, -1, 1, -1];   // F major
+    const voices = freqs.map((f, i) => {
+      const o = ac.createOscillator(); o.type = i < 2 ? 'sine' : 'triangle'; o.frequency.value = f;
+      const g = ac.createGain(); g.gain.value = i < 2 ? .16 : .055; o.connect(g); g.connect(lp); o.start();
+      return { o, sign: signs[i] };
+    });
+    const pluckBus = ac.createGain(); pluckBus.gain.value = 1; pluckBus.connect(master); pluckBus.connect(delay);
+    return { ac, master, lp, voices, pluckBus };
+  }
+  function pluck(freq, vel) {
+    if (!audio || !soundOn) return;
+    const { ac, pluckBus } = audio, now = ac.currentTime;
+    [[freq, 'triangle', 1], [freq * 2, 'sine', .3]].forEach(([f, type, m]) => {
+      const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(vel * m, now + .012);
+      g.gain.exponentialRampToValueAtTime(.0001, now + 1.6);
+      o.connect(g); g.connect(pluckBus); o.start(now); o.stop(now + 1.7);
+    });
+  }
+  function updateAudio(t) {
+    if (!audio) return;
+    const now = audio.ac.currentTime, dis = currentLossNorm(t) * (1 - E(t, 126, 129));
+    const level = soundOn && playing ? .2 * (.6 + .4 * E(t, 0, 3)) * (1 + .4 * E(t, 128, 132)) * (1 - E(t, 138, 142)) : 0;
+    audio.master.gain.setTargetAtTime(level * (narr.speaking() ? .45 : 1), now, .25);
+    audio.voices.forEach(v => v.o.detune.setTargetAtTime(v.sign * dis * 60, now, .35));
+    audio.lp.frequency.setTargetAtTime(420 + 2000 * (1 - dis) * (t > 24 ? 1 : .5), now, .4);
+  }
+  const PENTA = [174.61, 196, 220, 261.63, 293.66, 349.23, 392, 440, 523.25, 587.33, 698.46];
+  const EVENTS = [];
+  SV.forEach((s, i) => { if (s) EVENTS.push({ t: 32.2 + EVENTS.length * .35, fn: () => pluck(523.25 * [1, 1.25, 1.5, 2][EVENTS.length % 4], .06) }); });
+  [349.23, 440, 523.25, 698.46, 880].forEach((f, j) => EVENTS.push({ t: 128.6 + j * .3, fn: () => pluck(f, .08) }));
+  function onAdvance(a, b) {
+    if (b - a > .25) return;
+    EVENTS.forEach(e => { if (a < e.t && e.t <= b) e.fn(); });
+    [[trainK, hist, STEPS], [trainK3, hist3, STEPS3]].forEach(([tk, H_, steps]) => {
+      const k0 = Math.floor(tk(a)), k1 = Math.floor(tk(b));
+      if (k1 > k0 && k1 <= steps) pluck(PENTA[Math.min(PENTA.length - 1, Math.floor(k1 / steps * PENTA.length))], .025 + .05 * Math.min(1, H_[k1].viol / 8));
+    });
+  }
+
+  // ───────── narration ─────────
+  const narr = (() => {
+    const synth = window.speechSynthesis;
+    const PREF = [/premium/i, /enhanced/i, /natural/i, /neural/i, /Google UK English Female/i, /Google US English/i, /Samantha/i, /Daniel/i, /Karen/i, /Moira/i];
+    let on = false, voice = null, utter = null, spokenIdx = -1, speakingIdx = -1, startedAt = 0, budget = 0;
+    function pickVoice() {
+      const vs = synth.getVoices().filter(v => /^en/i.test(v.lang));
+      for (const re of PREF) { const v = vs.find(v => re.test(v.name)); if (v) return v; }
+      return vs.find(v => v.default) || vs[0] || null;
+    }
+    if (synth) { voice = pickVoice(); synth.addEventListener?.('voiceschanged', () => { voice = pickVoice(); }); }
+    const spoken = s => s.replace(/η/g, 'eta').replace(/…/g, '...').replace(/[“”]/g, '');
+    function stop() { if (synth) synth.cancel(); utter = null; speakingIdx = -1; spokenIdx = -1; }
+    function speak(i) {
+      synth.cancel();
+      const text = spoken(SUBS[i][2]);
+      const u = new SpeechSynthesisUtterance(text);
+      if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
+      u.rate = .95; u.pitch = 1;
+      u.onend = u.onerror = () => { if (utter === u) { utter = null; speakingIdx = -1; } };
+      utter = u; speakingIdx = i; spokenIdx = i;
+      startedAt = performance.now();
+      budget = (text.split(/\s+/).length / 2.4 + 1.5) * 1800 + 2000;
+      synth.speak(u);
+    }
+    return {
+      supported: !!synth,
+      get on() { return on; },
+      set(v) { on = v; if (!on) stop(); else if (synth) synth.speak(new SpeechSynthesisUtterance('')); },
+      speaking: () => on && speakingIdx >= 0,
+      stop,
+      pauseForUser() { if (speakingIdx >= 0) stop(); },
+      holdPoint() {
+        if (!on || speakingIdx < 0) return Infinity;
+        if (performance.now() - startedAt > budget) { speakingIdx = -1; return Infinity; }
+        return SUBS[speakingIdx][1] - .4;
+      },
+      update(t) {
+        if (!on || !playing) return;
+        const si = SUBS.findIndex(s => t >= s[0] && t < s[1]);
+        if (si >= 0 && si !== spokenIdx) speak(si);
+      },
+    };
+  })();
+
+  // ───────── controls ─────────
+  const startAt = parseFloat(new URLSearchParams(location.search).get('t'));
+  let t = Number.isFinite(startAt) ? clamp(startAt, 0, DUR) : 0, playing = !reduce, lastNow = performance.now();
+  function syncPlay() { el.play.textContent = playing ? 'Pause' : (t >= DUR ? 'Replay' : 'Play'); }
+  el.play.addEventListener('click', () => { if (t >= DUR) { t = 0; narr.stop(); } playing = !playing; if (!playing) narr.pauseForUser(); syncPlay(); });
+  $('replay').addEventListener('click', () => { t = 0; narr.stop(); playing = true; syncPlay(); });
+  el.scrub.addEventListener('pointerdown', () => dragging = true);
+  window.addEventListener('pointerup', () => dragging = false);
+  el.scrub.addEventListener('input', () => { t = +el.scrub.value; narr.stop(); syncPlay(); });
+  el.sound.addEventListener('click', () => {
+    if (!audio) audio = makeAudio();
+    if (!audio) { el.sound.textContent = 'No audio'; return; }
+    audio.ac.resume();
+    soundOn = !soundOn;
+    el.sound.textContent = soundOn ? 'Sound on' : 'Sound off';
+    el.sound.setAttribute('aria-pressed', String(soundOn));
+  });
+  const narrBtn = $('narrate');
+  if (!narr.supported) { narrBtn.textContent = 'No narration'; narrBtn.disabled = true; }
+  narrBtn.addEventListener('click', () => {
+    narr.set(!narr.on);
+    narrBtn.textContent = narr.on ? 'Narration on' : 'Narration off';
+    narrBtn.setAttribute('aria-pressed', String(narr.on));
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === ' ' && e.target.tagName !== 'BUTTON') { e.preventDefault(); if (t >= DUR) { t = 0; narr.stop(); } playing = !playing; if (!playing) narr.pauseForUser(); syncPlay(); }
+    else if (e.target.tagName !== 'INPUT' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { t = clamp(t + (e.key === 'ArrowRight' ? 5 : -5), 0, DUR); narr.stop(); }
+  });
+  syncPlay();
+
+  function frame(now) {
+    const dt = Math.min(.1, (now - lastNow) / 1000); lastNow = now;
+    if (playing) {
+      const prev = t; t = Math.min(DUR, t + dt, Math.max(prev, narr.holdPoint()));
+      onAdvance(prev, t);
+      if (t >= DUR) { playing = false; syncPlay(); }
+    }
+    narr.update(t);
+    render(t); updateDOM(t); updateAudio(t);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
