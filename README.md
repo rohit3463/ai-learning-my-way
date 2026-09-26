@@ -14,6 +14,8 @@ A static website for learning machine learning and AI through animated films, wo
 | `films/*.html` | Standalone animated films (canvas + JavaScript). `?t=<seconds>` starts at a given time |
 | `content/lessons.json` | The list of lessons, in order |
 | `content/lessons/<slug>.html` | Optional written notes for a lesson, in plain HTML. Math goes in `\( … \)` (inline) or `\[ … \]` (centered) and is rendered by KaTeX |
+| `content/labs/<slug>.js` | Optional hands-on coding lab for a lesson: small steps, each with starter code, hint, solution and Python tests. Enable with `"lab": "<slug>"` in `lessons.json` |
+| `assets/js/lab.js`, `assets/js/py-worker.js` | The in-browser IDE. Code runs in real Python (Pyodide) inside a Web Worker, with an 8-second limit per run |
 | `assets/` | Shared CSS and JavaScript |
 
 ## Run locally

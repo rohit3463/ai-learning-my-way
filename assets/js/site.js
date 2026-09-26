@@ -28,6 +28,7 @@
     all() { return store.get('done', {}); },
     has(slug) { return !!this.all()[slug]; },
     toggle(slug) { const d = this.all(); d[slug] ? delete d[slug] : d[slug] = Date.now(); store.set('done', d); return !!d[slug]; },
+    mark(slug) { const d = this.all(); if (!d[slug]) { d[slug] = Date.now(); store.set('done', d); } },
   };
 
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -43,6 +44,7 @@
     if (l.film) c.push('<span class="chip film">Film</span>');
     if (l.doc) c.push('<span class="chip math">Math</span>');
     if (l.code && l.code.length) c.push('<span class="chip code">Code</span>');
+    if (l.lab) c.push('<span class="chip code">Hands-on coding</span>');
     if (l.videos && l.videos.length) c.push(`<span class="chip video">${l.videos.length} video${l.videos.length > 1 ? 's' : ''}</span>`);
     return `<div class="chips">${c.join('')}</div>`;
   }
@@ -154,17 +156,19 @@
         </header>
         ${film}
         <div class="layout">
-          <article class="prose" id="prose">${body}${videos}${code}
-            <div class="done-row">
-              <button class="btn" id="done" type="button" aria-pressed="${progress.has(l.slug)}">${progress.has(l.slug) ? '✓ Marked as done' : 'Mark as done'}</button>
-              <span class="progress-note">Saved in this browser only.</span>
-            </div>
-            <nav class="pager" aria-label="Lessons">
-              ${prev ? `<a class="prev" href="lesson.html?l=${prev.slug}"><span>← Previous</span><strong>${esc(prev.title)}</strong></a>` : ''}
-              ${next ? `<a class="next" href="lesson.html?l=${next.slug}"><span>Next →</span><strong>${esc(next.title)}</strong></a>` : ''}
-            </nav>
-          </article>
+          <article class="prose" id="prose">${body}${videos}${code}</article>
           <aside class="toc" aria-label="On this page"><div class="eyebrow">On this page</div><ol id="toc"></ol></aside>
+        </div>
+        ${l.lab ? '<section class="lab" id="lab"><p class="loading">Loading the coding lab…</p></section>' : ''}
+        <div class="lesson-end">
+          <div class="done-row">
+            <button class="btn" id="done" type="button" aria-pressed="${progress.has(l.slug)}">${progress.has(l.slug) ? '✓ Marked as done' : 'Mark as done'}</button>
+            <span class="progress-note">${l.lab ? 'Finishing the coding lab marks this lesson as done. ' : ''}Saved in this browser only.</span>
+          </div>
+          <nav class="pager" aria-label="Lessons">
+            ${prev ? `<a class="prev" href="lesson.html?l=${prev.slug}"><span>← Previous</span><strong>${esc(prev.title)}</strong></a>` : ''}
+            ${next ? `<a class="next" href="lesson.html?l=${next.slug}"><span>Next →</span><strong>${esc(next.title)}</strong></a>` : ''}
+          </nav>
         </div>`;
 
       const prose = document.getElementById('prose');
@@ -174,6 +178,7 @@
         if (!h.id) h.id = slugify(h.textContent);
         toc.insertAdjacentHTML('beforeend', `<li><a href="#${h.id}">${esc(h.textContent)}</a></li>`);
       });
+      if (l.lab) toc.insertAdjacentHTML('beforeend', '<li><a href="#build">Build it yourself</a></li>');
       if (!toc.children.length) toc.closest('.toc').remove();
       renderMath(prose);
       enhanceCode(prose);
@@ -197,14 +202,35 @@
         } catch { codeEl.textContent = `# Could not load ${d.dataset.src}`; }
         enhanceCode(d);
       }));
-      document.getElementById('done').addEventListener('click', e => {
-        const on = progress.toggle(l.slug);
-        e.currentTarget.setAttribute('aria-pressed', on);
-        e.currentTarget.textContent = on ? '✓ Marked as done' : 'Mark as done';
-      });
+      const doneBtn = document.getElementById('done');
+      const syncDone = () => {
+        const on = progress.has(l.slug);
+        doneBtn.setAttribute('aria-pressed', on);
+        doneBtn.textContent = on ? '✓ Marked as done' : 'Mark as done';
+      };
+      doneBtn.addEventListener('click', () => { progress.toggle(l.slug); syncDone(); });
+      if (l.lab) loadLab(l, () => { progress.mark(l.slug); syncDone(); });
       if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
     } catch (err) {
       host.innerHTML = `<div class="error"><h1>Lesson not found</h1><p>${esc(err.message)}. <a href="./">Back to the learning path</a>.</p></div>`;
+    }
+  }
+
+  async function loadLab(l, onComplete) {
+    const host = document.getElementById('lab');
+    try {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = `content/labs/${l.lab}.js?v=${l.labVersion || 1}`;
+        s.onload = res; s.onerror = () => rej(new Error(`Missing content/labs/${l.lab}.js`));
+        document.head.appendChild(s);
+      });
+      const lab = window.LABS && window.LABS[l.lab];
+      if (!lab || !window.startLab) throw new Error('The coding lab could not start');
+      await window.startLab(host, { slug: l.slug, lab, renderMath, onComplete });
+      if (location.hash === '#build') document.getElementById('build')?.scrollIntoView();
+    } catch (err) {
+      host.innerHTML = `<p class="error">${esc(err.message)}. Try reloading the page.</p>`;
     }
   }
 

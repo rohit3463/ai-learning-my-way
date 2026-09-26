@@ -4,7 +4,7 @@
       "slug": "linear-regression",
       "title": "Linear Regression",
       "summary": "How a straight line learns to fit noisy data: errors, squared loss, gradients and gradient descent.",
-      "minutes": 15,
+      "minutes": 40,
       "film": {
         "file": "linear-regression.html?v=3",
         "title": "The Line That Learned",
@@ -12,7 +12,9 @@
       },
       "doc": true,
       "code": [],
-      "videos": []
+      "videos": [],
+      "lab": "linear-regression",
+      "labVersion": 1
     },
     {
       "slug": "logistic-regression",
