@@ -39,37 +39,13 @@
 </blockquote>
 
 <h3>Working out the width</h3>
-<p>The idea is simple: the middle of the street is where the score is 0, and the edge is where the score is 1. So the question is <strong>how far do you have to walk for the score to go up by 1?</strong></p>
-
-<p><strong>Warm-up: one measurement.</strong> With a single measurement the score is \(z = w \times x + b\). Moving \(x\) by some distance \(d\) changes the score by \(w \times d\), because \(b\) stays the same. To go from the middle (\(z = 0\)) to the edge (\(z = 1\)) we need</p>
-\[ w \times d = 1 \quad \Rightarrow \quad d = \frac{1}{w} \]
-<p>That is the distance from the middle to one edge. The street has two edges, one on each side, so</p>
-\[ \text{width} = 2 \times \frac{1}{w} = \frac{2}{w} \]
-<p>For example, with \(w = 4\) the street is \(0.5\) wide, and with \(w = 0.5\) it is \(4\) wide.</p>
-
-<p><strong>Two measurements.</strong> Now the score is \(z = w_1 \times x_1 + w_2 \times x_2 + b\). If we move from a point by \(\Delta x_1\) in the first direction and \(\Delta x_2\) in the second (\(\Delta\) just means "change in"), the score changes by</p>
-\[ \Delta z = w_1 \times \Delta x_1 + w_2 \times \Delta x_2 \]
-<p>Again \(b\) cancels out, because it is the same everywhere.</p>
-<p>To measure the street's width we must walk <em>straight across</em> it, the shortest way from one edge to the other. Walking at a slant would cover more ground than the true width. Straight across means the direction \((w_1, w_2)\): the arrow made of the two weights points exactly across the street, because it is the direction in which the score climbs fastest.</p>
-<p>That arrow has length \(\sqrt{w_1^2 + w_2^2}\) (Pythagoras). So a walk of distance \(d\) straight across is</p>
-\[ \Delta x_1 = d \times \frac{w_1}{\sqrt{w_1^2 + w_2^2}} \qquad \Delta x_2 = d \times \frac{w_2}{\sqrt{w_1^2 + w_2^2}} \]
-<p>Put these into the score change:</p>
-\[ \Delta z = w_1 \times \frac{d \times w_1}{\sqrt{w_1^2 + w_2^2}} + w_2 \times \frac{d \times w_2}{\sqrt{w_1^2 + w_2^2}} = d \times \frac{w_1^2 + w_2^2}{\sqrt{w_1^2 + w_2^2}} \]
-<p>A number divided by its own square root is just its square root, so this tidies up to</p>
-\[ \Delta z = d \times \sqrt{w_1^2 + w_2^2} \]
-<p>Read it like the warm-up: walking straight across, the score rises by \(\sqrt{w_1^2 + w_2^2}\) for every unit of distance. It plays the part that \(w\) played with one measurement.</p>
-<p>To reach the edge the score must rise by 1:</p>
-\[ d \times \sqrt{w_1^2 + w_2^2} = 1 \quad \Rightarrow \quad d = \frac{1}{\sqrt{w_1^2 + w_2^2}} \]
-<p>That is the distance from the middle to one edge. Doubling it for both edges gives the width:</p>
+<p>The width is the distance between the two edges, which are parallel lines. Recall the distance between two parallel lines \(a x_1 + c\, x_2 + k_1 = 0\) and \(a x_1 + c\, x_2 + k_2 = 0\):</p>
+\[ \text{distance} = \frac{|k_1 - k_2|}{\sqrt{a^2 + c^2}} \]
+<p>Write the two edges in that form:</p>
+\[ w_1 x_1 + w_2 x_2 + (b - 1) = 0 \qquad w_1 x_1 + w_2 x_2 + (b + 1) = 0 \]
+<p>So \(a = w_1\), \(c = w_2\), and the constants differ by \(|(b - 1) - (b + 1)| = 2\):</p>
 \[ \text{width} = \frac{2}{\sqrt{w_1^2 + w_2^2}} \]
-
-<p><strong>Check it with numbers.</strong> The widest street in the worked example below has \(w_1 = w_2 = 0.5\) and \(b = -1\):</p>
-\[ \sqrt{0.5^2 + 0.5^2} = \sqrt{0.5} = 0.707 \qquad \text{width} = \frac{2}{0.707} = 2.83 \]
-<p>We can confirm this without the formula. Point C \((0, 0)\) sits on one edge and point A \((2, 2)\) sits on the other. The step from C to A is \((2, 2)\), which points the same way as \((w_1, w_2) = (0.5, 0.5)\), so it goes straight across the street. Its length is \(\sqrt{2^2 + 2^2} = \sqrt{8} = 2.83\). The same answer.</p>
-
-<blockquote>
-  <p><strong>Why this matters for training.</strong> The width is \(2 \div \sqrt{w_1^2 + w_2^2}\), so making the street wider is the same as making \(w_1^2 + w_2^2\) smaller. That is exactly what the penalty \(\lambda \times (w_1^2 + w_2^2)\) in the loss does. Squaring avoids the square root and gives simpler slopes, and it still points in the same direction: smaller weights, wider street.</p>
-</blockquote>
+<p>For the worked example's best street, \(w_1 = w_2 = 0.5\), this gives \(2 \div \sqrt{0.5} = 2.83\). Making the street wider means making \(w_1^2 + w_2^2\) smaller, which is exactly what the penalty in the loss pushes for.</p>
 
 <h3>Support vectors</h3>
 <p>When the street is as wide as it can be, a few points end up standing exactly on its edges. These points are the <strong>support vectors</strong>. They alone decide where the street goes.</p>
