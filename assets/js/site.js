@@ -131,9 +131,10 @@
         if (!r.ok) throw new Error(`Missing content/lessons/${l.slug}.html`); return r.text();
       }) : '';
 
+      const filmSrc = l.film ? `films/${l.film.file}${l.film.start ? (l.film.file.includes('?') ? '&' : '?') + 't=' + l.film.start : ''}` : '';
       const film = l.film ? `
-        <div class="film-frame"><iframe src="films/${esc(l.film.file)}${l.film.start ? '?t=' + l.film.start : ''}" title="${esc(l.film.title)}" loading="lazy" allow="fullscreen"></iframe></div>
-        <div class="film-caption"><span>Film: <em>${esc(l.film.title)}</em>${l.film.note ? ' · ' + esc(l.film.note) : ''}</span><a href="films/${esc(l.film.file)}${l.film.start ? '?t=' + l.film.start : ''}">Open full screen ↗</a></div>` : '';
+        <div class="film-frame"><iframe src="${esc(filmSrc)}" title="${esc(l.film.title)}" loading="lazy" allow="fullscreen"></iframe></div>
+        <div class="film-caption"><span>Film: <em>${esc(l.film.title)}</em>${l.film.note ? ' · ' + esc(l.film.note) : ''}</span><a href="${esc(filmSrc)}">Open full screen ↗</a></div>` : '';
 
       const videos = (l.videos || []).length ? `<h2 id="watch">Watch</h2><div class="videos">${l.videos.map(videoCard).join('')}</div>` : '';
       const code = (l.code || []).length ? `<h2 id="code">Code</h2>

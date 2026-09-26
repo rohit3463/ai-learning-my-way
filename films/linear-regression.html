@@ -132,6 +132,7 @@
     white-space: nowrap;
   }
   button:hover { border-color: rgba(238, 230, 214, .4); }
+  button:disabled { opacity: .5; cursor: default; }
   button:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
   button.on, button[aria-pressed="true"] { color: var(--amber); border-color: rgba(244, 184, 96, .55); }
   .endcard button { font-size: 14px; padding: 10px 20px; }
@@ -158,6 +159,8 @@
     .math { font-size: 13px; height: 8.8em; }
     .sub { font-size: 14.5px; }
     .time, .home { display: none; }
+    .controls { flex-wrap: wrap; row-gap: 8px; }
+    .scrubwrap { order: -1; flex-basis: 100%; }
   }
 </style>
 </head>
@@ -191,6 +194,7 @@
     </div>
     <span class="time" id="time">0:00 / 2:12</span>
     <button id="sound" type="button" aria-pressed="false">Sound off</button>
+    <button id="narrate" type="button" aria-pressed="false">Narration off</button>
     <a class="home" href="../" target="_top">All lessons</a>
   </div>
   <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
@@ -778,7 +782,7 @@
   const chapBtns = CHAPTERS.map((c, i) => {
     const b = document.createElement('button'); b.type = 'button';
     b.textContent = c.act ? `${c.act.replace('Act ', '')} · ${c.name}` : c.name;
-    b.addEventListener('click', () => { t = c.t + .01; playing = true; syncPlay(); });
+    b.addEventListener('click', () => { t = c.t + .01; narr.stop(); playing = true; syncPlay(); });
     $('chapters').appendChild(b);
     const tick = document.createElement('span'); tick.style.left = (c.t / DUR * 100) + '%'; $('ticks').appendChild(tick);
     return b;
@@ -846,7 +850,7 @@
     if (!audio) return;
     const now = audio.ac.currentTime, dis = dissonance(t);
     const level = soundOn && playing ? .2 * (.6 + .4 * E(t, 0, 3)) * (1 + .4 * E(t, 114, 118)) * (1 - E(t, 128, 132)) : 0;
-    audio.master.gain.setTargetAtTime(level, now, .25);
+    audio.master.gain.setTargetAtTime(level * (narr.speaking() ? .45 : 1), now, .25);
     audio.voices.forEach(v => v.o.detune.setTargetAtTime(v.sign * dis * 60, now, .35));
     audio.lp.frequency.setTargetAtTime(420 + 2000 * (1 - dis) * (t > 20 ? 1 : .5), now, .4);
   }
@@ -865,15 +869,68 @@
     }
   }
 
+  // ───────── narration: the browser reads each subtitle aloud ─────────
+  const narr = (() => {
+    const synth = window.speechSynthesis;
+    const PREF = [/premium/i, /enhanced/i, /natural/i, /neural/i, /Google UK English Female/i, /Google US English/i, /Samantha/i, /Daniel/i, /Karen/i, /Moira/i];
+    let on = false, voice = null, utter = null, spokenIdx = -1, speakingIdx = -1, startedAt = 0, budget = 0;
+    function pickVoice() {
+      const vs = synth.getVoices().filter(v => /^en/i.test(v.lang));
+      for (const re of PREF) { const v = vs.find(v => re.test(v.name)); if (v) return v; }
+      return vs.find(v => v.default) || vs[0] || null;
+    }
+    if (synth) { voice = pickVoice(); synth.addEventListener?.('voiceschanged', () => { voice = pickVoice(); }); }
+    const spoken = s => s.replace(/η/g, 'eta').replace(/…/g, '...').replace(/[“”]/g, '');
+    function stop() {
+      if (synth) synth.cancel();
+      utter = null; speakingIdx = -1; spokenIdx = -1;
+    }
+    function speak(i) {
+      synth.cancel();
+      const text = spoken(SUBS[i][2]);
+      const u = new SpeechSynthesisUtterance(text);
+      if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
+      u.rate = .95; u.pitch = 1;
+      u.onend = u.onerror = () => { if (utter === u) { utter = null; speakingIdx = -1; } };
+      utter = u; speakingIdx = i; spokenIdx = i;
+      startedAt = performance.now();
+      budget = (text.split(/\s+/).length / 2.4 + 1.5) * 1800 + 2000; // safety net if the browser never reports the end
+      synth.speak(u);
+    }
+    return {
+      supported: !!synth,
+      get on() { return on; },
+      set(v) {
+        on = v;
+        if (!on) stop();
+        else if (synth) synth.speak(new SpeechSynthesisUtterance('')); // unlocks speech on iOS inside the tap
+      },
+      speaking: () => on && speakingIdx >= 0,
+      stop,
+      pauseForUser() { if (speakingIdx >= 0) stop(); },
+      // Latest time the film may reach while the current line is still being read.
+      holdPoint() {
+        if (!on || speakingIdx < 0) return Infinity;
+        if (performance.now() - startedAt > budget) { speakingIdx = -1; return Infinity; }
+        return SUBS[speakingIdx][1] - .4;
+      },
+      update(t) {
+        if (!on || !playing) return;
+        const si = SUBS.findIndex(s => t >= s[0] && t < s[1]);
+        if (si >= 0 && si !== spokenIdx) speak(si);
+      },
+    };
+  })();
+
   // ───────── controls ─────────
   const startAt = parseFloat(new URLSearchParams(location.search).get('t'));
   let t = Number.isFinite(startAt) ? clamp(startAt, 0, DUR) : 0, playing = !reduce, lastNow = performance.now();
   function syncPlay() { el.play.textContent = playing ? 'Pause' : (t >= DUR ? 'Replay' : 'Play'); }
-  el.play.addEventListener('click', () => { if (t >= DUR) t = 0; playing = !playing; syncPlay(); });
-  $('replay').addEventListener('click', () => { t = 0; playing = true; syncPlay(); });
+  el.play.addEventListener('click', () => { if (t >= DUR) { t = 0; narr.stop(); } playing = !playing; if (!playing) narr.pauseForUser(); syncPlay(); });
+  $('replay').addEventListener('click', () => { t = 0; narr.stop(); playing = true; syncPlay(); });
   el.scrub.addEventListener('pointerdown', () => dragging = true);
   window.addEventListener('pointerup', () => dragging = false);
-  el.scrub.addEventListener('input', () => { t = +el.scrub.value; syncPlay(); });
+  el.scrub.addEventListener('input', () => { t = +el.scrub.value; narr.stop(); syncPlay(); });
   el.sound.addEventListener('click', () => {
     if (!audio) audio = makeAudio();
     if (!audio) { el.sound.textContent = 'No audio'; return; }
@@ -882,19 +939,27 @@
     el.sound.textContent = soundOn ? 'Sound on' : 'Sound off';
     el.sound.setAttribute('aria-pressed', String(soundOn));
   });
+  const narrBtn = $('narrate');
+  if (!narr.supported) { narrBtn.textContent = 'No narration'; narrBtn.disabled = true; }
+  narrBtn.addEventListener('click', () => {
+    narr.set(!narr.on);
+    narrBtn.textContent = narr.on ? 'Narration on' : 'Narration off';
+    narrBtn.setAttribute('aria-pressed', String(narr.on));
+  });
   document.addEventListener('keydown', e => {
-    if (e.key === ' ' && e.target.tagName !== 'BUTTON') { e.preventDefault(); if (t >= DUR) t = 0; playing = !playing; syncPlay(); }
-    else if (e.target.tagName !== 'INPUT' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { t = clamp(t + (e.key === 'ArrowRight' ? 5 : -5), 0, DUR); }
+    if (e.key === ' ' && e.target.tagName !== 'BUTTON') { e.preventDefault(); if (t >= DUR) { t = 0; narr.stop(); } playing = !playing; if (!playing) narr.pauseForUser(); syncPlay(); }
+    else if (e.target.tagName !== 'INPUT' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { t = clamp(t + (e.key === 'ArrowRight' ? 5 : -5), 0, DUR); narr.stop(); }
   });
   syncPlay();
 
   function frame(now) {
     const dt = Math.min(.1, (now - lastNow) / 1000); lastNow = now;
     if (playing) {
-      const prev = t; t = Math.min(DUR, t + dt);
+      const prev = t; t = Math.min(DUR, t + dt, Math.max(prev, narr.holdPoint()));
       onAdvance(prev, t);
       if (t >= DUR) { playing = false; syncPlay(); }
     }
+    narr.update(t);
     render(t); updateDOM(t); updateAudio(t);
     requestAnimationFrame(frame);
   }
