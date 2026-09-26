@@ -14,13 +14,13 @@
       "code": [],
       "videos": [],
       "lab": "linear-regression",
-      "labVersion": 1
+      "labVersion": 2
     },
     {
       "slug": "logistic-regression",
       "title": "Logistic Regression",
       "summary": "Predicting yes or no: the sigmoid squash, log loss, each point's pull, and the border between two classes.",
-      "minutes": 20,
+      "minutes": 45,
       "film": {
         "file": "logistic-regression.html?v=1",
         "title": "How Sure to Be",
@@ -28,7 +28,9 @@
       },
       "doc": true,
       "code": [],
-      "videos": []
+      "videos": [],
+      "lab": "logistic-regression",
+      "labVersion": 1
     }
   ]
 }

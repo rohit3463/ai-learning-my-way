@@ -210,7 +210,7 @@
       const was = !!S.passed[s.id];
       S.passed[s.id] = passed;
       save();
-      if (passed) html += `<div class="win">${i + 1 < N ? 'Step passed.' : 'All tests pass. Your linear regression works.'}</div>${nextButton(i)}`;
+      if (passed) html += `<div class="win">${i + 1 < N ? 'Step passed.' : esc(lab.finalMessage || 'All tests pass. Your program works.')}</div>${nextButton(i)}`;
       con.innerHTML = html;
       con.querySelector('.ide-next')?.addEventListener('click', () => show(i + 1));
       renderSteps();
@@ -223,8 +223,8 @@
       box.hidden = false;
       box.innerHTML = `
         <div class="lab-done-head">
-          <div><div class="eyebrow">Lesson complete</div><h3>You wrote linear regression from scratch.</h3>
-          <p>Every line below is yours: data, predictions, errors, loss, gradients, and the training loop. The lesson is marked as done.</p></div>
+          <div><div class="eyebrow">Lesson complete</div><h3>${esc(lab.doneTitle || 'You finished the lab.')}</h3>
+          <p>${esc(lab.doneText || 'Every line below is yours. The lesson is marked as done.')}</p></div>
           <div class="lab-done-actions"><button class="btn" type="button" id="lab-copy">Copy code</button><a class="btn" id="lab-dl" download="${esc(lab.file)}">Download ${esc(lab.file)}</a></div>
         </div>
         <pre><code class="language-python">${esc(full)}</code></pre>`;

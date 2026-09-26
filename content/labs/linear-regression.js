@@ -9,6 +9,9 @@
   window.LABS['linear-regression'] = {
     file: 'linear_regression.py',
     title: 'Write linear regression from scratch',
+    doneTitle: 'You wrote linear regression from scratch.',
+    doneText: 'Every line below is yours: data, predictions, errors, loss, gradients, and the training loop. The lesson is marked as done.',
+    finalMessage: 'All tests pass. Your linear regression works.',
     intro: R`Twelve small steps, one or two ideas at a time. Write each piece, run its tests, and move on. At the end you will have a working program that learns a line from data, in plain Python with no libraries.`,
     steps: [
       {
