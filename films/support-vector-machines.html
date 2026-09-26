@@ -205,7 +205,8 @@
 (() => {
   // ───────── utilities ─────────
   const DUR = 142, TAU = Math.PI * 2;
-  const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
+  const clamp = (v, a = 0, b = 1) => v > b ? b : v >= a ? v : a;   // NaN falls back to a
+  const sqrt0 = v => Math.sqrt(Math.max(0, v));
   const lerp = (a, b, t) => a + (b - a) * t;
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const seg = (t, a, b) => clamp((t - a) / (b - a));
@@ -654,8 +655,8 @@
   function currentLossNorm(t) {
     const md = model(t);
     if (!md || t < 44) return .3;
-    if (t < 112) return clamp(Math.sqrt((lossOf(md.m) - FINAL.L) / (hist[0].L - FINAL.L)));
-    return clamp(Math.sqrt((lossOf(md.m, P3) - FINAL3.L) / (hist3[0].L - FINAL3.L + 1e-6))) * .6;
+    if (t < 112) return clamp(sqrt0((lossOf(md.m) - FINAL.L) / (hist[0].L - FINAL.L)));
+    return clamp(sqrt0((lossOf(md.m, P3) - FINAL3.L) / (hist3[0].L - FINAL3.L + 1e-6))) * .6;
   }
   function render(t) {
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);

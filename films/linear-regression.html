@@ -205,7 +205,8 @@
 (() => {
   // ───────── utilities ─────────
   const DUR = 132, TAU = Math.PI * 2;
-  const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
+  const clamp = (v, a = 0, b = 1) => v > b ? b : v >= a ? v : a;   // NaN falls back to a
+  const sqrt0 = v => Math.sqrt(Math.max(0, v));
   const lerp = (a, b, t) => a + (b - a) * t;
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const seg = (t, a, b) => clamp((t - a) / (b - a));
@@ -756,7 +757,7 @@
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     ctx.globalAlpha = 1; ctx.fillStyle = COL.ink; ctx.fillRect(0, 0, W, H);
     // warm bloom behind the plot that grows as the fit improves
-    const ls = lineState(t), fitness = ls ? 1 - clamp(Math.sqrt((loss(ls.w, ls.b) - Lmin) / (L0 - Lmin))) : 0;
+    const ls = lineState(t), fitness = ls ? 1 - clamp(sqrt0((loss(ls.w, ls.b) - Lmin) / (L0 - Lmin))) : 0;
     const bloom = ctx.createRadialGradient(RM.x + RM.w / 2, RM.y + RM.h / 2, 0, RM.x + RM.w / 2, RM.y + RM.h / 2, Math.max(RM.w, RM.h) * .8);
     bloom.addColorStop(0, rgba(COL.amber, .03 + .07 * fitness * (1 - win(t, 58.2, 80, 1.4)) + .05 * E(t, 114, 120)));
     bloom.addColorStop(1, rgba(COL.amber, 0));
@@ -845,7 +846,7 @@
     if (t < 20) return .15;
     if (t >= 58 && t < 80) return .45;
     const ls = lineState(t);
-    return clamp(Math.sqrt((loss(ls.w, ls.b) - Lmin) / (L0 - Lmin))) * (1 - E(t, 113, 116));
+    return clamp(sqrt0((loss(ls.w, ls.b) - Lmin) / (L0 - Lmin))) * (1 - E(t, 113, 116));
   }
   function updateAudio(t) {
     if (!audio) return;

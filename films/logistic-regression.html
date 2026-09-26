@@ -205,7 +205,8 @@
 (() => {
   // ───────── utilities ─────────
   const DUR = 142, TAU = Math.PI * 2;
-  const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
+  const clamp = (v, a = 0, b = 1) => v > b ? b : v >= a ? v : a;   // NaN falls back to a
+  const sqrt0 = v => Math.sqrt(Math.max(0, v));
   const lerp = (a, b, t) => a + (b - a) * t;
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const seg = (t, a, b) => clamp((t - a) / (b - a));
@@ -773,9 +774,9 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   function currentLossNorm(t) {
     if (t < 42) return .35;
-    if (t < 108) { const md = model(t); return clamp(Math.sqrt((loss1(md.w, md.b) - LBEST) / (L0 - LBEST))); }
+    if (t < 108) { const md = model(t); return clamp(sqrt0((loss1(md.w, md.b) - LBEST) / (L0 - LBEST))); }
     const s = trainState2(trainK2(t)), l = loss2(s.w1, s.w2, s.b);
-    return clamp(Math.sqrt((l - FINAL2.L) / (hist2[0].L - FINAL2.L)));
+    return clamp(sqrt0((l - FINAL2.L) / (hist2[0].L - FINAL2.L)));
   }
   function render(t) {
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);

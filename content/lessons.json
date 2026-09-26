@@ -6,7 +6,7 @@
       "summary": "How a straight line learns to fit noisy data: errors, squared loss, gradients and gradient descent.",
       "minutes": 40,
       "film": {
-        "file": "linear-regression.html?v=3",
+        "file": "linear-regression.html?v=4",
         "title": "The Line That Learned",
         "note": "2 min 12 s, best with sound and narration on"
       },
@@ -22,7 +22,7 @@
       "summary": "Predicting yes or no: the sigmoid squash, log loss, each point's pull, and the border between two classes.",
       "minutes": 45,
       "film": {
-        "file": "logistic-regression.html?v=1",
+        "file": "logistic-regression.html?v=2",
         "title": "How Sure to Be",
         "note": "2 min 22 s, best with sound and narration on"
       },
@@ -38,7 +38,7 @@
       "summary": "Finding the safest border: margins, the widest street, support vectors and the hinge loss.",
       "minutes": 45,
       "film": {
-        "file": "support-vector-machines.html?v=1",
+        "file": "support-vector-machines.html?v=2",
         "title": "The Widest Street",
         "note": "2 min 22 s, best with sound and narration on"
       },
