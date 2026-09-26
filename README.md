@@ -29,3 +29,9 @@ python3 -m http.server 8000
 
 The site is plain HTML with no build step. GitHub Pages serves it from the `main` branch root
 (Settings → Pages → Deploy from a branch → `main` / `/ (root)`).
+
+## Updating the site
+
+After changing `assets/js/site.js` or `assets/css/site.css`, bump the `?v=` number where they are linked in
+`index.html`, `lesson.html` and `films.html`. Browsers cache these files for up to 10 minutes, and the new number
+makes them fetch the fresh copy straight away.
