@@ -1,0 +1,168 @@
+<!--
+  Lesson notes: Logistic Regression.
+  This file is inserted into lesson.html below the film.
+  Math: write \( ... \) for inline math and \[ ... \] for a centered equation.
+  Every <h2> automatically appears in the "On this page" list.
+-->
+
+<h2>The goal</h2>
+<p>In linear regression the answer \(y\) could be any number, like a price. Many real questions only have two possible answers:</p>
+<ul>
+  <li>Will this email be spam? Yes or no.</li>
+  <li>Will this student pass? Yes or no.</li>
+  <li>Is this tumour harmful? Yes or no.</li>
+</ul>
+<p>We write the answer as a number: \(y = 1\) means yes and \(y = 0\) means no. Instead of predicting \(y\) directly, we predict the <strong>probability</strong> that the answer is yes. We call that probability \(p\). It is always between 0 and 1.</p>
+
+<h2>Why a straight line fails</h2>
+<p>Our first idea could be to fit a straight line \(\hat{y} = w \times x + b\) to the 0s and 1s, exactly as in Lesson 1. It runs into trouble at both ends. A straight line keeps going forever, so far enough to the right it predicts more than 1, and far enough to the left it predicts less than 0.</p>
+<p>A probability of 1.3 or −0.2 doesn't mean anything. We need something that behaves like a line in the middle but can never leave the range 0 to 1.</p>
+<p>In the film this is <a href="films/logistic-regression.html?t=13">Act I</a>, where the areas above 1 and below 0 are marked as impossible.</p>
+
+<h2>The model: squash the line</h2>
+<p>Logistic regression keeps the straight line but passes its output through a squashing function. It happens in two steps.</p>
+<p><strong>Step 1.</strong> Compute a score \(z\) with a straight line, exactly as before:</p>
+\[ z = w \times x + b \]
+<p><strong>Step 2.</strong> Squash the score into a probability with the <strong>sigmoid</strong> function:</p>
+\[ p = \frac{1}{1 + e^{-z}} \]
+<p>Here \(e\) is the number 2.718…, the same one your calculator uses for "exp". You don't need to remember how the sigmoid is built, only how it behaves:</p>
+<table>
+  <thead><tr><th>Score \(z\)</th><th>Probability \(p\)</th><th>What it means</th></tr></thead>
+  <tbody>
+    <tr><td>\(-4\)</td><td>\(0.02\)</td><td>almost certainly no</td></tr>
+    <tr><td>\(-1\)</td><td>\(0.27\)</td><td>leaning no</td></tr>
+    <tr><td>\(0\)</td><td>\(0.50\)</td><td>a coin toss</td></tr>
+    <tr><td>\(1\)</td><td>\(0.73\)</td><td>leaning yes</td></tr>
+    <tr><td>\(4\)</td><td>\(0.98\)</td><td>almost certainly yes</td></tr>
+  </tbody>
+</table>
+<p>However big or small \(z\) gets, \(p\) stays between 0 and 1. The result is an S-shaped curve instead of a straight line.</p>
+
+<h3>What \(w\) and \(b\) do now</h3>
+<ul>
+  <li>\(w\) controls <strong>how steep</strong> the S is. A large \(w\) makes a sharp step, so the model sounds very sure. A small \(w\) makes a gentle slope, so the model sounds unsure. A negative \(w\) flips the S so that it falls instead of rising.</li>
+  <li>\(b\) <strong>slides</strong> the S left and right.</li>
+</ul>
+<p>The middle of the S, where \(p = 0.5\), is where \(z = 0\). Solving \(w \times x + b = 0\) gives</p>
+\[ x = -\frac{b}{w} \]
+<p>This is the point where the model switches from "probably no" to "probably yes". Watch both knobs move in <a href="films/logistic-regression.html?t=33">Act II</a>.</p>
+
+<h2>Step 1: the cost of one answer</h2>
+<p>In linear regression we squared the error. Here we use a cost that fits probabilities better. For each point, ask one question: <strong>what chance did the model give to the right answer?</strong></p>
+<ul>
+  <li>For a yes point (\(y = 1\)), the chance of the right answer is \(p\).</li>
+  <li>For a no point (\(y = 0\)), the chance of the right answer is \(1 - p\).</li>
+</ul>
+<p>The cost is minus the log of that chance:</p>
+\[ \text{cost} = -\log(\text{chance given to the right answer}) \]
+<p>"log" here is the natural log, the "ln" button on a calculator. Look at how this cost behaves:</p>
+<table>
+  <thead><tr><th>Chance given to the right answer</th><th>Cost</th><th>In words</th></tr></thead>
+  <tbody>
+    <tr><td>\(0.99\)</td><td>\(0.01\)</td><td>confident and right: almost free</td></tr>
+    <tr><td>\(0.9\)</td><td>\(0.11\)</td><td>fairly sure and right: cheap</td></tr>
+    <tr><td>\(0.5\)</td><td>\(0.69\)</td><td>a coin toss</td></tr>
+    <tr><td>\(0.1\)</td><td>\(2.30\)</td><td>fairly sure and wrong: expensive</td></tr>
+    <tr><td>\(0.01\)</td><td>\(4.61\)</td><td>confident and wrong: very expensive</td></tr>
+  </tbody>
+</table>
+<blockquote>
+  <p><strong>Why the log?</strong> It punishes overconfidence. Being wrong when you said "90% sure" costs a lot, and being wrong when you said "99% sure" costs even more. The cost grows without limit as the chance for the right answer approaches 0, so the model learns never to be certain unless the data really backs it up.</p>
+</blockquote>
+<p>In the film each point gets a halo whose size is its cost (<a href="films/logistic-regression.html?t=53">Act III</a>).</p>
+
+<h2>Step 2: the loss</h2>
+<p>As before, average the costs over all \(n\) points to get one number for the whole model:</p>
+\[ L = \frac{\text{cost}_1 + \text{cost}_2 + \dots + \text{cost}_n}{n} \]
+<p>You will often see the same thing written as one formula that handles both kinds of point:</p>
+\[ \text{cost} = -\big(\,y \times \log(p) + (1 - y) \times \log(1 - p)\,\big) \]
+<p>It looks busy, but it is just a switch. When \(y = 1\) the second part is multiplied by 0 and disappears, leaving \(-\log(p)\). When \(y = 0\) the first part disappears, leaving \(-\log(1 - p)\). This loss has several names: <strong>log loss</strong>, <strong>cross-entropy</strong>, or <strong>binary cross-entropy</strong>.</p>
+<p>A useful reference point: a model that says \(p = 0.5\) for every point has a loss of exactly \(0.69\). Any model worth keeping must beat that.</p>
+
+<h2>Step 3: the gradient</h2>
+<p>We need the slopes \(\dfrac{dL}{dw}\) and \(\dfrac{dL}{db}\) again, so we know which way to move each knob. Working through the calculus (the log and the sigmoid cancel each other out very neatly) leaves a surprisingly simple result:</p>
+\[ \frac{dL}{dw} = \frac{(p_1 - y_1) \times x_1 + (p_2 - y_2) \times x_2 + \dots + (p_n - y_n) \times x_n}{n} \]
+\[ \frac{dL}{db} = \frac{(p_1 - y_1) + (p_2 - y_2) + \dots + (p_n - y_n)}{n} \]
+<p>The key quantity is \(p - y\) for each point, the gap between what the model said and what was true. Think of it as each point's <strong>pull</strong> on the curve:</p>
+<ul>
+  <li>A yes point (\(y = 1\)) with \(p = 0.2\) has \(p - y = -0.8\). It pulls the curve up hard.</li>
+  <li>A yes point with \(p = 0.95\) has \(p - y = -0.05\). It is almost satisfied and barely pulls.</li>
+  <li>A no point (\(y = 0\)) with \(p = 0.7\) has \(p - y = 0.7\). It pulls the curve down.</li>
+</ul>
+<blockquote>
+  <p><strong>Look familiar?</strong> In linear regression the slopes were built from the error \(y - \hat{y}\). Here they are built from \(p - y\). It is the same shape of formula with the sign flipped, which is why the film says the gradient "looks just like linear regression's". The same pattern shows up again in neural networks.</p>
+</blockquote>
+<p>See the pulls as arrows and bars in <a href="films/logistic-regression.html?t=62">Act IV</a>.</p>
+
+<h2>Step 4: take a step</h2>
+<p>The update rule is exactly the one from Lesson 1:</p>
+\[ w_{\text{new}} = w_{\text{old}} - \eta \times \frac{dL}{dw} \]
+\[ b_{\text{new}} = b_{\text{old}} - \eta \times \frac{dL}{db} \]
+<p>\(\eta\) is the learning rate. Repeat the loop and the curve settles into place:</p>
+<ol>
+  <li>Start with any \(w\) and \(b\).</li>
+  <li>For every point, compute \(z = w \times x + b\) and then \(p = \dfrac{1}{1 + e^{-z}}\).</li>
+  <li>Compute the loss \(L\) so you can watch it fall.</li>
+  <li>Compute each pull \(p - y\), then the two slopes.</li>
+  <li>Update \(w\) and \(b\).</li>
+  <li>Repeat from step 2 until the loss stops falling.</li>
+</ol>
+
+<h2>A worked example by hand</h2>
+<p>Two points, a starting guess of \(w = 0\) and \(b = 0\), and \(\eta = 1\):</p>
+<ul>
+  <li>Point A: \(x = 1\), answer yes (\(y = 1\))</li>
+  <li>Point B: \(x = -1\), answer no (\(y = 0\))</li>
+</ul>
+<p><strong>Round 1.</strong> With \(w = 0\) and \(b = 0\), every score is \(z = 0\), so \(p = 0.5\) for both points. The model has no opinion yet.</p>
+<table>
+  <thead><tr><th>Point</th><th>\(x\)</th><th>\(y\)</th><th>\(p\)</th><th>chance of right answer</th><th>cost</th><th>\(p - y\)</th><th>\((p - y) \times x\)</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>1</td><td>1</td><td>0.5</td><td>0.5</td><td>0.693</td><td>−0.5</td><td>−0.5</td></tr>
+    <tr><td>B</td><td>−1</td><td>0</td><td>0.5</td><td>0.5</td><td>0.693</td><td>0.5</td><td>−0.5</td></tr>
+  </tbody>
+</table>
+\[ L = \frac{0.693 + 0.693}{2} = 0.693 \]
+\[ \frac{dL}{dw} = \frac{-0.5 + (-0.5)}{2} = -0.5 \qquad \frac{dL}{db} = \frac{-0.5 + 0.5}{2} = 0 \]
+<p>The slope for \(w\) is negative, so \(w\) should go up. The pulls on \(b\) cancel out, because one point pulls up and the other pulls down equally. Update:</p>
+\[ w = 0 - 1 \times (-0.5) = 0.5 \qquad b = 0 - 1 \times 0 = 0 \]
+<p><strong>Round 2.</strong> Now \(z = 0.5 \times x\):</p>
+<table>
+  <thead><tr><th>Point</th><th>\(z\)</th><th>\(p\)</th><th>chance of right answer</th><th>cost</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>0.5</td><td>0.622</td><td>0.622</td><td>0.474</td></tr>
+    <tr><td>B</td><td>−0.5</td><td>0.378</td><td>0.622</td><td>0.474</td></tr>
+  </tbody>
+</table>
+\[ L = \frac{0.474 + 0.474}{2} = 0.474 \]
+<p>One step took the loss from <strong>0.693 to 0.474</strong>. The model now leans the right way for both points. Keep going and \(w\) keeps growing, because these two points can be separated perfectly. With real, messy data the points overlap, and \(w\) settles at a finite value instead.</p>
+
+<h2>Why the model stays humble</h2>
+<p>In real data the yes and no answers overlap. Some yes points sit among the no points, and the other way round. No setting of \(w\) and \(b\) can be confident and right about all of them.</p>
+<p>The log loss makes the model pay heavily for confident mistakes, so near the overlap it learns to stay close to 0.5. Far from the overlap, where the data agrees, it becomes confident. The loss falls but never reaches zero (<a href="films/logistic-regression.html?t=93">Act V</a>).</p>
+<p>That is the real skill logistic regression learns: not only yes or no, but <strong>how sure to be</strong>.</p>
+
+<h2>More than one input</h2>
+<p>With two measurements \(x_1\) and \(x_2\), the score simply gets one weight per input:</p>
+\[ z = w_1 \times x_1 + w_2 \times x_2 + b \qquad p = \frac{1}{1 + e^{-z}} \]
+<p>The points where \(p = 0.5\) are where \(z = 0\):</p>
+\[ w_1 \times x_1 + w_2 \times x_2 + b = 0 \]
+<p>That is the equation of a straight line, called the <strong>decision boundary</strong>. On one side the model says "probably yes", on the other "probably no". The weights \((w_1, w_2)\) point toward the "yes" side, and the larger they are, the faster the probability changes as you cross the line. With more inputs the same idea holds: the boundary becomes a flat surface in more dimensions.</p>
+<p>The update rule doesn't change. Each weight \(w_j\) gets its own slope, built the same way from the pulls \(p - y\) multiplied by that input. See the border settle into place in <a href="films/logistic-regression.html?t=108">Act VI</a>.</p>
+
+<h2>Symbols at a glance</h2>
+<table>
+  <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\(y\)</td><td>the true answer: 1 for yes, 0 for no</td></tr>
+    <tr><td>\(z = w \times x + b\)</td><td>the score, from a straight line</td></tr>
+    <tr><td>\(p = \dfrac{1}{1 + e^{-z}}\)</td><td>the predicted probability of yes (the sigmoid of the score)</td></tr>
+    <tr><td>\(w,\ b\)</td><td>the numbers being learned: steepness and shift</td></tr>
+    <tr><td>\(x = -b \div w\)</td><td>the point where \(p = 0.5\)</td></tr>
+    <tr><td>\(-\log(\text{chance of right answer})\)</td><td>the cost of one point</td></tr>
+    <tr><td>\(L\)</td><td>loss: the average cost (log loss, or cross-entropy)</td></tr>
+    <tr><td>\(p - y\)</td><td>each point's pull on the curve</td></tr>
+    <tr><td>\(\dfrac{dL}{dw},\ \dfrac{dL}{db}\)</td><td>slopes of the loss, which together form the gradient</td></tr>
+    <tr><td>\(\eta\)</td><td>learning rate: how big each step is</td></tr>
+  </tbody>
+</table>

@@ -6,9 +6,23 @@
       "summary": "How a straight line learns to fit noisy data: errors, squared loss, gradients and gradient descent.",
       "minutes": 15,
       "film": {
-        "file": "linear-regression.html?v=2",
+        "file": "linear-regression.html?v=3",
         "title": "The Line That Learned",
         "note": "2 min 12 s, best with sound and narration on"
+      },
+      "doc": true,
+      "code": [],
+      "videos": []
+    },
+    {
+      "slug": "logistic-regression",
+      "title": "Logistic Regression",
+      "summary": "Predicting yes or no: the sigmoid squash, log loss, each point's pull, and the border between two classes.",
+      "minutes": 20,
+      "film": {
+        "file": "logistic-regression.html?v=1",
+        "title": "How Sure to Be",
+        "note": "2 min 22 s, best with sound and narration on"
       },
       "doc": true,
       "code": [],
