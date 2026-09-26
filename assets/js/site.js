@@ -72,28 +72,17 @@
     }
   }
 
-  // ── markdown + math ──
-  // Math is pulled out before Markdown parsing so that "_" and "*" inside TeX survive,
-  // then rendered with KaTeX and put back.
-  function renderMarkdown(src) {
-    const math = [];
-    const parts = src.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
-    const protectedSrc = parts.map((p, i) => {
-      if (i % 2 === 1) return p; // code: leave alone
-      return p
-        .replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => { math.push({ tex, display: true }); return `\n\nMATHBLOCK${math.length - 1}ZZ\n\n`; })
-        .replace(/(^|[^\\$])\$([^\n$]+?)\$/g, (_, pre, tex) => { math.push({ tex, display: false }); return `${pre}MATHINLINE${math.length - 1}ZZ`; });
-    }).join('');
-    let html = window.marked.parse(protectedSrc, { gfm: true });
-    const tex = (i) => {
-      const m = math[+i];
-      try { return window.katex.renderToString(m.tex, { displayMode: m.display, throwOnError: false }); }
-      catch { return esc(m.tex); }
-    };
-    html = html.replace(/<p>\s*MATHBLOCK(\d+)ZZ\s*<\/p>/g, (_, i) => tex(i))
-               .replace(/MATHBLOCK(\d+)ZZ/g, (_, i) => tex(i))
-               .replace(/MATHINLINE(\d+)ZZ/g, (_, i) => tex(i));
-    return html;
+  // ── math ──
+  // Lesson notes are plain HTML. KaTeX's auto-render turns \( ... \) and \[ ... \] into typeset math.
+  function renderMath(scope) {
+    if (!window.renderMathInElement) return;
+    window.renderMathInElement(scope, {
+      delimiters: [
+        { left: '\\[', right: '\\]', display: true },
+        { left: '\\(', right: '\\)', display: false },
+      ],
+      throwOnError: false,
+    });
   }
 
   function slugify(s) { return s.toLowerCase().replace(/<[^>]+>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
@@ -137,11 +126,10 @@
       const l = data.lessons[idx], prev = data.lessons[idx - 1], next = data.lessons[idx + 1];
       document.title = `${l.title} · Learning AI My Way`;
 
-      // A lesson's written notes are optional: set "doc": true in lessons.json once content/lessons/<slug>.md exists.
-      const md = l.doc ? await fetch(`content/lessons/${l.slug}.md`, { cache: 'no-cache' }).then(r => {
-        if (!r.ok) throw new Error(`Missing content/lessons/${l.slug}.md`); return r.text();
+      // A lesson's written notes are optional: set "doc": true in lessons.json once content/lessons/<slug>.html exists.
+      const body = l.doc ? await fetch(`content/lessons/${l.slug}.html`, { cache: 'no-cache' }).then(r => {
+        if (!r.ok) throw new Error(`Missing content/lessons/${l.slug}.html`); return r.text();
       }) : '';
-      const body = md ? renderMarkdown(md) : '';
 
       const film = l.film ? `
         <div class="film-frame"><iframe src="films/${esc(l.film.file)}${l.film.start ? '?t=' + l.film.start : ''}" title="${esc(l.film.title)}" loading="lazy" allow="fullscreen"></iframe></div>
@@ -186,6 +174,7 @@
         toc.insertAdjacentHTML('beforeend', `<li><a href="#${h.id}">${esc(h.textContent)}</a></li>`);
       });
       if (!toc.children.length) toc.closest('.toc').remove();
+      renderMath(prose);
       enhanceCode(prose);
 
       prose.addEventListener('click', e => {

@@ -13,7 +13,7 @@ A static website for learning machine learning and AI through animated films, wo
 | `films.html` | Film library |
 | `films/*.html` | Standalone animated films (canvas + JavaScript). `?t=<seconds>` starts at a given time |
 | `content/lessons.json` | The list of lessons, in order |
-| `content/lessons/<slug>.md` | Optional written notes for a lesson (Markdown with `$…$` / `$$…$$` math) |
+| `content/lessons/<slug>.html` | Optional written notes for a lesson, in plain HTML. Math goes in `\( … \)` (inline) or `\[ … \]` (centered) and is rendered by KaTeX |
 | `assets/` | Shared CSS and JavaScript |
 
 ## Run locally

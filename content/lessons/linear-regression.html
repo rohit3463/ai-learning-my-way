@@ -1,0 +1,146 @@
+<!--
+  Lesson notes: Linear Regression.
+  This file is inserted into lesson.html below the film.
+  Math: write \( ... \) for inline math and \[ ... \] for a centered equation.
+  Every <h2> automatically appears in the "On this page" list.
+-->
+
+<h2>The goal</h2>
+<p>We have a set of points. Each point is a pair of numbers: an input \(x\) and the answer \(y\) that goes with it. For example, \(x\) could be the size of a house and \(y\) its price.</p>
+<p>We want a rule that takes a new \(x\) and predicts its \(y\). Linear regression uses the simplest rule there is: a straight line.</p>
+
+<h2>The model: a straight line</h2>
+<p>A straight line needs only two numbers:</p>
+\[ \hat{y} = w \times x + b \]
+<table>
+  <thead><tr><th>Symbol</th><th>Name</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td>\(x\)</td><td>input</td><td>the number we know</td></tr>
+    <tr><td>\(\hat{y}\)</td><td>prediction</td><td>the line's guess for \(y\) (read it as "y-hat")</td></tr>
+    <tr><td>\(w\)</td><td>weight, or slope</td><td>tilts the line. Bigger \(w\) means steeper</td></tr>
+    <tr><td>\(b\)</td><td>bias, or intercept</td><td>lifts the line up or down. It is the value of \(\hat{y}\) when \(x = 0\)</td></tr>
+  </tbody>
+</table>
+<p>"Learning" means finding the values of \(w\) and \(b\) that make the line fit the points as well as possible. Everything below is about how to find them.</p>
+
+<h2>Step 1: measure each miss</h2>
+<p>For every point, compare the real answer with the line's guess. The difference is the <strong>error</strong>:</p>
+\[ e = y - \hat{y} \]
+<ul>
+  <li>If \(e\) is positive, the point is above the line (the line guessed too low).</li>
+  <li>If \(e\) is negative, the point is below the line (the line guessed too high).</li>
+  <li>If \(e = 0\), the line passes exactly through the point.</li>
+</ul>
+<p>In the film, these are the thin red threads between each point and the line (<a href="films/linear-regression.html?t=20">Act II</a>).</p>
+
+<h2>Step 2: turn all the misses into one number</h2>
+<p>We have one error per point, but we need a single score for the whole line. We square each error and take the average. This score is called the <strong>loss</strong>, or the <strong>mean squared error</strong>:</p>
+\[ L = \frac{e_1^2 + e_2^2 + e_3^2 + \dots + e_n^2}{n} \]
+<p>Here \(n\) is the number of points and \(e_1, e_2, \dots\) are the errors of point 1, point 2, and so on.</p>
+<blockquote>
+  <p><strong>Why square the errors?</strong> Squaring does two useful things. It makes every error positive, so a miss above the line and a miss below the line can't cancel each other out. And it punishes big misses much more than small ones: an error of 3 costs 9, while an error of 1 costs only 1.</p>
+</blockquote>
+<p>Squaring also has a picture. An error of size \(e\) squared is the area of a square with side \(e\). That is why the film draws a square on every point: <strong>the loss is the average area of those squares</strong>. A good line has small squares.</p>
+<p>A small loss means a good line. So learning is now a clear task: <strong>find the \(w\) and \(b\) that make \(L\) as small as possible.</strong></p>
+
+<h2>Step 3: find which way is downhill</h2>
+<p>Imagine trying every possible value of \(w\) and plotting the loss for each one. You get a U-shaped curve, a valley. The best \(w\) sits at the bottom of that valley.</p>
+<p>We don't know where the bottom is, but we can always feel the <strong>slope</strong> of the ground where we are standing. The slope tells us which direction is downhill:</p>
+<ul>
+  <li>slope is negative → the loss goes down if we <strong>increase</strong> \(w\)</li>
+  <li>slope is positive → the loss goes down if we <strong>decrease</strong> \(w\)</li>
+  <li>slope is zero → we are at the bottom</li>
+</ul>
+<p>The slope of the loss with respect to \(w\) is written \(\dfrac{dL}{dw}\) ("how much \(L\) changes when \(w\) changes a little"). For \(b\) it is \(\dfrac{dL}{db}\). Together these two slopes are called the <strong>gradient</strong>.</p>
+
+<h3>Working out the slopes</h3>
+<p>Take one point. Its squared error is</p>
+\[ e^2 = (y - w \times x - b)^2 \]
+<p>Now nudge \(w\) a tiny bit and ask how \(e^2\) changes. The derivative of "something squared" is "2 × something × how fast that something changes". The something is \(e\). When \(w\) goes up by 1, \(e\) goes down by \(x\). So:</p>
+\[ \text{slope of } e^2 \text{ for } w = 2 \times e \times (-x) = -2 \times x \times e \]
+<p>When \(b\) goes up by 1, \(e\) goes down by 1. So:</p>
+\[ \text{slope of } e^2 \text{ for } b = 2 \times e \times (-1) = -2 \times e \]
+<p>The loss is the average of all the \(e^2\) values, so its slope is the average of all these slopes:</p>
+\[ \frac{dL}{dw} = -2 \times \frac{x_1 e_1 + x_2 e_2 + \dots + x_n e_n}{n} \]
+\[ \frac{dL}{db} = -2 \times \frac{e_1 + e_2 + \dots + e_n}{n} \]
+<p>Read them like this:</p>
+<ul>
+  <li>\(\dfrac{dL}{db}\) is \(-2\) times the <strong>average error</strong>. If most points sit above the line, the average error is positive and the slope is negative, which tells us to raise \(b\). That lifts the line toward the points.</li>
+  <li>\(\dfrac{dL}{dw}\) is the same idea, but each error is multiplied by its \(x\) first. Points far from \(x = 0\) have more say over the tilt, just as pushing on the far end of a lever turns it more easily.</li>
+</ul>
+
+<h2>Step 4: take a step downhill</h2>
+<p>Now update both numbers by stepping against the slope:</p>
+\[ w_{\text{new}} = w_{\text{old}} - \eta \times \frac{dL}{dw} \]
+\[ b_{\text{new}} = b_{\text{old}} - \eta \times \frac{dL}{db} \]
+<p>The minus sign is what makes the step go downhill. If the slope is negative, subtracting it makes \(w\) bigger, and that is exactly the direction that lowers the loss.</p>
+<p>The Greek letter \(\eta\) ("eta") is the <strong>learning rate</strong>. It controls how big each step is. It is a small number that you choose, such as \(0.05\).</p>
+<table>
+  <thead><tr><th>Learning rate</th><th>What happens</th></tr></thead>
+  <tbody>
+    <tr><td>too small</td><td>Each step barely moves. It works, but it takes a very long time.</td></tr>
+    <tr><td>about right</td><td>The line glides into place in a few dozen steps.</td></tr>
+    <tr><td>too large</td><td>Each step jumps over the bottom of the valley and lands higher up the other side. The loss grows and the numbers blow up.</td></tr>
+  </tbody>
+</table>
+<p>All three are shown side by side in the film (<a href="films/linear-regression.html?t=58">Act IV</a>).</p>
+<p>Notice that the step size is the learning rate <strong>times the slope</strong>. Far from the answer the ground is steep, so steps are big. Near the bottom the ground is almost flat, so steps shrink on their own. That is why the line slows down gently as it settles.</p>
+
+<h2>The whole recipe</h2>
+<p>This loop is called <strong>gradient descent</strong>:</p>
+<ol>
+  <li>Start with any guess for \(w\) and \(b\) (even \(0\) and \(0\)).</li>
+  <li>For every point, compute the prediction \(\hat{y} = w \times x + b\) and the error \(e = y - \hat{y}\).</li>
+  <li>Compute the loss \(L\) (the average squared error) so you can watch it fall.</li>
+  <li>Compute the two slopes \(\dfrac{dL}{dw}\) and \(\dfrac{dL}{db}\).</li>
+  <li>Update \(w\) and \(b\) by stepping against the slopes.</li>
+  <li>Repeat from step 2 until the loss stops getting smaller.</li>
+</ol>
+
+<h2>A worked example by hand</h2>
+<p>Three points, a starting guess of \(w = 0\) and \(b = 0\), and a learning rate of \(\eta = 0.05\).</p>
+<p><strong>Round 1.</strong> With \(w = 0\) and \(b = 0\), the line predicts \(0\) for every point.</p>
+<table>
+  <thead><tr><th>\(x\)</th><th>\(y\)</th><th>\(\hat{y}\)</th><th>\(e = y - \hat{y}\)</th><th>\(e^2\)</th><th>\(x \times e\)</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>2</td><td>0</td><td>2</td><td>4</td><td>2</td></tr>
+    <tr><td>2</td><td>3</td><td>0</td><td>3</td><td>9</td><td>6</td></tr>
+    <tr><td>3</td><td>5</td><td>0</td><td>5</td><td>25</td><td>15</td></tr>
+  </tbody>
+</table>
+<p>Loss:</p>
+\[ L = \frac{4 + 9 + 25}{3} = 12.67 \]
+<p>Slopes:</p>
+\[ \frac{dL}{dw} = -2 \times \frac{2 + 6 + 15}{3} = -15.33 \qquad \frac{dL}{db} = -2 \times \frac{2 + 3 + 5}{3} = -6.67 \]
+<p>Both slopes are negative, so both numbers should go up. Update:</p>
+\[ w = 0 - 0.05 \times (-15.33) = 0.767 \qquad b = 0 - 0.05 \times (-6.67) = 0.333 \]
+<p><strong>Round 2.</strong> Check the new line \(\hat{y} = 0.767 \times x + 0.333\):</p>
+<table>
+  <thead><tr><th>\(x\)</th><th>\(y\)</th><th>\(\hat{y}\)</th><th>\(e\)</th><th>\(e^2\)</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>2</td><td>1.100</td><td>0.900</td><td>0.810</td></tr>
+    <tr><td>2</td><td>3</td><td>1.867</td><td>1.133</td><td>1.284</td></tr>
+    <tr><td>3</td><td>5</td><td>2.633</td><td>2.367</td><td>5.601</td></tr>
+  </tbody>
+</table>
+\[ L = \frac{0.810 + 1.284 + 5.601}{3} = 2.57 \]
+<p>One step took the loss from <strong>12.67 to 2.57</strong>. Keep repeating and it settles at the best line for these three points, \(w = 1.5\) and \(b = 0.333\), where the loss is \(0.056\).</p>
+
+<h2>Why the loss never reaches zero</h2>
+<p>Real data is noisy. The points don't sit on a perfect line, so no straight line can pass through all of them. The loss bottoms out at a floor set by that noise. In the film this is the dashed "noise floor" on the loss chart (<a href="films/linear-regression.html?t=80">Act V</a>).</p>
+<p>That is fine. The line isn't trying to hit every point. It finds the position where the <strong>total squared miss is as small as it can be</strong>, and then it stops, because no small step in any direction makes things better.</p>
+
+<h2>Symbols at a glance</h2>
+<table>
+  <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\(x,\ y\)</td><td>input and true answer for one point</td></tr>
+    <tr><td>\(\hat{y} = w \times x + b\)</td><td>the line's prediction</td></tr>
+    <tr><td>\(w,\ b\)</td><td>the two numbers being learned: slope and intercept</td></tr>
+    <tr><td>\(e = y - \hat{y}\)</td><td>error for one point</td></tr>
+    <tr><td>\(n\)</td><td>number of points</td></tr>
+    <tr><td>\(L\)</td><td>loss: the average of the squared errors</td></tr>
+    <tr><td>\(\dfrac{dL}{dw},\ \dfrac{dL}{db}\)</td><td>slopes of the loss, which together form the gradient</td></tr>
+    <tr><td>\(\eta\)</td><td>learning rate: how big each step is</td></tr>
+  </tbody>
+</table>
