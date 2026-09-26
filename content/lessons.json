@@ -1,0 +1,18 @@
+{
+  "lessons": [
+    {
+      "slug": "linear-regression",
+      "title": "Linear Regression",
+      "summary": "How a straight line learns to fit noisy data: errors, squared loss, gradients and gradient descent.",
+      "minutes": 3,
+      "film": {
+        "file": "linear-regression.html",
+        "title": "The Line That Learned",
+        "note": "2 min 12 s, best with sound on"
+      },
+      "doc": false,
+      "code": [],
+      "videos": []
+    }
+  ]
+}

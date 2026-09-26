@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning AI My Way</title>
+<meta name="description" content="Learn machine learning and AI from first principles: animated films, the full math, and plain numpy code for every idea.">
+<script>try{var t=JSON.parse(localStorage.getItem('theme'));if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="./">Learning AI <span>My Way</span></a>
+    <nav class="topnav">
+      <a href="./" aria-current="page">Path</a>
+      <a href="films.html">Films</a>
+      <a href="https://github.com/rohit3463/ai-learning-my-way">GitHub</a>
+    </nav>
+    <button class="theme-btn" id="theme" type="button">Dark mode</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Machine learning, from first principles</div>
+    <h1>See it move. Derive it. <span>Then write it.</span></h1>
+    <p class="lede">Every idea here is taught three ways: a short animated film that builds intuition, the full math worked out step by step, and a small numpy program you can run and change.</p>
+  </section>
+
+  <a class="hero-film" href="films/linear-regression.html">
+    <div class="poster"><canvas id="poster" width="640" height="360" aria-hidden="true"></canvas></div>
+    <div>
+      <div class="eyebrow">Now showing · 2 min</div>
+      <h2>The Line That Learned</h2>
+      <p>Twenty-four points, one bad guess, and sixty small steps downhill. Errors become squares, loss becomes a valley, and gradient descent finds the bottom. Turn the sound on: the music comes into tune as the line fits.</p>
+    </div>
+  </a>
+
+  <div class="section-head">
+    <h2>The learning path</h2>
+    <span class="progress-note" id="progress-note"></span>
+  </div>
+  <ol class="path" id="path"><li class="loading">Loading lessons…</li></ol>
+
+  <section class="pillars" aria-label="How each lesson works">
+    <div>
+      <div class="eyebrow">01 · Film</div>
+      <h3>Intuition first</h3>
+      <p>Short animated films show what the math is doing before you read a single symbol. Scrub, pause and replay any moment.</p>
+    </div>
+    <div>
+      <div class="eyebrow">02 · Math</div>
+      <h3>Every step derived</h3>
+      <p>No "it can be shown that". Each lesson derives the loss, the gradient and the update rule, with the notation explained.</p>
+    </div>
+    <div>
+      <div class="eyebrow">03 · Code</div>
+      <h3>Plain numpy</h3>
+      <p>Each idea is written from scratch in a short Python file, so you can match every line to an equation above it.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Learning AI My Way · open source on <a href="https://github.com/rohit3463/ai-learning-my-way">GitHub</a></span>
+    <span>Your progress is saved in this browser only.</span>
+  </div>
+</footer>
+
+<script>
+// Poster frame: the fitted line from the film, drawn once.
+(() => {
+  const c = document.getElementById('poster'), g = c.getContext('2d');
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  g.fillStyle = '#0b1120'; g.fillRect(0, 0, 640, 360);
+  for (let i = 0; i < 90; i++) { g.globalAlpha = r() * .35; g.fillStyle = '#eee6d6'; g.beginPath(); g.arc(r() * 640, r() * 360, r() * 1.1 + .3, 0, 6.3); g.fill(); }
+  const X = v => 320 + v * 48, Y = v => 200 - v * 24;
+  const pts = Array.from({ length: 24 }, (_, i) => { const x = -4.5 + 9 * i / 23; return [x, .72 * x + 1.1 + (r() + r() + r() - 1.5) * 1.4]; });
+  g.globalAlpha = 1;
+  pts.forEach(([x, y]) => { const e = y - (.72 * x + 1.1), sz = Math.abs(e) * 24; g.fillStyle = 'rgba(239,129,147,.12)'; g.strokeStyle = 'rgba(239,129,147,.5)'; g.fillRect(X(x), Math.min(Y(y), Y(.72 * x + 1.1)), sz, sz); g.strokeRect(X(x), Math.min(Y(y), Y(.72 * x + 1.1)), sz, sz); });
+  g.shadowColor = '#f4b860'; g.shadowBlur = 22; g.strokeStyle = '#f4b860'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(X(-6), Y(.72 * -6 + 1.1)); g.lineTo(X(6), Y(.72 * 6 + 1.1)); g.stroke();
+  g.shadowColor = '#a9d6f5'; g.shadowBlur = 12; g.fillStyle = '#a9d6f5';
+  pts.forEach(([x, y]) => { g.beginPath(); g.arc(X(x), Y(y), 4, 0, 6.3); g.fill(); });
+})();
+</script>
+<script src="assets/js/site.js"></script>
+</body>
+</html>

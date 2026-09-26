@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Line That Learned</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --void: #05070d;
+    --ink: #0b1120;
+    --bone: #eee6d6;
+    --dim: #8d93a6;
+    --amber: #f4b860;
+    --rose: #ef8193;
+    --star: #a9d6f5;
+    --lilac: #c4b3ff;
+    --hair: rgba(238, 230, 214, .16);
+    --bar: 24px;
+    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--void);
+    color: var(--bone);
+    font: 15px/1.45 var(--sans);
+    overflow: hidden;
+  }
+  .theatre { height: 100%; display: flex; flex-direction: column; }
+
+  .stage {
+    position: relative;
+    flex: 1;
+    min-height: 420px;
+    overflow: hidden;
+    background: var(--ink);
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas: "plot panel" "plot math" "sub sub";
+    gap: 14px clamp(20px, 3vw, 40px);
+    padding: calc(var(--bar) + 20px) clamp(16px, 4vw, 56px) calc(var(--bar) + 10px);
+  }
+  #film { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .slot, .math, .sub { position: relative; z-index: 1; min-height: 0; }
+  .plot { grid-area: plot; }
+  .panel { grid-area: panel; }
+
+  .math { grid-area: math; height: 9.4em; font-size: 16px; transition: none; }
+  .math .lbl, .kicker, .chapter .act {
+    font: 600 10.5px/1.2 var(--sans);
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0 0 .5em;
+  }
+  .eq { font-family: var(--serif); font-weight: 500; font-size: 1.55em; line-height: 1.3; white-space: nowrap; }
+  .eq.sm { font-size: 1.28em; }
+  .eq i { font-style: italic; }
+  .eq sub, .eq sup { font-size: .6em; font-style: italic; }
+  .a { color: var(--amber); } .r { color: var(--rose); } .g { color: var(--lilac); } .s { color: var(--star); }
+  .num {
+    font: 500 .6em/1 var(--mono);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    padding: .18em .4em;
+    border-radius: 4px;
+    background: rgba(238, 230, 214, .08);
+    vertical-align: .18em;
+  }
+  .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .66em; line-height: 1.08; margin: 0 .1em; }
+  .fr > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .2em; }
+  .note { color: var(--dim); font-size: .9em; max-width: 46ch; margin: .45em 0 0; }
+
+  .sub {
+    grid-area: sub;
+    justify-self: center;
+    text-align: center;
+    max-width: 54ch;
+    min-height: 2.9em;
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.45;
+    text-wrap: balance;
+    text-shadow: 0 1px 14px #000, 0 0 2px #000;
+  }
+
+  .titlecard {
+    position: absolute; inset: 0; z-index: 2;
+    display: grid; place-content: center; gap: 14px;
+    text-align: center; pointer-events: none; padding-inline: 16px;
+  }
+  .titlecard h1 {
+    margin: 0;
+    font: italic 500 clamp(44px, 7.4vw, 104px)/1 var(--serif);
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    text-shadow: 0 0 48px rgba(244, 184, 96, .35);
+  }
+  .titlecard .by { font: italic 500 clamp(17px, 1.8vw, 22px)/1.3 var(--serif); color: var(--dim); }
+
+  .chapter {
+    position: absolute; z-index: 2; pointer-events: none;
+    left: clamp(16px, 4vw, 56px); top: calc(var(--bar) + 14px);
+  }
+  .chapter .act { color: var(--amber); }
+  .chapter .name { font: italic 500 clamp(28px, 3.2vw, 42px)/1.05 var(--serif); text-shadow: 0 2px 20px #000; }
+
+  .endcard {
+    position: absolute; inset: 0; z-index: 3;
+    display: grid; place-content: center; justify-items: center; gap: 16px;
+    padding-inline: 16px; pointer-events: none;
+  }
+  .endcard > * { pointer-events: auto; }
+  .endcard .fin { font: italic 500 clamp(34px, 4.6vw, 60px)/1 var(--serif); text-shadow: 0 0 40px rgba(244, 184, 96, .4); }
+
+  button {
+    font: 500 13px/1 var(--sans);
+    color: var(--bone);
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover { border-color: rgba(238, 230, 214, .4); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  button.on, button[aria-pressed="true"] { color: var(--amber); border-color: rgba(244, 184, 96, .55); }
+  .endcard button { font-size: 14px; padding: 10px 20px; }
+
+  .controls { display: flex; align-items: center; gap: 12px; padding: 10px 16px 6px; }
+  .scrubwrap { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+  #scrub { width: 100%; accent-color: var(--amber); margin: 0; }
+  .ticks { position: absolute; inset: 0; pointer-events: none; }
+  .ticks span { position: absolute; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: rgba(238, 230, 214, .35); }
+  .home { font: 500 13px/1 var(--sans); color: var(--dim); white-space: nowrap; }
+  .home:hover { color: var(--amber); }
+  .time { font: 12px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--dim); }
+  .chapters { display: flex; gap: 6px; overflow-x: auto; padding: 4px 16px 12px; scrollbar-width: none; }
+  .chapters button { font-size: 12px; padding: 6px 11px; color: var(--dim); }
+  .chapters button.on { color: var(--amber); }
+
+  @media (max-aspect-ratio: 1/1), (max-width: 760px) {
+    .stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) auto auto;
+      grid-template-areas: "plot" "panel" "math" "sub";
+      gap: 10px;
+    }
+    .math { font-size: 13px; height: 8.8em; }
+    .sub { font-size: 14.5px; }
+    .time, .home { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="theatre">
+  <div class="stage" id="stage">
+    <canvas id="film" aria-label="Animated film about fitting a line with gradient descent"></canvas>
+    <div class="slot plot" id="slotPlot"></div>
+    <div class="slot panel" id="slotPanel"></div>
+    <div class="math" id="math" aria-live="off"></div>
+    <div class="sub" id="sub"></div>
+
+    <div class="titlecard" id="titlecard">
+      <div class="kicker">A short film about linear regression</div>
+      <h1>The Line That Learned</h1>
+      <div class="by">twenty-four points, two numbers, one small step at a time</div>
+    </div>
+    <div class="chapter" id="chapter"><div class="act" id="chapAct"></div><div class="name" id="chapName"></div></div>
+    <div class="endcard" id="endcard" hidden>
+      <div class="fin">fin.</div>
+      <button id="replay" type="button">Watch again</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="play" type="button">Pause</button>
+    <div class="scrubwrap">
+      <input id="scrub" type="range" min="0" max="132" step="0.01" value="0" aria-label="Film position">
+      <div class="ticks" id="ticks"></div>
+    </div>
+    <span class="time" id="time">0:00 / 2:12</span>
+    <button id="sound" type="button" aria-pressed="false">Sound off</button>
+    <a class="home" href="../" target="_top">All lessons</a>
+  </div>
+  <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
+</div>
+
+<script>
+(() => {
+  // ───────── utilities ─────────
+  const DUR = 132, TAU = Math.PI * 2;
+  const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const E = (t, a, b) => ease(seg(t, a, b));
+  const win = (t, a, b, f = .6) => Math.min(E(t, a, a + f), 1 - E(t, b - f, b));
+  const fmt = (v, d = 2) => { const s = Math.abs(v).toFixed(d); return (v < 0 && +s !== 0 ? '−' : '') + s; };
+  const paren = (v, d = 3) => v < 0 ? `(${fmt(v, d)})` : fmt(v, d);
+
+  const COL = { ink: '#0b1120', bone: '#eee6d6', dim: '#8d93a6', amber: '#f4b860', rose: '#ef8193', star: '#a9d6f5', lilac: '#c4b3ff' };
+  const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${n >> 8 & 255},${n & 255},${a})`; };
+
+  function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const rnd = mulberry32(20260926);
+  const gauss = () => { let u = 0; while (!u) u = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * rnd()); };
+
+  // ───────── the data and the maths ─────────
+  const N = 24, TRUE_W = 0.72, TRUE_B = 1.1;
+  const X = [], Y = [];
+  for (let i = 0; i < N; i++) {
+    const x = -4.5 + 9 * i / (N - 1) + (rnd() - .5) * .28;
+    X.push(x); Y.push(TRUE_W * x + TRUE_B + gauss() * .85);
+  }
+  const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+  const mx = mean(X), my = mean(Y);
+  const mxx = mean(X.map(x => x * x)), mxy = mean(X.map((x, i) => x * Y[i])), myy = mean(Y.map(y => y * y));
+  // L(w,b) = (1/n) Σ (y − wx − b)²  expanded into moments
+  const loss = (w, b) => myy - 2 * w * mxy - 2 * b * my + w * w * mxx + 2 * w * b * mx + b * b;
+  // ∂L/∂w = −(2/n) Σ x·e,  ∂L/∂b = −(2/n) Σ e
+  const grad = (w, b) => [2 * (w * mxx + b * mx - mxy), 2 * (w * mx + b - my)];
+  const wStar = (mxy - mx * my) / (mxx - mx * mx), bStar = my - wStar * mx, Lmin = loss(wStar, bStar);
+
+  const W0 = -0.9, B0 = 3.4, L0 = loss(W0, B0);
+  const STEPS = 60, ETA = Math.max(.01, Math.round(.7 / (2 * mxx) * 100) / 100);
+  const hist = [];
+  { let w = W0, b = B0;
+    for (let k = 0; k <= STEPS; k++) { const [gw, gb] = grad(w, b); hist.push({ w, b, gw, gb, L: loss(w, b) }); w -= ETA * gw; b -= ETA * gb; } }
+  const FINAL = hist[STEPS];
+
+  // Act IV: three learning rates on the slice L(w | b = b*)
+  const CURV = 2 * mxx, r3 = v => Math.max(.001, Math.round(v * 1000) / 1000);
+  const HOPS = 17, WSTART = -1.8, HW = [-3, 4.2];
+  const RUNS = [
+    { eta: r3(.03 / CURV), label: 'TOO TIMID', col: COL.star },
+    { eta: r3(.45 / CURV), label: 'JUST RIGHT', col: COL.amber },
+    { eta: r3(2.1 / CURV), label: 'TOO EAGER', col: COL.rose },
+  ];
+  RUNS.forEach(r => { let w = WSTART; r.ws = [w]; for (let k = 0; k < HOPS; k++) { w -= r.eta * grad(w, bStar)[0]; r.ws.push(w); } });
+  const slice = w => loss(w, bStar);
+  const SLMAX = Math.max(slice(HW[0]), slice(HW[1]));
+
+  // decorative seeds
+  const STARS = Array.from({ length: 170 }, () => ({ x: rnd(), y: rnd(), r: rnd() * 1.1 + .3, a: rnd() * .4 + .08, sp: .4 + rnd() * 1.4, ph: rnd() * TAU, z: rnd() }));
+  const START = X.map(() => ({ fx: .06 + rnd() * .88, fy: .12 + rnd() * .72, ph: rnd() * TAU }));
+  const ORD = [...X.keys()]; for (let i = ORD.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [ORD[i], ORD[j]] = [ORD[j], ORD[i]]; }
+  const RANK = []; ORD.forEach((i, k) => RANK[i] = k);
+  const FIRE = X.map(() => Array.from({ length: 5 }, () => ({ dx: rnd() * 2 - 1, sp: rnd(), ph: rnd() * TAU, d: rnd() * 1.6 })));
+
+  const XD = [-6, 6];
+  const YD = [Math.floor(Math.min(...Y)) - 1.5, Math.ceil(Math.max(...Y)) + 1.5];
+
+  // ───────── timeline ─────────
+  const CHAPTERS = [
+    { t: 0, act: '', name: 'Opening' },
+    { t: 8, act: 'Act I', name: 'The Data' },
+    { t: 20, act: 'Act II', name: 'A First Guess' },
+    { t: 38, act: 'Act III', name: 'Which Way Is Down' },
+    { t: 58, act: 'Act IV', name: 'The Size of a Step' },
+    { t: 80, act: 'Act V', name: 'Descent' },
+    { t: 114, act: 'Act VI', name: 'Fit' },
+  ];
+  const SUBS = [
+    [0.6, 7.4, 'Twenty-four points of light. Somewhere among them hides a straight line.'],
+    [8.6, 13.2, 'Each point is a pair of numbers: an input x, and the answer y.'],
+    [13.6, 19.6, 'A line through them is just two numbers too. Its slope w, and its height b.'],
+    [20.6, 25.0, 'The line begins with a guess. A bad one.'],
+    [25.4, 30.4, 'For every point, we measure how far the line missed. That gap is the error.'],
+    [30.8, 37.6, 'Square each error and it becomes an area. Average the areas and you get the loss: one number for how wrong the line is.'],
+    [38.6, 42.0, 'Turn w, and every square changes with it.'],
+    [42.2, 47.8, 'Plot the loss for every w and you get a valley. The slope under our feet is the gradient.'],
+    [48.6, 53.2, 'With two knobs, the valley becomes a bowl. The gradient points uphill…'],
+    [53.4, 57.6, '…so we step the other way.'],
+    [58.6, 63.2, 'How far should each step go? That is the learning rate, η.'],
+    [63.6, 69.2, 'Too small, and the ball barely moves. Learning takes forever.'],
+    [69.6, 74.6, 'Too large, and it leaps over the valley, again and again, farther each time.'],
+    [75.0, 79.6, 'In between, it settles gently at the bottom.'],
+    [80.6, 86.2, 'Now everything at once. Measure the errors, compute the gradient, take one step. Repeat.'],
+    [86.6, 93.2, 'Watch the squares shrink. Each one is a point being heard a little better.'],
+    [93.6, 100.2, 'Early steps are big because the ground is steep. Near the bottom it flattens, and the steps soften.'],
+    [100.6, 108.2, 'The loss bends toward the floor but never reaches zero. The data has noise no line can explain.'],
+    [108.6, 113.6, 'It stops where no small step makes things better.'],
+    [114.6, 119.2, 'It never saw the answer.'],
+    [119.6, 125.0, 'It only kept asking one question, “which way is down?”, and took one small step.'],
+    [125.4, 131.6, 'Sometimes that is all learning is.'],
+  ];
+
+  const trainK = t => STEPS * Math.pow(seg(t, 83, 110), 1.8);
+  function trainState(kf) {
+    const k = Math.min(STEPS - 1, Math.floor(kf)), f = kf >= STEPS ? 1 : ease(kf - k);
+    const a = hist[k], b = hist[k + 1];
+    return { w: lerp(a.w, b.w, f), b: lerp(a.b, b.b, f), k, kf, draw: 1 };
+  }
+  function lineState(t) {
+    if (t < 20) return null;
+    if (t < 80) {
+      let w = W0;
+      if (t > 40 && t < 47.5) w = W0 + (2.4 - W0) * Math.sin(Math.PI * seg(t, 40, 47.5));
+      return { w, b: B0, draw: E(t, 20.4, 23) };
+    }
+    return trainState(trainK(t));
+  }
+  function hopState(run, t) {
+    const tt = t - 61;
+    let k = 0, f = 0;
+    if (tt >= HOPS) { k = HOPS - 1; f = 1; }
+    else if (tt > 0) { k = Math.floor(tt); f = clamp((tt - k) / .7); }
+    return { k, f, w: lerp(run.ws[k], run.ws[k + 1], ease(f)) };
+  }
+
+  // ───────── math cards ─────────
+  const fr = (a, b) => `<span class="fr"><span>${a}</span><span>${b}</span></span>`;
+  const num = s => `<span class="num">${s}</span>`;
+  const dLdw = `<i class="g">∂L</i><span class="g">/</span><i class="g">∂w</i>`;
+  const dLdb = `<i class="g">∂L</i><span class="g">/</span><i class="g">∂b</i>`;
+  const sumXE = `${fr('−2', '<i>n</i>')} Σ <i>x<sub>i</sub></i><i class="r">e<sub>i</sub></i>`;
+  const MATH = [
+    { t0: 8.4, t1: 20, html: () =>
+      `<p class="lbl">The model</p>
+       <div class="eq"><i class="a">ŷ</i> = <i class="a">w</i> · <i class="s">x</i> + <i class="a">b</i></div>
+       <p class="note"><i class="a">w</i> tilts the line. <i class="a">b</i> lifts it: it is where the line crosses x = 0. Fitting means finding the best pair.</p>` },
+    { t0: 20.2, t1: 38, html: t => {
+      const ls = lineState(t);
+      return `<p class="lbl">Error, then loss</p>
+       <div class="eq"><i class="r">e<sub>i</sub></i> = <i class="s">y<sub>i</sub></i> − <i class="a">ŷ<sub>i</sub></i></div>
+       <div class="eq"><i>L</i> = ${fr('1', '<i>n</i>')} Σ <i class="r">e<sub>i</sub></i><sup>2</sup> = ${num(t > 32.4 ? fmt(loss(ls.w, ls.b)) : '…')}</div>
+       <p class="note">Squaring makes every miss positive and punishes big misses most. Here n = ${N}.</p>`; } },
+    { t0: 38.4, t1: 48.2, html: t => {
+      const ls = lineState(t), g = grad(ls.w, B0)[0];
+      const msg = Math.abs(g) < .6 ? 'Nearly flat: this is the valley floor along w.'
+        : g < 0 ? 'Negative slope: raising w lowers the loss.' : 'Positive slope: lowering w lowers the loss.';
+      return `<p class="lbl">The gradient along w</p>
+       <div class="eq">${dLdw} = ${sumXE} = ${num(fmt(g))}</div>
+       <p class="note">At w = ${fmt(ls.w)}. ${msg}</p>`; } },
+    { t0: 48.4, t1: 58, html: () => {
+      const [gw, gb] = grad(W0, B0);
+      return `<p class="lbl">Two knobs, one gradient</p>
+       <div class="eq sm">${dLdw} = ${sumXE} = ${num(fmt(gw))}</div>
+       <div class="eq sm">${dLdb} = ${fr('−2', '<i>n</i>')} Σ <i class="r">e<sub>i</sub></i> = ${num(fmt(gb))}</div>
+       <p class="note">Together they form <span class="g">∇L</span>, which points uphill. Descent walks along <span class="a">−∇L</span>.</p>`; } },
+    { t0: 58.4, t1: 80, html: () =>
+      `<p class="lbl">The update rule</p>
+       <div class="eq"><i class="a">w</i> ← <i class="a">w</i> − <i>η</i> · ${dLdw}</div>
+       <p class="note">Each step is the learning rate times the slope. Steep ground gives a big step, flat ground a small one. η = ${RUNS[0].eta}, ${RUNS[1].eta} and ${RUNS[2].eta} below.</p>` },
+    { t0: 80.4, t1: 114, html: t => {
+      const k = Math.min(STEPS - 1, Math.floor(trainK(t))), h = hist[k], h1 = hist[k + 1];
+      return `<p class="lbl">Step ${k + 1} of ${STEPS} · η = ${ETA} · L = ${fmt(h.L, 3)}</p>
+       <div class="eq sm">${dLdw} = ${sumXE} = ${num(fmt(h.gw, 3))}</div>
+       <div class="eq sm"><i class="a">w</i> ← ${fmt(h.w, 3)} − ${ETA} × ${paren(h.gw)} = ${num(fmt(h1.w, 3))}</div>
+       <div class="eq sm"><i class="a">b</i> ← ${fmt(h.b, 3)} − ${ETA} × ${paren(h.gb)} = ${num(fmt(h1.b, 3))}</div>`; } },
+    { t0: 114.4, t1: 132.5, html: () =>
+      `<p class="lbl">What it learned</p>
+       <div class="eq"><i class="a">ŷ</i> = ${num(fmt(FINAL.w, 3))} · <i class="s">x</i> + ${num(fmt(FINAL.b, 3))}</div>
+       <p class="note">The hidden line that made the noisy data was ŷ = ${TRUE_W.toFixed(2)}x + ${TRUE_B.toFixed(2)}. The line never saw it and still came close.</p>` },
+  ];
+
+  // ───────── canvas setup ─────────
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), cvs = $('film'), ctx = cvs.getContext('2d');
+  let W = 0, H = 0, DPR = 1, BAR = 24, RP = null, RM = null, vig = null;
+  const contourCache = new Map();
+
+  function measure() {
+    const st = stage.getBoundingClientRect();
+    BAR = Math.round(Math.min(44, Math.max(10, st.height * .055)));
+    stage.style.setProperty('--bar', BAR + 'px');
+    W = st.width; H = st.height; DPR = Math.min(2, window.devicePixelRatio || 1);
+    cvs.width = Math.round(W * DPR); cvs.height = Math.round(H * DPR);
+    const rel = el => { const r = el.getBoundingClientRect(); return { x: r.left - st.left, y: r.top - st.top, w: r.width, h: r.height }; };
+    RM = rel($('slotPlot')); RP = rel($('slotPanel'));
+    vig = null; contourCache.clear();
+  }
+  new ResizeObserver(measure).observe(stage);
+  if (document.fonts) document.fonts.ready.then(measure);
+  measure();
+
+  const grain = document.createElement('canvas');
+  grain.width = grain.height = 160;
+  { const g = grain.getContext('2d'), id = g.createImageData(160, 160);
+    for (let i = 0; i < id.data.length; i += 4) { const v = Math.random() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+    g.putImageData(id, 0, 0); }
+  const grainPat = ctx.createPattern(grain, 'repeat');
+
+  function txt(s, x, y, o = {}) {
+    ctx.save();
+    ctx.globalAlpha *= o.a ?? 1;
+    ctx.fillStyle = o.c || COL.dim;
+    ctx.font = `${o.it ? 'italic ' : ''}${o.w || 500} ${o.s || 10.5}px ${o.mono ? '"IBM Plex Mono", ui-monospace, monospace' : o.serif ? '"Cormorant Garamond", Georgia, serif' : '"Instrument Sans", system-ui, sans-serif'}`;
+    ctx.textAlign = o.al || 'left';
+    ctx.textBaseline = o.bl || 'alphabetic';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = o.ls || '0px';
+    ctx.fillText(s, x, y);
+    ctx.restore();
+  }
+  const cap = (s, x, y, o = {}) => txt(s, x, y, { s: 9.5, w: 600, ls: '2px', ...o });
+
+  function scaler(R, xd, yd, p) {
+    const ix = R.x + p.l, iy = R.y + p.t, iw = Math.max(10, R.w - p.l - p.r), ih = Math.max(10, R.h - p.t - p.b);
+    const sx = iw / (xd[1] - xd[0]), sy = ih / (yd[1] - yd[0]);
+    return { ix, iy, iw, ih, sx, sy, xd, yd, X: v => ix + (v - xd[0]) * sx, Y: v => iy + ih - (v - yd[0]) * sy };
+  }
+  function clipTo(S) { ctx.beginPath(); ctx.rect(S.ix, S.iy, S.iw, S.ih); ctx.clip(); }
+  function glowDot(x, y, r, col, blur) {
+    ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = blur; ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.beginPath(); ctx.arc(x, y, r * .45, 0, TAU); ctx.fill(); ctx.restore();
+  }
+  function arrow(x1, y1, x2, y2, col, lw = 2) {
+    const a = Math.atan2(y2 - y1, x2 - x1), h = 7 + lw;
+    ctx.save(); ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = lw; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - Math.cos(a) * h * .6, y2 - Math.sin(a) * h * .6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - Math.cos(a - .42) * h, y2 - Math.sin(a - .42) * h);
+    ctx.lineTo(x2 - Math.cos(a + .42) * h, y2 - Math.sin(a + .42) * h);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  function dashed(x1, y1, x2, y2, col) {
+    ctx.save(); ctx.setLineDash([3, 5]); ctx.strokeStyle = col; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore();
+  }
+
+  // ───────── scene pieces ─────────
+  function drawStars(t) {
+    for (const s of STARS) {
+      const x = ((s.x + t * .0012 * (.3 + s.z)) % 1) * W, y = s.y * H;
+      ctx.globalAlpha = s.a * (.55 + .45 * Math.sin(t * s.sp + s.ph));
+      ctx.fillStyle = COL.bone;
+      ctx.beginPath(); ctx.arc(x, y, s.r, 0, TAU); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawAxes(S, a) {
+    ctx.save(); ctx.globalAlpha = a; ctx.lineWidth = 1;
+    for (let x = Math.ceil(S.xd[0] / 2) * 2; x <= S.xd[1]; x += 2) {
+      ctx.strokeStyle = rgba(COL.bone, x === 0 ? .3 : .06);
+      ctx.beginPath(); ctx.moveTo(S.X(x), S.iy); ctx.lineTo(S.X(x), S.iy + S.ih); ctx.stroke();
+      if (Math.abs(x) < 6) txt(x < 0 ? '−' + (-x) : '' + x, S.X(x), S.iy + S.ih + 15, { mono: true, s: 10, al: 'center' });
+    }
+    for (let y = Math.ceil(S.yd[0] / 2) * 2; y <= S.yd[1]; y += 2) {
+      ctx.strokeStyle = rgba(COL.bone, y === 0 ? .3 : .06);
+      ctx.beginPath(); ctx.moveTo(S.ix, S.Y(y)); ctx.lineTo(S.ix + S.iw, S.Y(y)); ctx.stroke();
+      txt(y < 0 ? '−' + (-y) : '' + y, S.ix - 7, S.Y(y) + 3.5, { mono: true, s: 10, al: 'right' });
+    }
+    txt('x', S.ix + S.iw - 4, S.Y(0) - 7, { serif: true, it: true, s: 17, c: COL.star, al: 'right' });
+    txt('y', S.X(0) + 8, S.iy + 14, { serif: true, it: true, s: 17, c: COL.star });
+    ctx.restore();
+  }
+
+  function drawPoints(t, S, alpha) {
+    if (alpha <= 0) return;
+    for (let i = 0; i < N; i++) {
+      const st = START[i], f = E(t, 8.6 + RANK[i] * .09, 11.8 + RANK[i] * .09);
+      const sx = st.fx * W, sy = st.fy * H + Math.sin(t * .4 + st.ph) * 4;
+      const x = lerp(sx, S.X(X[i]), f), y = lerp(sy, S.Y(Y[i]), f) - Math.sin(Math.PI * f) * 50;
+      const tw = .6 + .4 * Math.sin(t * 1.7 + st.ph);
+      ctx.globalAlpha = alpha * lerp(tw, 1, f);
+      glowDot(x, y, lerp(1.9, 3.8, f), COL.star, lerp(10, 14, f));
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawFit(t, S, ls, alpha, fin) {
+    ctx.save(); clipTo(S);
+    const ly = x => S.Y(ls.w * x + ls.b);
+    for (let i = 0; i < N; i++) {
+      const q = E(t, 30.8 + i * .1, 31.9 + i * .1) * (1 - fin);
+      if (q <= 0) continue;
+      const px = S.X(X[i]), py = S.Y(Y[i]), lp = ly(X[i]), s = Math.abs(py - lp), top = Math.min(py, lp);
+      ctx.globalAlpha = alpha * q;
+      ctx.fillStyle = rgba(COL.rose, .12); ctx.strokeStyle = rgba(COL.rose, .5); ctx.lineWidth = 1;
+      ctx.fillRect(px, top, s * q, s); ctx.strokeRect(px + .5, top + .5, s * q, s);
+    }
+    ctx.lineWidth = 1.5; ctx.strokeStyle = COL.rose;
+    for (let i = 0; i < N; i++) {
+      const r = E(t, 25.4 + i * .12, 26.3 + i * .12);
+      if (r <= 0) continue;
+      const px = S.X(X[i]), py = S.Y(Y[i]), lp = ly(X[i]);
+      ctx.globalAlpha = alpha * r * (1 - .6 * fin);
+      ctx.beginPath(); ctx.moveTo(px, lp); ctx.lineTo(px, lerp(lp, py, r)); ctx.stroke();
+    }
+    if (ls.draw > 0) {
+      const half = 6 * ls.draw;
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = COL.amber; ctx.lineCap = 'round';
+      ctx.lineWidth = 2.4 + fin * 1.4;
+      ctx.shadowColor = COL.amber; ctx.shadowBlur = 14 + fin * 26 + Math.sin(t * 2) * 3 * fin;
+      ctx.beginPath(); ctx.moveTo(S.X(-half), ly(-half)); ctx.lineTo(S.X(half), ly(half)); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawHops(t, Rm, a) {
+    const cols = Rm.w / 3 >= 118, gap = 14;
+    const cw = cols ? (Rm.w - 2 * gap) / 3 : Rm.w, ch = cols ? Rm.h : (Rm.h - 2 * gap) / 3;
+    RUNS.forEach((run, j) => {
+      const cell = { x: Rm.x + (cols ? j * (cw + gap) : 0), y: Rm.y + (cols ? 0 : j * (ch + gap)), w: cw, h: ch };
+      const S = scaler(cell, HW, [0, SLMAX], { l: 6, r: 6, t: cols ? 50 : 36, b: 8 });
+      ctx.save(); ctx.globalAlpha = a;
+      cap(run.label, cell.x + 6, cell.y + 12, { c: run.col });
+      txt('η = ' + run.eta, cell.x + 6, cell.y + (cols ? 32 : 28), { mono: true, s: 12.5, c: COL.bone });
+      // valley
+      ctx.save(); clipTo(S);
+      const grd = ctx.createLinearGradient(0, S.iy, 0, S.iy + S.ih);
+      grd.addColorStop(0, rgba(run.col, .02)); grd.addColorStop(1, rgba(run.col, .12));
+      ctx.beginPath();
+      for (let s = 0; s <= 90; s++) { const w = lerp(HW[0], HW[1], s / 90); s ? ctx.lineTo(S.X(w), S.Y(slice(w))) : ctx.moveTo(S.X(w), S.Y(slice(w))); }
+      ctx.strokeStyle = rgba(COL.bone, .55); ctx.lineWidth = 1.4; ctx.stroke();
+      ctx.lineTo(S.X(HW[1]), S.iy + S.ih); ctx.lineTo(S.X(HW[0]), S.iy + S.ih); ctx.closePath();
+      ctx.fillStyle = grd; ctx.fill();
+      dashed(S.X(wStar), S.iy + S.ih, S.X(wStar), S.Y(Lmin) - 10, rgba(COL.bone, .3));
+      // hop trail
+      const hs = hopState(run, t);
+      const lift = (w1, w2) => Math.min(ch * .28, Math.abs(w2 - w1) * S.sx * .35);
+      ctx.strokeStyle = rgba(run.col, .38); ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+      for (let m = 0; m < hs.k + (hs.f >= 1 ? 1 : 0); m++) {
+        const w1 = run.ws[m], w2 = run.ws[m + 1];
+        const x1 = S.X(w1), y1 = S.Y(slice(w1)), x2 = S.X(w2), y2 = S.Y(slice(w2));
+        ctx.beginPath(); ctx.moveTo(x1, y1);
+        ctx.quadraticCurveTo((x1 + x2) / 2, Math.min(y1, y2) - lift(w1, w2) * 2, x2, y2); ctx.stroke();
+      }
+      ctx.setLineDash([]); ctx.restore();
+      // ball
+      const inRange = hs.w > HW[0] - .05 && hs.w < HW[1] + .05 && slice(hs.w) <= SLMAX * 1.02;
+      if (inRange) {
+        const w1 = run.ws[hs.k], w2 = run.ws[hs.k + 1];
+        const up = Math.sin(Math.PI * hs.f) * lift(w1, w2);
+        glowDot(S.X(hs.w), S.Y(slice(hs.w)) - up - 5, 5, run.col, 16);
+      } else {
+        txt('flew off the valley', cell.x + cell.w / 2, S.iy + S.ih * .45, { c: run.col, al: 'center', s: 12, it: true, serif: true, w: 600 });
+      }
+      txt('w = ' + (Math.abs(hs.w) > 99 ? (hs.w > 0 ? '+∞' : '−∞') : fmt(hs.w)), cell.x + cell.w - 6, cell.y + (cols ? 32 : 28), { mono: true, s: 11, al: 'right' });
+      ctx.restore();
+    });
+  }
+
+  function drawFireflies(t, S) {
+    if (t < 114.8) return;
+    const ly = x => S.Y(FINAL.w * x + FINAL.b);
+    for (let i = 0; i < N; i++) {
+      const px = S.X(X[i]), py = S.Y(Y[i]), lp = ly(X[i]), s = Math.abs(py - lp);
+      for (const p of FIRE[i]) {
+        const t0 = 114.8 + i * .06 + p.d;
+        if (t < t0) continue;
+        const dt = t - t0;
+        const x = px + s / 2 + p.dx * s * .5 + Math.sin(dt * 1.3 + p.ph) * 10 * (.4 + p.sp);
+        const y = (py + lp) / 2 - dt * (12 + p.sp * 24);
+        const a = E(t, t0, t0 + .9) * (1 - E(t, 126, 131.5)) * (.6 + .4 * Math.sin(dt * 3 + p.ph));
+        if (a <= 0 || y < -10) continue;
+        ctx.globalAlpha = a;
+        glowDot(x, y, 1.6 + p.sp, dt < 3 ? COL.rose : COL.amber, 12);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawMain(t) {
+    const S = scaler(RM, XD, YD, { l: 30, r: 8, t: 8, b: 22 });
+    const sA = 1 - win(t, 58.2, 80, 1.4);
+    const fin = E(t, 114.5, 118.5);
+    const aA = E(t, 10.5, 13) * sA * (1 - .45 * fin);
+    if (aA > 0) drawAxes(S, aA);
+    const ls = lineState(t);
+    if (ls && sA > 0) drawFit(t, S, ls, sA, fin);
+    drawPoints(t, S, sA);
+    const a4 = win(t, 58.8, 79.6, 1.2);
+    if (a4 > 0) drawHops(t, RM, a4);
+    drawFireflies(t, S);
+  }
+
+  // ───────── panel charts ─────────
+  function drawSlice(R, a, t) {
+    const wd = [-2.6, 3.2], f = w => loss(w, B0), ymax = Math.max(f(wd[0]), f(wd[1]));
+    const S = scaler(R, wd, [0, ymax * 1.08], { l: 10, r: 10, t: 30, b: 24 });
+    ctx.save(); ctx.globalAlpha = a;
+    cap('LOSS AS w TURNS  ·  b HELD AT ' + fmt(B0), R.x + 10, R.y + 12);
+    ctx.strokeStyle = rgba(COL.bone, .18); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(S.ix, S.Y(0)); ctx.lineTo(S.ix + S.iw, S.Y(0)); ctx.stroke();
+    for (let w = -2; w <= 3; w++) txt(w < 0 ? '−' + (-w) : '' + w, S.X(w), S.Y(0) + 15, { mono: true, s: 10, al: 'center' });
+    txt('w', S.ix + S.iw, S.Y(0) - 6, { serif: true, it: true, s: 16, c: COL.amber, al: 'right' });
+    ctx.save(); clipTo(S);
+    const grd = ctx.createLinearGradient(0, S.iy, 0, S.Y(0));
+    grd.addColorStop(0, rgba(COL.rose, .02)); grd.addColorStop(1, rgba(COL.rose, .16));
+    ctx.beginPath();
+    for (let s = 0; s <= 120; s++) { const w = lerp(wd[0], wd[1], s / 120); s ? ctx.lineTo(S.X(w), S.Y(f(w))) : ctx.moveTo(S.X(w), S.Y(f(w))); }
+    ctx.strokeStyle = rgba(COL.bone, .75); ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.lineTo(S.X(wd[1]), S.Y(0)); ctx.lineTo(S.X(wd[0]), S.Y(0)); ctx.closePath(); ctx.fillStyle = grd; ctx.fill();
+    // tangent + downhill arrow
+    const cw = lineState(t).w, g = grad(cw, B0)[0], P = [S.X(cw), S.Y(f(cw))];
+    let dx = S.sx, dy = -g * S.sy; const m = Math.hypot(dx, dy); dx /= m; dy /= m;
+    ctx.strokeStyle = COL.lilac; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(P[0] - dx * 64, P[1] - dy * 64); ctx.lineTo(P[0] + dx * 64, P[1] + dy * 64); ctx.stroke();
+    if (Math.abs(g) > .6) { const s = -Math.sign(g); arrow(P[0] + s * dx * 8, P[1] + s * dy * 8, P[0] + s * dx * 50, P[1] + s * dy * 50, COL.amber, 2.2); }
+    ctx.restore();
+    glowDot(P[0], P[1], 5.5, COL.amber, 18);
+    const right = P[0] < S.ix + S.iw - 110;
+    txt('slope ' + fmt(g), P[0] + (right ? 12 : -12), P[1] - 12, { mono: true, s: 11, c: COL.lilac, al: right ? 'left' : 'right' });
+    ctx.restore();
+  }
+
+  function contourDomain(R) {
+    const cw = (W0 + wStar) / 2, cb = (B0 + bStar) / 2;
+    const k = Math.min(R.w / (Math.abs(W0 - wStar) + 1.8), R.h / (Math.abs(B0 - bStar) + 1.9));
+    return { k, w0: cw - R.w / (2 * k), w1: cw + R.w / (2 * k), b0: cb - R.h / (2 * k), b1: cb + R.h / (2 * k) };
+  }
+  function getContour(R, D) {
+    const key = Math.round(R.w) + 'x' + Math.round(R.h);
+    if (contourCache.has(key)) return contourCache.get(key);
+    const cw = Math.max(2, Math.ceil(R.w * .6)), ch = Math.max(2, Math.ceil(R.h * .6));
+    const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    const g = c.getContext('2d'), id = g.createImageData(cw, ch), d = id.data;
+    const v = L => Math.log(1 + (L - Lmin) * 3);
+    const vmax = Math.max(v(loss(D.w0, D.b0)), v(loss(D.w1, D.b0)), v(loss(D.w0, D.b1)), v(loss(D.w1, D.b1)));
+    const low = [118, 78, 42], mid = [30, 40, 70], high = [11, 17, 32];
+    for (let py = 0; py < ch; py++) {
+      const b = D.b1 - (py + .5) / ch * (D.b1 - D.b0);
+      for (let px = 0; px < cw; px++) {
+        const w = D.w0 + (px + .5) / cw * (D.w1 - D.w0);
+        const lv = v(loss(w, b)), n = clamp(lv / vmax);
+        const c1 = n < .35 ? low : mid, c2 = n < .35 ? mid : high, u = n < .35 ? n / .35 : (n - .35) / .65;
+        const band = (lv * 2.6) % 1, dd = Math.min(band, 1 - band), ln = Math.max(0, 1 - dd / .07) * (.35 + .65 * (1 - n));
+        const o = (py * cw + px) * 4;
+        d[o] = lerp(c1[0], c2[0], u) + 70 * ln; d[o + 1] = lerp(c1[1], c2[1], u) + 62 * ln; d[o + 2] = lerp(c1[2], c2[2], u) + 52 * ln; d[o + 3] = 255;
+      }
+    }
+    g.putImageData(id, 0, 0);
+    contourCache.set(key, c);
+    return c;
+  }
+  function drawContour(R, a, t, mode) {
+    if (R.w < 20 || R.h < 20) return;
+    const D = contourDomain(R), img = getContour(R, D);
+    const P = (w, b) => [R.x + (w - D.w0) * D.k, R.y + R.h - (b - D.b0) * D.k];
+    ctx.save(); ctx.globalAlpha = a;
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(R.x, R.y, R.w, R.h, 8) : ctx.rect(R.x, R.y, R.w, R.h); ctx.clip();
+    ctx.imageSmoothingEnabled = true; ctx.drawImage(img, R.x, R.y, R.w, R.h);
+    const [ox, oy] = P(wStar, bStar);
+    ctx.strokeStyle = rgba(COL.bone, .45); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(ox - 5, oy); ctx.lineTo(ox + 5, oy); ctx.moveTo(ox, oy - 5); ctx.lineTo(ox, oy + 5); ctx.stroke();
+    if (mode === 'grad') {
+      const [px, py] = P(W0, B0), [gw, gb] = grad(W0, B0);
+      let vx = gw, vy = -gb; const m = Math.hypot(vx, vy), L = Math.min(72, Math.min(R.w, R.h) * .3); vx = vx / m * L; vy = vy / m * L;
+      const grow = E(t, 50.5, 52);
+      arrow(px, py, px + vx * grow, py + vy * grow, COL.lilac, 2);
+      if (grow > .9) txt('∇L', px + vx + 6, py + vy + 4, { serif: true, it: true, s: 16, c: COL.lilac, w: 600 });
+      const back = E(t, 53.6, 55);
+      if (back > 0) { arrow(px, py, px - vx * back, py - vy * back, COL.amber, 2.4); if (back > .9) txt('−∇L', px - vx + (vx > 0 ? -8 : 8), py - vy - 8, { serif: true, it: true, s: 16, c: COL.amber, w: 600, al: vx > 0 ? 'right' : 'left' }); }
+      glowDot(px, py, 5, COL.amber, 16);
+    } else {
+      const ts = trainState(trainK(t));
+      ctx.strokeStyle = rgba(COL.amber, .55); ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (let k = 0; k <= ts.k; k++) { const [x, y] = P(hist[k].w, hist[k].b); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      const [cx, cy] = P(ts.w, ts.b); ctx.lineTo(cx, cy); ctx.stroke();
+      ctx.fillStyle = rgba(COL.amber, .7);
+      for (let k = 0; k <= ts.k; k++) { const [x, y] = P(hist[k].w, hist[k].b); ctx.beginPath(); ctx.arc(x, y, 1.6, 0, TAU); ctx.fill(); }
+      glowDot(cx, cy, 5, COL.amber, 16);
+    }
+    ctx.restore();
+    ctx.strokeStyle = rgba(COL.bone, .1); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(R.x + .5, R.y + .5, R.w - 1, R.h - 1, 8) : ctx.rect(R.x, R.y, R.w, R.h); ctx.stroke();
+    cap('LOSS SURFACE L(w, b), FROM ABOVE', R.x + 10, R.y + 16, { c: COL.bone, a: .75 });
+    txt('w →', R.x + R.w - 10, R.y + R.h - 10, { serif: true, it: true, s: 15, c: COL.amber, al: 'right' });
+    txt('b ↑', R.x + 10, R.y + R.h - 10, { serif: true, it: true, s: 15, c: COL.amber });
+    ctx.restore();
+  }
+
+  function drawWChart(R, a, t) {
+    const S = scaler(R, [0, HOPS], HW, { l: 28, r: 10, t: 30, b: 22 });
+    ctx.save(); ctx.globalAlpha = a;
+    cap('w AFTER EACH STEP', R.x + 10, R.y + 12);
+    for (let y = -2; y <= 4; y += 2) {
+      ctx.strokeStyle = rgba(COL.bone, .06); ctx.beginPath(); ctx.moveTo(S.ix, S.Y(y)); ctx.lineTo(S.ix + S.iw, S.Y(y)); ctx.stroke();
+      txt(y < 0 ? '−' + (-y) : '' + y, S.ix - 6, S.Y(y) + 3.5, { mono: true, s: 10, al: 'right' });
+    }
+    for (let x = 0; x <= 15; x += 5) txt('' + x, S.X(x), S.iy + S.ih + 15, { mono: true, s: 10, al: 'center' });
+    txt('step', S.ix + S.iw, S.iy + S.ih + 15, { s: 10, al: 'right' });
+    dashed(S.ix, S.Y(wStar), S.ix + S.iw, S.Y(wStar), rgba(COL.bone, .35));
+    txt('best w', S.ix + S.iw - 2, S.Y(wStar) - 5, { s: 10, al: 'right', c: COL.bone, a: .6 });
+    ctx.save(); clipTo(S);
+    RUNS.forEach(run => {
+      const hs = hopState(run, t), pts = [];
+      for (let k = 0; k <= hs.k; k++) pts.push([k, run.ws[k]]);
+      pts.push([hs.k + ease(hs.f), hs.w]);
+      ctx.strokeStyle = run.col; ctx.lineWidth = 1.6; ctx.globalAlpha = a * .9;
+      ctx.beginPath(); pts.forEach(([k, w], i) => i ? ctx.lineTo(S.X(k), S.Y(clamp(w, -50, 50))) : ctx.moveTo(S.X(k), S.Y(w))); ctx.stroke();
+      ctx.fillStyle = run.col;
+      pts.forEach(([k, w]) => { ctx.beginPath(); ctx.arc(S.X(k), S.Y(clamp(w, -50, 50)), 2, 0, TAU); ctx.fill(); });
+    });
+    ctx.restore(); ctx.restore();
+  }
+
+  function drawLossCurve(R, a, t) {
+    if (R.h < 40) return;
+    const S = scaler(R, [0, STEPS], [0, L0 * 1.06], { l: 34, r: 10, t: 26, b: 20 });
+    const ts = trainState(trainK(t)), cur = loss(ts.w, ts.b);
+    ctx.save(); ctx.globalAlpha = a;
+    cap('LOSS AFTER EACH STEP', R.x + 10, R.y + 12);
+    [0, L0 / 2, L0].forEach(v => {
+      ctx.strokeStyle = rgba(COL.bone, .06); ctx.beginPath(); ctx.moveTo(S.ix, S.Y(v)); ctx.lineTo(S.ix + S.iw, S.Y(v)); ctx.stroke();
+      txt(v.toFixed(v ? 1 : 0), S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' });
+    });
+    for (let x = 0; x <= STEPS; x += 20) txt('' + x, S.X(x), S.iy + S.ih + 14, { mono: true, s: 10, al: 'center' });
+    dashed(S.ix, S.Y(Lmin), S.ix + S.iw, S.Y(Lmin), rgba(COL.rose, .6));
+    txt('noise floor ' + fmt(Lmin), S.ix + S.iw - 2, S.Y(Lmin) - 5, { s: 10, c: COL.rose, al: 'right' });
+    const pts = [];
+    for (let k = 0; k <= ts.k; k++) pts.push([k, hist[k].L]);
+    pts.push([ts.kf >= STEPS ? STEPS : ts.k + ease(ts.kf - ts.k), cur]);
+    const grd = ctx.createLinearGradient(0, S.iy, 0, S.iy + S.ih);
+    grd.addColorStop(0, rgba(COL.amber, .22)); grd.addColorStop(1, rgba(COL.amber, 0));
+    ctx.beginPath(); pts.forEach(([k, L], i) => i ? ctx.lineTo(S.X(k), S.Y(L)) : ctx.moveTo(S.X(k), S.Y(L)));
+    ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.8; ctx.stroke();
+    const last = pts[pts.length - 1];
+    ctx.lineTo(S.X(last[0]), S.Y(0)); ctx.lineTo(S.X(0), S.Y(0)); ctx.closePath(); ctx.fillStyle = grd; ctx.fill();
+    const lx = S.X(last[0]), lyy = S.Y(cur);
+    glowDot(lx, lyy, 4, COL.amber, 14);
+    const right = lx < S.ix + S.iw - 80;
+    txt('L = ' + fmt(cur), lx + (right ? 9 : -9), lyy - 9, { mono: true, s: 11, c: COL.bone, al: right ? 'left' : 'right' });
+    ctx.restore();
+  }
+
+  function drawPanel(t) {
+    const R = RP;
+    const a1 = win(t, 38.6, 48.4, .8); if (a1 > 0) drawSlice(R, a1, t);
+    const a2 = win(t, 48.3, 58.4, .8); if (a2 > 0) drawContour(R, a2, t, 'grad');
+    const a3 = win(t, 59.2, 80, 1); if (a3 > 0) drawWChart(R, a3, t);
+    const a5 = E(t, 80.4, 82) * (1 - E(t, 119, 122));
+    if (a5 > 0) {
+      const g = 12, h1 = (R.h - g) * .56;
+      drawContour({ x: R.x, y: R.y, w: R.w, h: h1 }, a5, t, 'train');
+      drawLossCurve({ x: R.x, y: R.y + h1 + g, w: R.w, h: R.h - h1 - g }, a5, t);
+    }
+  }
+
+  // ───────── frame ─────────
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function render(t) {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.globalAlpha = 1; ctx.fillStyle = COL.ink; ctx.fillRect(0, 0, W, H);
+    // warm bloom behind the plot that grows as the fit improves
+    const ls = lineState(t), fitness = ls ? 1 - clamp(Math.sqrt((loss(ls.w, ls.b) - Lmin) / (L0 - Lmin))) : 0;
+    const bloom = ctx.createRadialGradient(RM.x + RM.w / 2, RM.y + RM.h / 2, 0, RM.x + RM.w / 2, RM.y + RM.h / 2, Math.max(RM.w, RM.h) * .8);
+    bloom.addColorStop(0, rgba(COL.amber, .03 + .07 * fitness * (1 - win(t, 58.2, 80, 1.4)) + .05 * E(t, 114, 120)));
+    bloom.addColorStop(1, rgba(COL.amber, 0));
+    ctx.fillStyle = bloom; ctx.fillRect(0, 0, W, H);
+    drawStars(t);
+    drawPanel(t);
+    drawMain(t);
+    if (!vig) {
+      vig = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .78);
+      vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,.55)');
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.globalAlpha = .045;
+    const ox = reduce ? 0 : (Math.random() * 160) | 0, oy = reduce ? 0 : (Math.random() * 160) | 0;
+    ctx.translate(ox, oy); ctx.fillStyle = grainPat; ctx.fillRect(-ox, -oy, W, H); ctx.restore();
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, BAR); ctx.fillRect(0, H - BAR, W, BAR);
+  }
+
+  // ───────── DOM overlays ─────────
+  const el = { title: $('titlecard'), chap: $('chapter'), chapAct: $('chapAct'), chapName: $('chapName'), sub: $('sub'), math: $('math'), end: $('endcard'), time: $('time'), scrub: $('scrub'), play: $('play'), sound: $('sound') };
+  const setOp = (node, v) => { const s = v.toFixed(3); if (node._op !== s) { node.style.opacity = s; node._op = s; } };
+  const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  let chapIdx = -1, subIdx = -2, mathHTML = '', dragging = false;
+  const chapBtns = CHAPTERS.map((c, i) => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.textContent = c.act ? `${c.act.replace('Act ', '')} · ${c.name}` : c.name;
+    b.addEventListener('click', () => { t = c.t + .01; playing = true; syncPlay(); });
+    $('chapters').appendChild(b);
+    const tick = document.createElement('span'); tick.style.left = (c.t / DUR * 100) + '%'; $('ticks').appendChild(tick);
+    return b;
+  });
+
+  function updateDOM(t) {
+    setOp(el.title, 1 - E(t, 6, 7.6));
+    let ci = 0; CHAPTERS.forEach((c, i) => { if (t >= c.t) ci = i; });
+    if (ci !== chapIdx) {
+      chapIdx = ci; el.chapAct.textContent = CHAPTERS[ci].act; el.chapName.textContent = CHAPTERS[ci].name;
+      chapBtns.forEach((b, i) => b.classList.toggle('on', i === ci));
+    }
+    const c = CHAPTERS[ci];
+    setOp(el.chap, c.act ? win(t, c.t + .3, c.t + 3.4, .5) : 0);
+    const si = SUBS.findIndex(s => t >= s[0] && t < s[1]);
+    if (si !== subIdx) { subIdx = si; el.sub.textContent = si >= 0 ? SUBS[si][2] : ''; }
+    setOp(el.sub, si >= 0 ? win(t, SUBS[si][0], SUBS[si][1], .35) : 0);
+    const m = MATH.find(q => t >= q.t0 && t < q.t1);
+    const html = m ? m.html(t) : '';
+    if (html !== mathHTML) { mathHTML = html; el.math.innerHTML = html; }
+    setOp(el.math, m ? win(t, m.t0, m.t1, .6) : 0);
+    const ea = E(t, 127.5, 129.5);
+    el.end.hidden = ea <= .01; setOp(el.end, ea);
+    el.time.textContent = `${mmss(t)} / ${mmss(DUR)}`;
+    if (!dragging) el.scrub.value = t.toFixed(2);
+  }
+
+  // ───────── sound: a chord that detunes with the loss and resolves as the line fits ─────────
+  let audio = null, soundOn = false;
+  function makeAudio() {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    const ac = new AC();
+    const master = ac.createGain(); master.gain.value = 0;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700; lp.Q.value = .4;
+    const delay = ac.createDelay(1); delay.delayTime.value = .37;
+    const fb = ac.createGain(); fb.gain.value = .33;
+    delay.connect(fb); fb.connect(delay);
+    lp.connect(master); lp.connect(delay); delay.connect(master); master.connect(ac.destination);
+    const freqs = [110, 164.81, 220, 277.18, 329.63], signs = [0, 1, -1, 1, -1];
+    const voices = freqs.map((f, i) => {
+      const o = ac.createOscillator(); o.type = i < 2 ? 'sine' : 'triangle'; o.frequency.value = f;
+      const g = ac.createGain(); g.gain.value = i < 2 ? .16 : .055; o.connect(g); g.connect(lp); o.start();
+      return { o, sign: signs[i] };
+    });
+    const pluckBus = ac.createGain(); pluckBus.gain.value = 1; pluckBus.connect(master); pluckBus.connect(delay);
+    return { ac, master, lp, voices, pluckBus };
+  }
+  function pluck(freq, vel) {
+    if (!audio || !soundOn) return;
+    const { ac, pluckBus } = audio, now = ac.currentTime;
+    [[freq, 'triangle', 1], [freq * 2, 'sine', .3]].forEach(([f, type, m]) => {
+      const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(vel * m, now + .012);
+      g.gain.exponentialRampToValueAtTime(.0001, now + 1.6);
+      o.connect(g); g.connect(pluckBus); o.start(now); o.stop(now + 1.7);
+    });
+  }
+  function dissonance(t) {
+    if (t < 20) return .15;
+    if (t >= 58 && t < 80) return .45;
+    const ls = lineState(t);
+    return clamp(Math.sqrt((loss(ls.w, ls.b) - Lmin) / (L0 - Lmin))) * (1 - E(t, 113, 116));
+  }
+  function updateAudio(t) {
+    if (!audio) return;
+    const now = audio.ac.currentTime, dis = dissonance(t);
+    const level = soundOn && playing ? .2 * (.6 + .4 * E(t, 0, 3)) * (1 + .4 * E(t, 114, 118)) * (1 - E(t, 128, 132)) : 0;
+    audio.master.gain.setTargetAtTime(level, now, .25);
+    audio.voices.forEach(v => v.o.detune.setTargetAtTime(v.sign * dis * 60, now, .35));
+    audio.lp.frequency.setTargetAtTime(420 + 2000 * (1 - dis) * (t > 20 ? 1 : .5), now, .4);
+  }
+  const PENTA = [220, 246.94, 277.18, 329.63, 369.99, 440, 493.88, 554.37, 659.25, 739.99, 880];
+  const EVENTS = [];
+  for (let k = 0; k < HOPS; k++) EVENTS.push({ t: 61 + k, fn: () => { pluck(PENTA[Math.min(PENTA.length - 1, 3 + Math.round(k * .35))], .06); pluck(k % 2 ? 311.13 : 155.56, .035); } });
+  [440, 554.37, 659.25, 880, 1108.73].forEach((f, j) => EVENTS.push({ t: 114.6 + j * .3, fn: () => pluck(f, .08) }));
+  const S0 = Math.hypot(hist[0].w - hist[1].w, hist[0].b - hist[1].b);
+  function onAdvance(a, b) {
+    if (b - a > .25) return;
+    EVENTS.forEach(e => { if (a < e.t && e.t <= b) e.fn(); });
+    const k0 = Math.floor(trainK(a)), k1 = Math.floor(trainK(b));
+    if (k1 > k0 && k1 <= STEPS) {
+      const step = Math.hypot(hist[k1 - 1].w - hist[k1].w, hist[k1 - 1].b - hist[k1].b);
+      pluck(PENTA[Math.min(PENTA.length - 1, Math.floor(k1 / STEPS * PENTA.length))], .025 + .07 * Math.sqrt(step / S0));
+    }
+  }
+
+  // ───────── controls ─────────
+  const startAt = parseFloat(new URLSearchParams(location.search).get('t'));
+  let t = Number.isFinite(startAt) ? clamp(startAt, 0, DUR) : 0, playing = !reduce, lastNow = performance.now();
+  function syncPlay() { el.play.textContent = playing ? 'Pause' : (t >= DUR ? 'Replay' : 'Play'); }
+  el.play.addEventListener('click', () => { if (t >= DUR) t = 0; playing = !playing; syncPlay(); });
+  $('replay').addEventListener('click', () => { t = 0; playing = true; syncPlay(); });
+  el.scrub.addEventListener('pointerdown', () => dragging = true);
+  window.addEventListener('pointerup', () => dragging = false);
+  el.scrub.addEventListener('input', () => { t = +el.scrub.value; syncPlay(); });
+  el.sound.addEventListener('click', () => {
+    if (!audio) audio = makeAudio();
+    if (!audio) { el.sound.textContent = 'No audio'; return; }
+    audio.ac.resume();
+    soundOn = !soundOn;
+    el.sound.textContent = soundOn ? 'Sound on' : 'Sound off';
+    el.sound.setAttribute('aria-pressed', String(soundOn));
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === ' ' && e.target.tagName !== 'BUTTON') { e.preventDefault(); if (t >= DUR) t = 0; playing = !playing; syncPlay(); }
+    else if (e.target.tagName !== 'INPUT' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { t = clamp(t + (e.key === 'ArrowRight' ? 5 : -5), 0, DUR); }
+  });
+  syncPlay();
+
+  function frame(now) {
+    const dt = Math.min(.1, (now - lastNow) / 1000); lastNow = now;
+    if (playing) {
+      const prev = t; t = Math.min(DUR, t + dt);
+      onAdvance(prev, t);
+      if (t >= DUR) { playing = false; syncPlay(); }
+    }
+    render(t); updateDOM(t); updateAudio(t);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
