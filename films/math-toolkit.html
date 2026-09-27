@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --void: #05070d;
+    --ink: #0b1120;
+    --bone: #eee6d6;
+    --dim: #8d93a6;
+    --amber: #f4b860;
+    --rose: #ef8193;
+    --star: #a9d6f5;
+    --lilac: #c4b3ff;
+    --hair: rgba(238, 230, 214, .16);
+    --bar: 24px;
+    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--void);
+    color: var(--bone);
+    font: 15px/1.45 var(--sans);
+    overflow: hidden;
+  }
+  .theatre { height: 100%; display: flex; flex-direction: column; }
+
+  .stage {
+    position: relative;
+    flex: 1;
+    min-height: 420px;
+    overflow: hidden;
+    background: var(--ink);
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas: "plot panel" "plot math" "sub sub";
+    gap: 14px clamp(20px, 3vw, 40px);
+    padding: calc(var(--bar) + 20px) clamp(16px, 4vw, 56px) calc(var(--bar) + 10px);
+  }
+  #film { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .slot, .math, .sub { position: relative; z-index: 1; min-height: 0; }
+  .plot { grid-area: plot; }
+  .panel { grid-area: panel; }
+
+  .math { grid-area: math; height: 9.4em; font-size: 16px; transition: none; }
+  .math .lbl, .kicker, .chapter .act {
+    font: 600 10.5px/1.2 var(--sans);
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0 0 .5em;
+  }
+  .eq { font-family: var(--serif); font-weight: 500; font-size: 1.55em; line-height: 1.3; white-space: nowrap; font-variant-numeric: lining-nums; }
+  .nt { text-transform: none; letter-spacing: 0; }
+  .eq.sm { font-size: 1.28em; }
+  .eq i { font-style: italic; }
+  .eq sub, .eq sup { font-size: .6em; font-style: italic; }
+  .a { color: var(--amber); } .r { color: var(--rose); } .g { color: var(--lilac); } .s { color: var(--star); }
+  .num {
+    font: 500 .6em/1 var(--mono);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    padding: .18em .4em;
+    border-radius: 4px;
+    background: rgba(238, 230, 214, .08);
+    vertical-align: .18em;
+  }
+  .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .66em; line-height: 1.08; margin: 0 .1em; }
+  .fr > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .2em; }
+  .note { color: var(--dim); font-size: .9em; max-width: 46ch; margin: .45em 0 0; }
+
+  .sub {
+    grid-area: sub;
+    justify-self: center;
+    text-align: center;
+    max-width: 54ch;
+    min-height: 2.9em;
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.45;
+    text-wrap: balance;
+    text-shadow: 0 1px 14px #000, 0 0 2px #000;
+  }
+
+  .titlecard {
+    position: absolute; inset: 0; z-index: 2;
+    display: grid; place-content: center; gap: 14px;
+    text-align: center; pointer-events: none; padding-inline: 16px;
+  }
+  .titlecard h1 {
+    margin: 0;
+    font: italic 500 clamp(44px, 7.4vw, 104px)/1 var(--serif);
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    text-shadow: 0 0 48px rgba(244, 184, 96, .35);
+  }
+  .titlecard .by { font: italic 500 clamp(17px, 1.8vw, 22px)/1.3 var(--serif); color: var(--dim); }
+
+  .chapter {
+    position: absolute; z-index: 2; pointer-events: none;
+    left: clamp(16px, 4vw, 56px); top: calc(var(--bar) + 14px);
+  }
+  .chapter .act { color: var(--amber); }
+  .chapter .name { font: italic 500 clamp(28px, 3.2vw, 42px)/1.05 var(--serif); text-shadow: 0 2px 20px #000; }
+
+  .endcard {
+    position: absolute; inset: 0; z-index: 3;
+    display: grid; place-content: center; justify-items: center; gap: 16px;
+    padding-inline: 16px; pointer-events: none;
+  }
+  .endcard > * { pointer-events: auto; }
+  .endcard .fin { font: italic 500 clamp(34px, 4.6vw, 60px)/1 var(--serif); text-shadow: 0 0 40px rgba(244, 184, 96, .4); }
+
+  button {
+    font: 500 13px/1 var(--sans);
+    color: var(--bone);
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover { border-color: rgba(238, 230, 214, .4); }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  button.on, button[aria-pressed="true"] { color: var(--amber); border-color: rgba(244, 184, 96, .55); }
+  .endcard button { font-size: 14px; padding: 10px 20px; }
+
+  .controls { display: flex; align-items: center; gap: 12px; padding: 10px 16px 6px; }
+  .scrubwrap { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+  #scrub { width: 100%; accent-color: var(--amber); margin: 0; }
+  .ticks { position: absolute; inset: 0; pointer-events: none; }
+  .ticks span { position: absolute; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: rgba(238, 230, 214, .35); }
+  .home { font: 500 13px/1 var(--sans); color: var(--dim); white-space: nowrap; }
+  .home:hover { color: var(--amber); }
+  .time { font: 12px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--dim); }
+  .chapters { display: flex; gap: 6px; overflow-x: auto; padding: 4px 16px 12px; scrollbar-width: none; }
+  .chapters button { font-size: 12px; padding: 6px 11px; color: var(--dim); }
+  .chapters button.on { color: var(--amber); }
+
+  @media (max-aspect-ratio: 1/1), (max-width: 760px) {
+    .stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) auto auto;
+      grid-template-areas: "plot" "panel" "math" "sub";
+      gap: 10px;
+    }
+    .math { font-size: 13px; height: 8.8em; }
+    .sub { font-size: 14.5px; }
+    .time, .home { display: none; }
+    .controls { flex-wrap: wrap; row-gap: 8px; }
+    .scrubwrap { order: -1; flex-basis: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="theatre">
+  <div class="stage" id="stage">
+    <canvas id="film" aria-label="Animated film about vectors, distance, the dot product, matrices, derivatives and probability"></canvas>
+    <div class="slot plot" id="slotPlot"></div>
+    <div class="slot panel" id="slotPanel"></div>
+    <div class="math" id="math" aria-live="off"></div>
+    <div class="sub" id="sub"></div>
+
+    <div class="titlecard" id="titlecard">
+      <div class="kicker">A short film about the math behind machine learning</div>
+      <h1>The Toolkit</h1>
+      <div class="by">arrows, grids, slopes and chances</div>
+    </div>
+    <div class="chapter" id="chapter"><div class="act" id="chapAct"></div><div class="name" id="chapName"></div></div>
+    <div class="endcard" id="endcard" hidden>
+      <div class="fin">fin.</div>
+      <button id="replay" type="button">Watch again</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="play" type="button">Pause</button>
+    <div class="scrubwrap">
+      <input id="scrub" type="range" min="0" max="138" step="0.01" value="0" aria-label="Film position">
+      <div class="ticks" id="ticks"></div>
+    </div>
+    <span class="time" id="time">0:00 / 2:18</span>
+    <button id="sound" type="button" aria-pressed="false">Sound off</button>
+    <button id="narrate" type="button" aria-pressed="false">Narration off</button>
+    <a class="home" href="../" target="_top">All lessons</a>
+  </div>
+  <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
+</div>
+
+<script src="film-kit.js?v=1"></script>
+<script>
+(() => {
+  const { TAU, clamp, lerp, ease, E, win, fmt, COL, rgba, mulberry32 } = FilmKit.util;
+  const A = [3, 2], B = [1, 2], P1 = [-3, -1], P2 = [2, 2], U = [3, 1];
+  const rnd = mulberry32(606);
+  const THROWS = Array.from({ length: 720 }, () => (1 + Math.floor(rnd() * 6)) + (1 + Math.floor(rnd() * 6)));
+  const f = x => x * x / 2, df = x => x;
+
+  const DUR = 138;
+  const CHAPTERS = [
+    { t: 0, act: '', name: 'Opening' },
+    { t: 8, act: 'Act I', name: 'Arrows' },
+    { t: 30, act: 'Act II', name: 'How Far' },
+    { t: 48, act: 'Act III', name: 'Pointing the Same Way' },
+    { t: 66, act: 'Act IV', name: 'Bending Space' },
+    { t: 88, act: 'Act V', name: 'The Slope' },
+    { t: 108, act: 'Act VI', name: 'Chance' },
+    { t: 126, act: 'Epilogue', name: 'The Toolkit' },
+  ];
+  const SUBS = [
+    [0.6, 7.4, 'Before any machine can learn, it needs a few tools. Here they are.'],
+    [8.6, 15.6, 'A vector is a list of numbers. Three and two. Draw it as an arrow: three across, two up.'],
+    [16.0, 24.6, 'To add two vectors, add their numbers. On paper, put one arrow at the tip of the other.'],
+    [25.0, 29.6, 'Multiply by a number, and the arrow stretches, shrinks, or flips around.'],
+    [30.6, 37.6, 'How long is an arrow? Across and up make a right triangle, so Pythagoras tells us.'],
+    [38.0, 47.4, 'The distance between two points is the length of the arrow from one to the other. Nearest neighbours live on this idea.'],
+    [48.6, 55.6, 'The dot product multiplies matching numbers and adds them up. One number out of two arrows.'],
+    [56.0, 65.4, 'It is big when the arrows point the same way, zero when they are at right angles, and negative when they point apart.'],
+    [66.6, 73.6, 'A matrix is a grid of numbers. Multiply a vector by it, and the vector moves.'],
+    [74.0, 81.6, 'Apply it to every point at once, and the whole plane turns, stretches and slants.'],
+    [82.0, 87.6, 'Its columns tell you where the two basic arrows land. That is all a matrix is.'],
+    [88.6, 95.6, 'How steep is a curve at one point? Take two points close together, and measure the slope between them.'],
+    [96.0, 101.6, 'Bring them closer and closer. The slope settles on one number: the derivative.'],
+    [102.0, 107.6, 'Where the curve falls, the derivative is negative. At the very bottom, it is zero. That is where learning heads.'],
+    [108.6, 115.6, 'Roll two dice. A sum of seven can happen in six ways out of thirty six.'],
+    [116.0, 125.4, 'Roll a few, and the counts are ragged. Roll hundreds, and they settle toward the true chances.'],
+    [126.6, 131.4, 'Arrows, grids, slopes and chances.'],
+    [131.8, 137.6, 'Every model in this course is built from these four. Now you have them all.'],
+  ];
+
+  // ───────── helpers ─────────
+  function plane(g, spanX = 10, spanY = 7, ox = 0, oy = 0) {
+    const R = g.RM, s = Math.min(R.w / spanX, R.h / spanY), cx = R.x + R.w / 2, cy = R.y + R.h / 2;
+    return { R, s, X: x => cx + (x - ox) * s, Y: y => cy - (y - oy) * s };
+  }
+  function vec(g, G, from, to, col, label, a = 1, lw = 2.6) {
+    const { ctx } = g;
+    ctx.save(); ctx.globalAlpha *= a; ctx.shadowColor = col; ctx.shadowBlur = 10;
+    g.arrow(G.X(from[0]), G.Y(from[1]), G.X(to[0]), G.Y(to[1]), col, lw);
+    ctx.restore();
+    if (label) g.txt(label, G.X(to[0]) + 8, G.Y(to[1]) - 8, { serif: true, it: true, s: 17, c: col, w: 600, a });
+  }
+  function grid(g, G, a, M = [[1, 0], [0, 1]]) {
+    const { ctx } = g, R = G.R, map = (x, y) => [M[0][0] * x + M[0][1] * y, M[1][0] * x + M[1][1] * y];
+    ctx.save(); ctx.globalAlpha = a;
+    for (let k = -8; k <= 8; k++) {
+      [[k, -8, k, 8], [-8, k, 8, k]].forEach(([x0, y0, x1, y1]) => {
+        const p = map(x0, y0), q = map(x1, y1);
+        ctx.strokeStyle = rgba(COL.bone, k === 0 ? .32 : .07); ctx.lineWidth = k === 0 ? 1.4 : 1;
+        ctx.beginPath(); ctx.moveTo(G.X(p[0]), G.Y(p[1])); ctx.lineTo(G.X(q[0]), G.Y(q[1])); ctx.stroke();
+      });
+    }
+    ctx.restore();
+  }
+  const lerpV = (p, q, u) => [lerp(p[0], q[0], u), lerp(p[1], q[1], u)];
+  const lerpM = (P, Q, u) => [[lerp(P[0][0], Q[0][0], u), lerp(P[0][1], Q[0][1], u)], [lerp(P[1][0], Q[1][0], u), lerp(P[1][1], Q[1][1], u)]];
+  const I = [[1, 0], [0, 1]], ROT = [[Math.SQRT1_2, -Math.SQRT1_2], [Math.SQRT1_2, Math.SQRT1_2]], STR = [[2, 0], [0, 1]], SHR = [[1, 1], [0, 1]];
+  function matrixAt(t) {
+    const keys = [[68, I], [71.5, ROT], [74.5, ROT], [77.5, STR], [80.5, STR], [83.5, SHR], [86.5, SHR], [87.8, I]];
+    for (let i = keys.length - 1; i >= 0; i--) if (t >= keys[i][0]) return i === keys.length - 1 ? keys[i][1] : lerpM(keys[i][1], keys[i + 1][1], ease(clamp((t - keys[i][0]) / (keys[i + 1][0] - keys[i][0]))));
+    return I;
+  }
+  function vAngle(t) { return (20 + 180 * ease(clamp((t - 50) / 13))) * Math.PI / 180; }
+
+  function draw(t, g) {
+    const { ctx } = g, R = g.RM;
+    ctx.save(); g.rrect(R.x, R.y, R.w, R.h, 10); ctx.clip();
+    // ── Acts I–IV: the plane ──
+    const planeA = E(t, 8.6, 11) * (1 - E(t, 87.6, 88.8));
+    if (planeA > 0) {
+      const G = t < 66 ? plane(g, 11.5, 9.4, .4, .9) : plane(g);
+      grid(g, G, planeA, t >= 66 ? matrixAt(t) : I);
+      if (t < 30.2) {           // Act I
+        const aA = E(t, 12, 13.5) * win(t, 8, 30.2, .6);
+        vec(g, G, [0, 0], lerpV([0, 0], A, E(t, 12, 14)), COL.amber, 'a = (3, 2)', aA);
+        const bA = E(t, 16, 17) * win(t, 8, 25.4, .6);
+        const slide = E(t, 19.5, 21.5), bFrom = lerpV([0, 0], A, slide), bTo = [bFrom[0] + B[0], bFrom[1] + B[1]];
+        vec(g, G, bFrom, lerpV(bFrom, bTo, E(t, 16, 17.5)), COL.star, slide > .9 ? '' : 'b = (1, 2)', bA);
+        const sA = E(t, 22, 23.4) * win(t, 8, 25.4, .6);
+        vec(g, G, [0, 0], [4, 4], COL.lilac, 'a + b = (4, 4)', sA, 2.2);
+        const scA = win(t, 25.2, 30.2, .5);
+        if (scA > 0) {
+          const c = t < 27 ? lerp(1, 2, E(t, 25.4, 26.8)) : t < 28.6 ? lerp(2, -1, E(t, 27, 28.4)) : lerp(-1, 1, E(t, 28.8, 29.8));
+          vec(g, G, [0, 0], [A[0] * c, A[1] * c], COL.rose, `${fmt(c, 1)} × a`, scA);
+        }
+      } else if (t < 48.2) {    // Act II
+        const a1 = win(t, 30.4, 37.8, .6);
+        if (a1 > 0) {
+          vec(g, G, [0, 0], A, COL.amber, 'a = (3, 2)', a1);
+          ctx.globalAlpha = a1;
+          g.dashed(G.X(0), G.Y(0), G.X(3), G.Y(0), COL.lilac, 1.6, [5, 4]); g.dashed(G.X(3), G.Y(0), G.X(3), G.Y(2), COL.lilac, 1.6, [5, 4]);
+          g.txt('3', G.X(1.5), G.Y(0) + 18, { mono: true, s: 14, c: COL.lilac, al: 'center' });
+          g.txt('2', G.X(3) + 10, G.Y(1), { mono: true, s: 14, c: COL.lilac });
+          g.txt('length √(3² + 2²) = 3.61', G.X(-4.6), G.Y(3), { mono: true, s: 14, c: COL.bone, a: E(t, 33, 34) });
+        }
+        const a2 = win(t, 38, 48.2, .6);
+        if (a2 > 0) {
+          ctx.globalAlpha = a2;
+          g.glowDot(G.X(P1[0]), G.Y(P1[1]), 5, COL.star, 14); g.glowDot(G.X(P2[0]), G.Y(P2[1]), 5, COL.rose, 14);
+          g.txt('p (−3, −1)', G.X(P1[0]) - 10, G.Y(P1[1]) + 22, { mono: true, s: 12.5, c: COL.star });
+          g.txt('q (2, 2)', G.X(P2[0]) + 12, G.Y(P2[1]) + 20, { mono: true, s: 12.5, c: COL.rose });
+          const d = E(t, 39.5, 41.5);
+          vec(g, G, P1, lerpV(P1, P2, d), COL.amber, d > .95 ? 'q − p = (5, 3)' : '', a2);
+          ctx.globalAlpha = a2 * E(t, 42, 43);
+          g.dashed(G.X(P1[0]), G.Y(P1[1]), G.X(P2[0]), G.Y(P1[1]), COL.lilac, 1.4, [5, 4]); g.dashed(G.X(P2[0]), G.Y(P1[1]), G.X(P2[0]), G.Y(P2[1]), COL.lilac, 1.4, [5, 4]);
+          g.txt('distance √(5² + 3²) = 5.83', G.X(-4.6), G.Y(3), { mono: true, s: 14, c: COL.bone });
+        }
+      } else if (t < 66.2) {    // Act III
+        const a = win(t, 48.4, 66.2, .6), th = vAngle(t), v = [2.6 * Math.cos(th), 2.6 * Math.sin(th)];
+        const dot = U[0] * v[0] + U[1] * v[1], col = Math.abs(dot) < .6 ? COL.lilac : dot > 0 ? COL.amber : COL.rose;
+        // projection shadow of v onto u
+        const uu = U[0] * U[0] + U[1] * U[1], k = dot / uu, pr = [U[0] * k, U[1] * k];
+        ctx.globalAlpha = a * .8; ctx.strokeStyle = rgba(col, .8); ctx.lineWidth = 6; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(G.X(0), G.Y(0)); ctx.lineTo(G.X(pr[0]), G.Y(pr[1])); ctx.stroke();
+        g.dashed(G.X(v[0]), G.Y(v[1]), G.X(pr[0]), G.Y(pr[1]), rgba(COL.bone, .5), 1.2);
+        vec(g, G, [0, 0], U, COL.star, 'u = (3, 1)', a);
+        vec(g, G, [0, 0], v, col, `v = (${fmt(v[0], 1)}, ${fmt(v[1], 1)})`, a);
+        g.txt(`u · v = ${fmt(dot, 2)}`, G.X(-4.6), G.Y(3), { mono: true, s: 15, c: col, a, w: 600 });
+      } else {                  // Act IV
+        const a = win(t, 66.4, 88, .6), M = matrixAt(t);
+        vec(g, G, [0, 0], [M[0][0], M[1][0]], COL.amber, 'î', a);
+        vec(g, G, [0, 0], [M[0][1], M[1][1]], COL.star, 'ĵ', a);
+        const w_ = [M[0][0] + M[0][1], M[1][0] + M[1][1]];
+        vec(g, G, [0, 0], w_, COL.lilac, 'M × (1, 1)', a * E(t, 68.5, 70), 2);
+      }
+    }
+    // ── Act V: the slope ──
+    const cA = win(t, 88.4, 108.2, .8);
+    if (cA > 0) {
+      const S = g.scaler(R, [-3.5, 3.5], [-.6, 6], { l: 20, r: 20, t: 20, b: 26 });
+      ctx.globalAlpha = cA;
+      g.line(S.ix, S.Y(0), S.ix + S.iw, S.Y(0), rgba(COL.bone, .3)); g.line(S.X(0), S.iy, S.X(0), S.iy + S.ih, rgba(COL.bone, .3));
+      ctx.strokeStyle = COL.bone; ctx.lineWidth = 2; ctx.beginPath();
+      for (let i = 0; i <= 140; i++) { const x = lerp(-3.4, 3.4, i / 140); i ? ctx.lineTo(S.X(x), S.Y(f(x))) : ctx.moveTo(S.X(x), S.Y(f(x))); }
+      ctx.stroke();
+      g.txt('f(x) = x² ÷ 2', S.X(-3.2), S.Y(5.6), { mono: true, s: 14, c: COL.bone });
+      const x0 = t < 101.8 ? 1.5 : lerp(-2.6, 2.6, E(t, 102, 107)), h = t < 101.8 ? Math.max(.02, lerp(2, .02, E(t, 91, 99.5))) : .001;
+      const s_ = (f(x0 + h) - f(x0)) / h, L = 1.6;
+      ctx.strokeStyle = COL.amber; ctx.lineWidth = 2; ctx.shadowColor = COL.amber; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(S.X(x0 - L), S.Y(f(x0) - s_ * L)); ctx.lineTo(S.X(x0 + L + h), S.Y(f(x0) + s_ * (L + h))); ctx.stroke(); ctx.shadowBlur = 0;
+      g.glowDot(S.X(x0), S.Y(f(x0)), 5, COL.amber, 14);
+      if (t < 101.8) { g.glowDot(S.X(x0 + h), S.Y(f(x0 + h)), 5, COL.lilac, 14); g.txt(`h = ${fmt(h, 2)}`, S.X(x0 + h) + 10, S.Y(f(x0 + h)) + 4, { mono: true, s: 12.5, c: COL.lilac }); }
+      g.txt(`slope = ${fmt(s_, 2)}`, S.X(x0) - 12, S.Y(f(x0)) - 16, { mono: true, s: 14, c: COL.amber, al: 'right', w: 600 });
+    }
+    // ── Act VI: dice ──
+    const dA = win(t, 108.4, 131, .8);
+    if (dA > 0) {
+      const n = Math.floor(lerp(0, THROWS.length, Math.pow(E(t, 110, 124), 1.3))), counts = Array(13).fill(0);
+      for (let i = 0; i < n; i++) counts[THROWS[i]]++;
+      const S = g.scaler(R, [1.5, 12.5], [0, .2], { l: 38, r: 16, t: 26, b: 30 });
+      ctx.globalAlpha = dA;
+      for (let s = 2; s <= 12; s++) {
+        const share = n ? counts[s] / n : 0, bw = S.sx * .7, x = S.X(s) - bw / 2;
+        ctx.fillStyle = rgba(s === 7 ? COL.amber : COL.star, .75); ctx.fillRect(x, S.Y(share), bw, S.Y(0) - S.Y(share));
+        const tru = (6 - Math.abs(7 - s)) / 36;
+        g.dashed(x - 3, S.Y(tru), x + bw + 3, S.Y(tru), COL.rose, 1.6, [4, 3]);
+        g.txt('' + s, S.X(s), S.iy + S.ih + 16, { mono: true, s: 11.5, al: 'center', c: COL.bone });
+      }
+      [0, .1, .2].forEach(v => g.txt(v.toFixed(1), S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' }));
+      g.txt(`${n} rolls`, S.ix + S.iw, S.iy + 10, { mono: true, s: 14, c: COL.bone, al: 'right', w: 600 });
+      g.txt('dashes: the true chances', S.ix + S.iw, S.iy + 28, { s: 11.5, c: COL.rose, al: 'right' });
+    }
+    ctx.restore();
+    // epilogue words
+    const ep = E(t, 127, 129);
+    if (ep > 0) {
+      ctx.save(); ctx.globalAlpha = ep;
+      ['vectors', 'matrices', 'slopes', 'chances'].forEach((w_, i) => {
+        const on = E(t, 127 + i * .7, 128 + i * .7);
+        g.txt(w_, R.x + R.w / 2, R.y + R.h * .28 + i * 44, { serif: true, it: true, s: 32, c: [COL.amber, COL.star, COL.lilac, COL.rose][i], al: 'center', w: 600, a: on });
+      });
+      ctx.restore();
+    }
+    drawPanel(t, g);
+  }
+
+  function drawPanel(t, g) {
+    const R = g.RP, { ctx } = g;
+    const a3 = win(t, 50, 66.2, .8);
+    if (a3 > 0) {
+      const S = g.scaler(R, [0, 360], [-8.5, 8.5], { l: 34, r: 12, t: 30, b: 22 });
+      ctx.save(); ctx.globalAlpha = a3;
+      g.cap('u · v AS v TURNS', R.x + 10, R.y + 12);
+      g.line(S.ix, S.Y(0), S.ix + S.iw, S.Y(0), rgba(COL.bone, .3));
+      [0, 90, 180, 270, 360].forEach(d => g.txt(d + '°', S.X(d), S.iy + S.ih + 14, { mono: true, s: 10, al: 'center' }));
+      const uang = Math.atan2(U[1], U[0]), len = Math.hypot(...U) * 2.6;
+      ctx.strokeStyle = rgba(COL.bone, .6); ctx.lineWidth = 1.6; ctx.beginPath();
+      for (let d = 0; d <= 360; d += 3) { const y = len * Math.cos(d * Math.PI / 180 - uang); d ? ctx.lineTo(S.X(d), S.Y(y)) : ctx.moveTo(S.X(d), S.Y(y)); }
+      ctx.stroke();
+      const th = vAngle(t), dd = th * 180 / Math.PI, y = len * Math.cos(th - uang);
+      g.glowDot(S.X(dd), S.Y(y), 5, Math.abs(y) < .6 ? COL.lilac : y > 0 ? COL.amber : COL.rose, 14);
+      g.txt('same way', S.X(18), S.Y(len) - 6, { s: 11, c: COL.amber, al: 'center' });
+      g.txt('opposite', S.X(198), S.Y(-len) + 14, { s: 11, c: COL.rose, al: 'center' });
+      ctx.restore();
+    }
+    const a4 = win(t, 66.6, 88, .8);
+    if (a4 > 0) {
+      const M = matrixAt(t);
+      ctx.save(); ctx.globalAlpha = a4;
+      g.cap('THE MATRIX M', R.x + 10, R.y + 12);
+      const x0 = R.x + 40, y0 = R.y + 50;
+      ctx.strokeStyle = COL.bone; ctx.lineWidth = 2;
+      [[x0, 1], [x0 + 190, -1]].forEach(([x, dir]) => { ctx.beginPath(); ctx.moveTo(x + 10 * dir, y0); ctx.lineTo(x, y0); ctx.lineTo(x, y0 + 96); ctx.lineTo(x + 10 * dir, y0 + 96); ctx.stroke(); });
+      [[0, 0], [0, 1], [1, 0], [1, 1]].forEach(([r, c]) => g.txt(fmt(M[r][c], 2), x0 + 50 + c * 90, y0 + 38 + r * 44, { mono: true, s: 20, c: c ? COL.star : COL.amber, al: 'center', w: 600 }));
+      g.txt('column 1 = where î lands', R.x + 12, y0 + 130, { s: 12, c: COL.amber });
+      g.txt('column 2 = where ĵ lands', R.x + 12, y0 + 150, { s: 12, c: COL.star });
+      const name = t < 71.5 ? 'turning' : t < 77.5 ? 'rotation by 45°' : t < 83.5 ? 'stretch x by 2' : 'shear';
+      g.txt(name, R.x + 12, y0 + 186, { serif: true, it: true, s: 20, c: COL.bone, w: 600 });
+      ctx.restore();
+    }
+    const a5 = win(t, 96, 108.2, .8);
+    if (a5 > 0) {
+      const S = g.scaler(R, [-3.5, 3.5], [-3.5, 3.5], { l: 30, r: 12, t: 30, b: 22 });
+      ctx.save(); ctx.globalAlpha = a5;
+      g.cap('THE DERIVATIVE  f′(x) = x', R.x + 10, R.y + 12);
+      g.line(S.ix, S.Y(0), S.ix + S.iw, S.Y(0), rgba(COL.bone, .3)); g.line(S.X(0), S.iy, S.X(0), S.iy + S.ih, rgba(COL.bone, .3));
+      const xEnd = t < 102 ? -3.4 : lerp(-2.6, 2.6, E(t, 102, 107));
+      ctx.strokeStyle = COL.amber; ctx.lineWidth = 2; ctx.beginPath();
+      for (let i = 0; i <= 60; i++) { const x = lerp(-3.4, 3.4, i / 60); ctx.globalAlpha = a5 * (x <= xEnd ? 1 : .15); }
+      ctx.globalAlpha = a5 * .25; ctx.beginPath(); ctx.moveTo(S.X(-3.4), S.Y(-3.4)); ctx.lineTo(S.X(3.4), S.Y(3.4)); ctx.stroke();
+      if (t >= 102) { ctx.globalAlpha = a5; ctx.beginPath(); ctx.moveTo(S.X(-2.6), S.Y(-2.6)); ctx.lineTo(S.X(xEnd), S.Y(xEnd)); ctx.stroke(); g.glowDot(S.X(xEnd), S.Y(xEnd), 5, COL.amber, 14); }
+      ctx.globalAlpha = a5;
+      g.txt('negative: falling', S.X(-3.3), S.Y(-3), { s: 11, c: COL.rose });
+      g.txt('zero: the bottom', S.X(.15), S.Y(0) - 8, { s: 11, c: COL.lilac });
+      g.txt('positive: rising', S.X(1.2), S.Y(3), { s: 11, c: COL.mint });
+      ctx.restore();
+    }
+    const a6 = win(t, 110, 126.4, .8);
+    if (a6 > 0) {
+      const S = g.scaler(R, [0, THROWS.length], [0, .35], { l: 34, r: 12, t: 30, b: 22 });
+      const n = Math.floor(lerp(0, THROWS.length, Math.pow(E(t, 110, 124), 1.3)));
+      ctx.save(); ctx.globalAlpha = a6;
+      g.cap('SHARE OF SEVENS SO FAR', R.x + 10, R.y + 12);
+      [0, .1, .2, .3].forEach(v => { g.line(S.ix, S.Y(v), S.ix + S.iw, S.Y(v), rgba(COL.bone, .06)); g.txt(v.toFixed(1), S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' }); });
+      g.dashed(S.ix, S.Y(1 / 6), S.ix + S.iw, S.Y(1 / 6), COL.rose, 1.4); g.txt('1/6 = 0.167', S.ix + S.iw - 2, S.Y(1 / 6) - 6, { s: 11, c: COL.rose, al: 'right' });
+      let sevens = 0; ctx.save(); g.clipTo(S); ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.8; ctx.beginPath();
+      for (let i = 0; i < n; i++) { if (THROWS[i] === 7) sevens++; const y = sevens / (i + 1); i ? ctx.lineTo(S.X(i + 1), S.Y(y)) : ctx.moveTo(S.X(1), S.Y(y)); }
+      ctx.stroke(); ctx.restore();
+      if (n) { g.glowDot(S.X(n), S.Y(sevens / n), 4, COL.amber, 12); g.txt(`${sevens} / ${n} = ${(sevens / n).toFixed(3)}`, S.ix + 8, S.iy + 14, { mono: true, s: 12, c: COL.bone }); }
+      ctx.restore();
+    }
+  }
+
+  const num = s => `<span class="num">${s}</span>`;
+  const frac = (a, b) => `<span class="fr"><span>${a}</span><span>${b}</span></span>`;
+  const MATH = [
+    { t0: 8.4, t1: 30, html: t => `<p class="lbl">Vectors</p>
+       <div class="eq sm"><span class="a">a</span> = (3, 2) &nbsp; <span class="s">b</span> = (1, 2)</div>
+       ${t > 20 ? `<div class="eq sm"><span class="a">a</span> + <span class="s">b</span> = (3 + 1, 2 + 2) = ${num('(4, 4)')}</div>` : ''}
+       ${t > 25 ? `<div class="eq sm">2 × <span class="a">a</span> = (6, 4) &nbsp; −1 × <span class="a">a</span> = (−3, −2)</div>` : ''}` },
+    { t0: 30.4, t1: 48, html: t => t < 38 ? `<p class="lbl">Length</p>
+       <div class="eq sm">|<span class="a">a</span>| = √(3² + 2²) = √13 = ${num('3.61')}</div>
+       <p class="note">Square each number, add, take the square root.</p>` : `<p class="lbl">Distance</p>
+       <div class="eq sm"><i>d</i>(p, q) = |q − p| = √((2 − (−3))² + (2 − (−1))²)</div>
+       <div class="eq sm">= √(5² + 3²) = √34 = ${num('5.83')}</div>` },
+    { t0: 48.4, t1: 66, html: t => { const th = vAngle(t), v = [2.6 * Math.cos(th), 2.6 * Math.sin(th)];
+       return `<p class="lbl">Dot product</p>
+       <div class="eq sm">u · v = u₁ × v₁ + u₂ × v₂</div>
+       <div class="eq sm">= 3 × ${fmt(v[0], 2)} + 1 × ${fmt(v[1], 2)} = ${num(fmt(3 * v[0] + v[1], 2))}</div>
+       <p class="note">Also equal to |u| × |v| × cos(angle between them).</p>`; } },
+    { t0: 66.4, t1: 88, html: () => `<p class="lbl">Matrix times vector</p>
+       <div class="eq sm">${`<span class="fr"><span>a b</span><span>c d</span></span>`} × (x, y) = (a·x + b·y, c·x + d·y)</div>
+       <p class="note">Each row of the matrix makes a dot product with the vector.</p>` },
+    { t0: 88.4, t1: 108, html: t => `<p class="lbl">Derivative</p>
+       <div class="eq sm">slope ≈ ${frac('f(x + h) − f(x)', 'h')} &nbsp; as h shrinks toward 0</div>
+       <div class="eq sm">f(x) = x² ÷ 2 &nbsp; → &nbsp; f′(x) = x</div>
+       <p class="note">${t < 102 ? 'At x = 1.5 the slope settles on 1.5.' : 'Gradient descent walks against the slope, toward the point where it is zero.'}</p>` },
+    { t0: 108.4, t1: 126, html: () => `<p class="lbl">Probability</p>
+       <div class="eq sm">P(sum = 7) = ${frac('ways to make 7', 'all outcomes')} = ${frac(6, 36)} = ${num('0.167')}</div>
+       <p class="note">Chances are between 0 and 1. The share you see in many trials settles toward the true chance.</p>` },
+    { t0: 126.4, t1: 138.5, html: () => `<p class="lbl">Where you will meet them</p>
+       <div class="eq sm">vectors and distance: every lesson, especially KNN and SVM</div>
+       <div class="eq sm">derivatives: gradient descent &nbsp; probability: logistic regression, naive Bayes</div>` },
+  ];
+  const mood = t => t < 30 ? .35 : t < 66 ? .3 : t < 88 ? .4 : t < 102 ? .45 : t < 110 ? .15 : t < 118 ? .5 : .1;
+  const events = [{ t: 14, fn: pl => pl(440, .06) }, { t: 17.5, fn: pl => pl(523.25, .06) }, { t: 23.4, fn: pl => pl(659.25, .07) },
+    { t: 34, fn: pl => pl(587.33, .06) }, { t: 43, fn: pl => pl(659.25, .06) }, { t: 71.5, fn: pl => pl(392, .06) }, { t: 77.5, fn: pl => pl(440, .06) },
+    { t: 83.5, fn: pl => pl(493.88, .06) }, { t: 99.5, fn: pl => pl(783.99, .07) }, { t: 104.5, fn: pl => pl(329.63, .08) }];
+  FilmKit.run({ DUR, CHAPTERS, SUBS, MATH, draw, mood, events, chord: [110, 164.81, 220, 277.18, 329.63] });
+})();
+
+</script>
+</body>
+</html>

@@ -1,6 +1,22 @@
 {
   "lessons": [
     {
+      "slug": "math-toolkit",
+      "title": "The Math Toolkit",
+      "summary": "Everything the course leans on: vectors, distance, the dot product, matrices, derivatives, logarithms and probability.",
+      "minutes": 45,
+      "film": {
+        "file": "math-toolkit.html?v=1",
+        "title": "The Toolkit",
+        "note": "2 min 18 s, best with sound and narration on"
+      },
+      "doc": true,
+      "code": [],
+      "videos": [],
+      "lab": "math-toolkit",
+      "labVersion": 1
+    },
+    {
       "slug": "linear-regression",
       "title": "Linear Regression",
       "summary": "How a straight line learns to fit noisy data: errors, squared loss, gradients and gradient descent.",

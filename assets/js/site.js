@@ -58,7 +58,7 @@
       const done = progress.all();
       list.innerHTML = data.lessons.map((l, i) => `
         <li class="stop${done[l.slug] ? ' done' : ''}">
-          <div class="n">${String(i + 1).padStart(2, '0')}</div>
+          <div class="n">${String(i).padStart(2, '0')}</div>
           <div>
             <h3><a href="lesson.html?l=${encodeURIComponent(l.slug)}">${esc(l.title)}</a></h3>
             <p>${esc(l.summary)}</p>
@@ -149,7 +149,7 @@
 
       host.innerHTML = `
         <header class="lesson-head">
-          <div class="crumbs"><a href="./">Learning path</a> / Lesson ${idx + 1} of ${data.lessons.length}</div>
+          <div class="crumbs"><a href="./">Learning path</a> / Lesson ${idx}</div>
           <h1>${esc(l.title)}</h1>
           <p class="lede">${esc(l.summary)}</p>
           <div class="lesson-meta"><span>${l.minutes} min</span>${chips(l)}</div>

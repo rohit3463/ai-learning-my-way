@@ -1,0 +1,127 @@
+<!--
+  Lesson notes: Lesson 0, the math toolkit.
+  Math: \( ... \) inline, \[ ... \] centered. Every <h2> appears in "On this page".
+-->
+
+<h2>Why start here</h2>
+<p>Every model in this course is built from a handful of ideas: <strong>vectors</strong>, <strong>distances</strong>, <strong>matrices</strong>, <strong>slopes</strong> and <strong>chances</strong>. None of them needs more than school maths. This lesson collects them in one place, so later lessons can use them without stopping to explain.</p>
+<p>Skim what you already know. Each section says where it comes back later.</p>
+
+<h2>Vectors</h2>
+<p>A <strong>vector</strong> is an ordered list of numbers:</p>
+\[ a = (3, 2) \]
+<p>With two numbers you can draw it as an arrow: 3 across and 2 up (<a href="films/math-toolkit.html?t=8">Act I</a>). With more numbers you can't draw it, but everything below still works the same way. In machine learning a vector usually describes one example: a house as (size, rooms, age), or a message as a count of each word.</p>
+
+<h3>Adding and scaling</h3>
+<p>Add two vectors by adding matching entries. On paper, put one arrow at the tip of the other:</p>
+\[ (3, 2) + (1, 2) = (3 + 1,\ 2 + 2) = (4, 4) \]
+<p>Multiply a vector by a number (a <strong>scalar</strong>) by multiplying every entry. It stretches, shrinks, or with a negative number flips the arrow:</p>
+\[ 2 \times (3, 2) = (6, 4) \qquad -1 \times (3, 2) = (-3, -2) \]
+
+<h3>Length</h3>
+<p>The length of a vector comes from Pythagoras: square each entry, add, take the square root.</p>
+\[ |a| = \sqrt{a_1^2 + a_2^2 + \dots + a_n^2} \qquad |(3, 2)| = \sqrt{9 + 4} = 3.61 \]
+
+<h2>Distance</h2>
+<p>The distance between two points \(p\) and \(q\) is the length of the arrow from one to the other, \(q - p\):</p>
+\[ d(p, q) = \sqrt{(q_1 - p_1)^2 + (q_2 - p_2)^2 + \dots} \]
+<p>From \((-3, -1)\) to \((2, 2)\): the arrow is \((5, 3)\), so the distance is \(\sqrt{25 + 9} = 5.83\) (<a href="films/math-toolkit.html?t=38">Act II</a>).</p>
+<blockquote><p><strong>Comes back in:</strong> k-nearest neighbours (which points are close?), SVM (how wide is the street?), and anywhere we ask how different two examples are.</p></blockquote>
+
+<h2>The dot product</h2>
+<p>Multiply matching entries of two vectors and add the results. Two vectors go in, one number comes out:</p>
+\[ u \cdot v = u_1 v_1 + u_2 v_2 + \dots + u_n v_n \qquad (3, 1) \cdot (2, 4) = 6 + 4 = 10 \]
+<p>It also measures how much two arrows point the same way:</p>
+\[ u \cdot v = |u| \times |v| \times \cos(\text{angle between them}) \]
+<ul>
+  <li>positive: they point roughly the same way</li>
+  <li>zero: they are at right angles</li>
+  <li>negative: they point roughly apart</li>
+</ul>
+<p>Dividing by both lengths leaves just the cosine, called the <strong>cosine similarity</strong>. It is 1 for the same direction and ignores how long the arrows are. It is a common way to compare tastes, documents or images (<a href="films/math-toolkit.html?t=48">Act III</a>).</p>
+<blockquote><p><strong>Comes back in:</strong> every model's score. \(w_1 x_1 + w_2 x_2 + b\) is the dot product \(w \cdot x\) plus \(b\).</p></blockquote>
+
+<h2>Matrices</h2>
+<p>A <strong>matrix</strong> is a grid of numbers with rows and columns. A matrix with 2 rows and 3 columns is called "2 by 3".</p>
+\[ M = \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix} \]
+
+<h3>Matrix times vector</h3>
+<p>Each row of the matrix takes a dot product with the vector:</p>
+\[ \begin{pmatrix} a & b \\ c & d \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} a x + b y \\ c x + d y \end{pmatrix} \]
+<p>Seen as a picture, a matrix <em>moves</em> vectors. It can turn, stretch or slant the whole plane. Its first column is where the arrow \((1, 0)\) lands, and its second column is where \((0, 1)\) lands (<a href="films/math-toolkit.html?t=66">Act IV</a>). For example, \(\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}\) turns everything a quarter turn to the left.</p>
+
+<h3>Matrix times matrix</h3>
+<p>Entry (row \(i\), column \(j\)) of \(A \times B\) is the dot product of row \(i\) of \(A\) with column \(j\) of \(B\). The result does both moves in one: first \(B\), then \(A\). Order matters: \(A \times B\) is usually not the same as \(B \times A\).</p>
+\[ \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix} \begin{pmatrix} 5 & 6 \\ 7 & 8 \end{pmatrix} = \begin{pmatrix} 1 \cdot 5 + 2 \cdot 7 & 1 \cdot 6 + 2 \cdot 8 \\ 3 \cdot 5 + 4 \cdot 7 & 3 \cdot 6 + 4 \cdot 8 \end{pmatrix} = \begin{pmatrix} 19 & 22 \\ 43 & 50 \end{pmatrix} \]
+<p>The <strong>transpose</strong> \(M^{T}\) swaps rows and columns. The <strong>identity</strong> matrix (1s on the diagonal, 0s elsewhere) changes nothing.</p>
+<blockquote><p><strong>Comes back in:</strong> a whole dataset is a matrix (one row per example), and the weights of a neural network are matrices.</p></blockquote>
+
+<h2>Derivatives</h2>
+<p>The <strong>derivative</strong> of a function \(f(x)\), written \(f'(x)\) or \(\dfrac{df}{dx}\), is its slope at a point: how much \(f\) changes for a tiny change in \(x\). Take two points close together and measure the rise over the run, then bring them closer (<a href="films/math-toolkit.html?t=88">Act V</a>):</p>
+\[ f'(x) \approx \frac{f(x + h) - f(x)}{h} \quad \text{for a very small } h \]
+
+<h3>The rules you will need</h3>
+<table>
+  <thead><tr><th>Function</th><th>Derivative</th><th>Example</th></tr></thead>
+  <tbody>
+    <tr><td>a constant \(c\)</td><td>\(0\)</td><td>\(7 \to 0\)</td></tr>
+    <tr><td>\(x^n\)</td><td>\(n \times x^{n-1}\)</td><td>\(x^2 \to 2x\), \(x^3 \to 3x^2\)</td></tr>
+    <tr><td>\(c \times f(x)\)</td><td>\(c \times f'(x)\)</td><td>\(5x^2 \to 10x\)</td></tr>
+    <tr><td>\(f(x) + g(x)\)</td><td>\(f'(x) + g'(x)\)</td><td>\(x^2 + 3x \to 2x + 3\)</td></tr>
+    <tr><td>\(e^x\)</td><td>\(e^x\)</td><td></td></tr>
+    <tr><td>\(\ln x\)</td><td>\(1 \div x\)</td><td></td></tr>
+  </tbody>
+</table>
+
+<h3>The chain rule</h3>
+<p>For a function inside a function, multiply the outer slope by the inner slope:</p>
+\[ \frac{d}{dx} f(g(x)) = f'(g(x)) \times g'(x) \]
+<p>This is exactly how Lesson 1 gets its gradient. With \(e = y - w x - b\), the squared error \(e^2\) has slope \(2e\) with respect to \(e\), and \(e\) has slope \(-x\) with respect to \(w\), so:</p>
+\[ \frac{d}{dw} (y - w x - b)^2 = 2(y - w x - b) \times (-x) \]
+
+<h3>Several inputs: the gradient</h3>
+<p>When a function has several inputs, such as a loss \(L(w, b)\), take the slope with respect to one input while holding the others still. That is a <strong>partial derivative</strong>, written \(\dfrac{\partial L}{\partial w}\). The list of all of them is the <strong>gradient</strong>. It points uphill, and stepping the other way is <strong>gradient descent</strong>:</p>
+\[ w \leftarrow w - \eta \times \frac{\partial L}{\partial w} \]
+<blockquote><p><strong>Comes back in:</strong> every model trained by gradient descent: linear and logistic regression, SVMs and neural networks.</p></blockquote>
+
+<h2>Exponentials and logarithms</h2>
+<p>\(e = 2.718\ldots\) is a special number, and \(e^x\) grows faster and faster. The natural logarithm \(\ln x\) undoes it: \(\ln(e^x) = x\). Two log rules turn multiplication into addition:</p>
+\[ \ln(a \times b) = \ln a + \ln b \qquad \ln(a^n) = n \ln a \]
+<blockquote><p><strong>Comes back in:</strong> the sigmoid \(1 \div (1 + e^{-z})\) and the log loss in logistic regression, and adding log-chances in naive Bayes.</p></blockquote>
+
+<h2>Probability</h2>
+<p>A probability is a number from 0 (impossible) to 1 (certain). When all outcomes are equally likely:</p>
+\[ P(\text{event}) = \frac{\text{outcomes where it happens}}{\text{all outcomes}} \]
+<p>Two dice have 36 equally likely outcomes, and 6 of them sum to 7, so \(P(\text{sum} = 7) = 6 \div 36 = 0.167\). Roll many times and the share of sevens settles toward that value (<a href="films/math-toolkit.html?t=108">Act VI</a>).</p>
+
+<h3>The rules you will need</h3>
+<table>
+  <thead><tr><th>Rule</th><th>Formula</th></tr></thead>
+  <tbody>
+    <tr><td>not A</td><td>\(P(\text{not } A) = 1 - P(A)\)</td></tr>
+    <tr><td>A and B, if independent</td><td>\(P(A \text{ and } B) = P(A) \times P(B)\)</td></tr>
+    <tr><td>A given B</td><td>\(P(A \mid B) = \dfrac{P(A \text{ and } B)}{P(B)}\)</td></tr>
+    <tr><td>Bayes' rule</td><td>\(P(A \mid B) = \dfrac{P(B \mid A) \times P(A)}{P(B)}\)</td></tr>
+  </tbody>
+</table>
+<p>"Given" means "now that we know B happened". For example, the chance of a total above 9 is \(6 \div 36 = 0.17\), but given that the first die shows 6 it jumps to \(3 \div 6 = 0.5\).</p>
+
+<h3>Averages</h3>
+<p>The <strong>mean</strong> (average) of \(n\) numbers is their sum divided by \(n\). Most losses in this course are a mean: the average squared error, the average log loss, the average hinge cost.</p>
+\[ \text{mean} = \frac{x_1 + x_2 + \dots + x_n}{n} \]
+<p>Books often write a sum with the Greek letter sigma: \(\sum_{i=1}^{n} x_i\) means \(x_1 + x_2 + \dots + x_n\). This course writes sums out in full, but now you can read both.</p>
+<blockquote><p><strong>Comes back in:</strong> logistic regression (probabilities), naive Bayes (conditional probability and Bayes' rule), and every loss (means).</p></blockquote>
+
+<h2>Where you will use each tool</h2>
+<table>
+  <thead><tr><th>Tool</th><th>Used in</th></tr></thead>
+  <tbody>
+    <tr><td>vectors and dot products</td><td>every model's score \(w \cdot x + b\)</td></tr>
+    <tr><td>length and distance</td><td>k-nearest neighbours, SVM street width</td></tr>
+    <tr><td>matrices</td><td>datasets, neural network layers</td></tr>
+    <tr><td>derivatives and the chain rule</td><td>gradient descent in linear regression, logistic regression and SVM</td></tr>
+    <tr><td>exponentials and logarithms</td><td>the sigmoid, log loss, naive Bayes with long messages</td></tr>
+    <tr><td>probability and Bayes' rule</td><td>logistic regression, naive Bayes</td></tr>
+    <tr><td>Gini impurity (built from shares, which are probabilities)</td><td>decision trees</td></tr>
+  </tbody>
+</table>
