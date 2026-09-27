@@ -289,7 +289,7 @@ details.code-file pre { margin: 0 12px 12px; }
 .ide-count { color: var(--ide-amber); }
 .ide-status { margin-left: auto; color: var(--ide-dim); }
 .ide-status::before { content: "●"; margin-right: 6px; color: #56607a; }
-.ide-status[data-state="loading"]::before { color: var(--ide-amber); }
+.ide-status[data-state="loading"]::before, .ide-status[data-state="installing"]::before { color: var(--ide-amber); }
 .ide-status[data-state="ready"]::before { color: var(--ide-green); }
 .ide-status[data-state="error"]::before { color: var(--ide-red); }
 
@@ -385,3 +385,4 @@ details.code-file pre { margin: 0 12px 12px; }
   .ide-steps button:not(.current) .t { display: none; }
   .ide-kbd { display: none; }
 }
+.ide-brief .ide-note { font-size: 13.5px; color: var(--ide-dim); border-left: 2px solid var(--ide-amber); padding-left: 10px; }

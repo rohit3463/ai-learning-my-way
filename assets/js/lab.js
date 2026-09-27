@@ -4,7 +4,7 @@
 // and unlocks the next step. Passing the last step calls onComplete().
 (() => {
   const CM = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/';
-  const WORKER_URL = 'assets/js/py-worker.js?v=1';
+  const WORKER_URL = 'assets/js/py-worker.js?v=2';
   const TIMEOUT_MS = 8000;
 
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -30,6 +30,12 @@
         const m = e.data;
         if (m.type === 'ready') { this.ready = true; this.onStatus('ready'); if (this.pending) this.arm(); }
         else if (m.type === 'fatal') { this.onStatus('error', m.error); this.finish({ fatal: m.error }); }
+        else if (m.type === 'installing' && this.pending && m.id === this.pending.id) {
+          clearTimeout(this.pending.timer);        // downloading is not a stuck loop
+          this.onStatus('installing', m.names.join(', '));
+          if (this.onInstall) this.onInstall(m.names);
+        }
+        else if (m.type === 'installed' && this.pending && m.id === this.pending.id) { this.onStatus('ready'); this.arm(); }
         else if (m.type === 'result' && this.pending && m.id === this.pending.id) this.finish(m.result);
       };
       w.onerror = e => { this.onStatus('error', e.message || 'Python could not start.'); this.finish({ fatal: e.message || 'Python could not start.' }); };
@@ -113,9 +119,13 @@
     const statusEl = $('lab-status');
     const runner = new Runner((state, err) => {
       statusEl.dataset.state = state;
-      statusEl.textContent = state === 'loading' ? 'Starting Python…' : state === 'ready' ? 'Python ready' : 'Python failed to start';
+      statusEl.textContent = state === 'loading' ? 'Starting Python…' : state === 'installing' ? `Installing ${err}…` : state === 'ready' ? 'Python ready' : 'Python failed to start';
       if (state === 'error' && err) statusEl.title = err;
     });
+    runner.onInstall = names => {
+      const con = $('lab-console');
+      if (con) con.innerHTML = `<div class="muted">Installing ${esc(names.join(', '))} into Python. This happens once and can take 10–30 seconds for scikit-learn…</div>`;
+    };
     // Warm up Python once the lab scrolls into view, so the first run is quick.
     const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { runner.start(); io.disconnect(); } }, { rootMargin: '400px' });
     io.observe(host);

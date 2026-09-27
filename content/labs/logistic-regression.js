@@ -5,11 +5,12 @@
 // close(a, b, tol=0.01) is provided for comparing decimals.
 (() => {
   const R = String.raw;
+  const NOTE = String.raw`<p class="ide-note">The first run downloads scikit-learn into your browser (about 40 MB, once). It can take up to a minute; later runs are instant.</p>`;
   window.LABS = window.LABS || {};
   window.LABS['logistic-regression'] = {
     file: 'logistic_regression.py',
     title: 'Write logistic regression from scratch',
-    intro: R`Twelve small steps again, reusing the ideas from Lesson 1. You will build the squash, the log loss and the pulls, then train a model that predicts whether a student passes an exam. Plain Python, with only the built-in <code>math</code> module.`,
+    intro: R`Thirteen small steps again, reusing the ideas from Lesson 1. You will build the squash, the log loss and the pulls, then train a model that predicts whether a student passes an exam. Plain Python, with only the built-in <code>math</code> module. The last step checks your work against scikit-learn, the library used in practice.`,
     doneTitle: 'You wrote logistic regression from scratch.',
     doneText: 'Every line below is yours: scores, the sigmoid, the log loss, the pulls, the gradients and the training loop. The lesson is marked as done.',
     finalMessage: 'All tests pass. Your logistic regression works.',
@@ -277,6 +278,35 @@ assert close(w, _w, 0.05) and close(b, _b, 0.1), f"w = {w:.3f}, b = {b:.3f}. The
           { name: 'chance is the probability for 4.5 hours', check: R`assert close(chance, sigmoid(score(w, b, 4.5)), 1e-6) and 0.5 < chance < 1, f"chance is {chance}, expected sigmoid(score(w, b, 4.5)) = {sigmoid(score(w, b, 4.5)):.3f}"` },
           { name: 'tipping point is −b ÷ w', check: R`assert w != 0 and close(tipping, -b / w, 1e-6), f"tipping is {tipping}, expected −b / w"` },
           { name: 'at the tipping point the model says 0.5', check: R`assert close(sigmoid(score(w, b, tipping)), 0.5, 1e-6), "the probability at the tipping point should be exactly 0.5"` },
+        ],
+      },
+      {
+        id: 'sklearn', title: 'Check with scikit-learn',
+        brief: R`<p>scikit-learn's <code>LogisticRegression</code> fits the same model. By default it also adds a penalty that keeps the weights small, so pass <code>penalty=None</code> to match the plain log loss you wrote.</p>
+          <p>Fit it on <code>hours</code> (reshaped into one column) and <code>passed</code>, then compare its weight, intercept and its chance of passing after 4.5 hours (<code>model.predict_proba([[4.5]])[0][1]</code>) with yours.</p>${NOTE}`,
+        starter: R`import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+model = None       # replace: LogisticRegression(penalty=None).fit(...)
+sk_chance = None   # replace: scikit-learn's chance of passing after 4.5 hours
+
+print("mine:        ", round(w, 3), round(b, 3), f"{chance:.1%}")
+if model is not None:
+    print("scikit-learn:", round(model.coef_[0][0], 3), round(model.intercept_[0], 3), f"{sk_chance:.1%}")`,
+        hint: R`<code>model = LogisticRegression(penalty=None).fit(np.array(hours).reshape(-1, 1), passed)</code> and <code>sk_chance = model.predict_proba([[4.5]])[0][1]</code>.`,
+        solution: R`import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+model = LogisticRegression(penalty=None).fit(np.array(hours).reshape(-1, 1), passed)
+sk_chance = model.predict_proba([[4.5]])[0][1]
+
+print("mine:        ", round(w, 3), round(b, 3), f"{chance:.1%}")
+if model is not None:
+    print("scikit-learn:", round(model.coef_[0][0], 3), round(model.intercept_[0], 3), f"{sk_chance:.1%}")`,
+        tests: [
+          { name: 'model is a fitted LogisticRegression without a penalty', check: R`from sklearn.linear_model import LogisticRegression as _L; assert isinstance(model, _L) and hasattr(model, "coef_") and model.penalty is None, "use LogisticRegression(penalty=None)"` },
+          { name: 'same weight and intercept as yours', check: R`assert close(model.coef_[0][0], w, 0.02) and close(model.intercept_[0], b, 0.05), f"scikit-learn {model.coef_[0][0]:.3f}, {model.intercept_[0]:.3f}; yours {w:.3f}, {b:.3f}"` },
+          { name: 'same chance of passing', check: R`assert sk_chance is not None and close(sk_chance, chance, 0.01), f"scikit-learn {sk_chance}, yours {chance:.3f}"` },
         ],
       },
     ],

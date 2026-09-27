@@ -3,11 +3,12 @@
 // Tests run after all earlier steps' code. close(a, b, tol=0.01) is provided.
 (() => {
   const R = String.raw;
+  const NOTE = String.raw`<p class="ide-note">The first run downloads scikit-learn into your browser (about 40 MB, once). It can take up to a minute; later runs are instant.</p>`;
   window.LABS = window.LABS || {};
   window.LABS['k-nearest-neighbors'] = {
     file: 'knn.py',
     title: 'Write k-nearest neighbours from scratch',
-    intro: R`Twelve small steps: measure distances, find the nearest points, let them vote, pick a good k, and rescale the measurements so each one counts fairly. Plain Python, with only the built-in <code>math</code> module.`,
+    intro: R`Thirteen small steps: measure distances, find the nearest points, let them vote, pick a good k, and rescale the measurements so each one counts fairly. Plain Python, with only the built-in <code>math</code> module. The last step checks your work against scikit-learn, the library used in practice.`,
     doneTitle: 'You wrote k-nearest neighbours from scratch.',
     doneText: 'Every line below is yours: distances, the nearest neighbours, the vote, choosing k, and rescaling. The lesson is marked as done.',
     finalMessage: 'All tests pass. Your k-nearest neighbours works.',
@@ -245,6 +246,33 @@ print("rescaled:   ", scaled_guess)`,
           { name: 'raw prediction uses income only, and says yes', check: R`assert raw_guess == "yes", f"raw_guess is {raw_guess!r}, expected 'yes'"` },
           { name: 'ranges come from the customers', check: R`assert list(mins) == [22, 25000] and list(maxs) == [61, 110000], f"got {mins}, {maxs}"` },
           { name: 'after rescaling, age counts too, and the answer is no', check: R`assert scaled_guess == "no", f"scaled_guess is {scaled_guess!r}, expected 'no'. Did you rescale the new customer with the same mins and maxs?"` },
+        ],
+      },
+      {
+        id: 'sklearn', title: 'Check with scikit-learn',
+        brief: R`<p>scikit-learn's <code>KNeighborsClassifier</code> does the distance-and-vote for you, and <code>MinMaxScaler</code> does the rescaling.</p>
+          <p>Predict the stranger with \(k = 3\), and redo the shop example with rescaling, then compare both answers with yours.</p>${NOTE}`,
+        starter: R`from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import MinMaxScaler
+
+sk_guess = None    # replace: KNeighborsClassifier(n_neighbors=3), fit on points and labels, predict [query]
+sk_scaled = None   # replace: fit a MinMaxScaler on customers, then predict the rescaled new customer
+
+print("stranger, k = 3:  mine", predict(points, labels, query, 3), "| scikit-learn", sk_guess)
+print("shop, rescaled:   mine", scaled_guess, "| scikit-learn", sk_scaled)`,
+        hint: R`<code>sk_guess = KNeighborsClassifier(n_neighbors=3).fit(points, labels).predict([query])[0]</code>. For the shop: <code>scaler = MinMaxScaler().fit(customers)</code>, then fit a classifier on <code>scaler.transform(customers)</code> and predict <code>scaler.transform([new])</code>.`,
+        solution: R`from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import MinMaxScaler
+
+sk_guess = KNeighborsClassifier(n_neighbors=3).fit(points, labels).predict([query])[0]
+scaler = MinMaxScaler().fit(customers)
+sk_scaled = KNeighborsClassifier(n_neighbors=3).fit(scaler.transform(customers), bought).predict(scaler.transform([new]))[0]
+
+print("stranger, k = 3:  mine", predict(points, labels, query, 3), "| scikit-learn", sk_guess)
+print("shop, rescaled:   mine", scaled_guess, "| scikit-learn", sk_scaled)`,
+        tests: [
+          { name: 'same answer for the stranger', check: R`assert sk_guess == predict(points, labels, query, 3), f"scikit-learn says {sk_guess!r}"` },
+          { name: 'same answer for the rescaled shop example', check: R`assert sk_scaled == scaled_guess, f"scikit-learn says {sk_scaled!r}, yours {scaled_guess!r}. Rescale the new customer with the same scaler"` },
         ],
       },
     ],

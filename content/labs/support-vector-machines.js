@@ -5,11 +5,12 @@
 // close(a, b, tol=0.01) is provided for comparing decimals.
 (() => {
   const R = String.raw;
+  const NOTE = String.raw`<p class="ide-note">The first run downloads scikit-learn into your browser (about 40 MB, once). It can take up to a minute; later runs are instant.</p>`;
   window.LABS = window.LABS || {};
   window.LABS['support-vector-machines'] = {
     file: 'svm.py',
     title: 'Write a support vector machine from scratch',
-    intro: R`Twelve small steps. You will measure margins, build the hinge cost, and train a linear SVM with gradient descent, the same loop you already know. It ends by sorting apples from oranges. Plain Python, no libraries.`,
+    intro: R`Thirteen small steps. You will measure margins, build the hinge cost, and train a linear SVM with gradient descent, the same loop you already know. It ends by sorting apples from oranges. Plain Python, no libraries. The last step checks your work against scikit-learn, the library used in practice.`,
     doneTitle: 'You wrote a support vector machine from scratch.',
     doneText: 'Every line below is yours: scores, margins, the hinge cost, the penalty that widens the street, the gradients and the training loop. The lesson is marked as done.',
     finalMessage: 'All tests pass. Your support vector machine works.',
@@ -275,6 +276,36 @@ print("a fruit of size 7.2 and redness 6.0 is probably an", guess)`,
           { name: 'every fruit is on its own side', check: R`assert all(margin(w, b, x, y) > 0 for x, y in zip(fruit, kind)), "some fruit is on the wrong side of the border"` },
           { name: 'width is 2 ÷ √(w₁² + w₂²)', check: R`assert close(width, 2 / (w[0] ** 2 + w[1] ** 2) ** 0.5, 1e-6) and width > 1, f"width is {width}"` },
           { name: 'the new fruit is classified by its score', check: R`_e = "apple" if score(w, b, (7.2, 6.0)) > 0 else "orange"; assert guess == _e, f"guess is {guess!r}, expected {_e!r}"` },
+        ],
+      },
+      {
+        id: 'sklearn', title: 'Check with scikit-learn',
+        brief: R`<p>scikit-learn's <code>SVC</code> with a linear kernel solves the same problem. Its setting <code>C</code> is the other way round from our \(\lambda\): big \(C\) means few mistakes allowed. For our loss the match is</p>
+          \[ C = \frac{1}{2 \lambda n} \]
+          <p>Fit <code>SVC(kernel="linear", C=...)</code> on the four points <code>X</code>, <code>ys</code> with \(\lambda = 0.05\), and compare <code>model.coef_[0]</code> and <code>model.intercept_[0]</code> with your trained street.</p>${NOTE}`,
+        starter: R`from sklearn.svm import SVC
+
+model = None   # replace: SVC(kernel="linear", C=1 / (2 * 0.05 * len(X))).fit(X, ys)
+
+w_mine, b_mine = train(X, ys, 0.05, 0.1, 1000)
+print("mine:        ", [round(v, 3) for v in w_mine], round(b_mine, 3))
+if model is not None:
+    print("scikit-learn:", [round(v, 3) for v in model.coef_[0]], round(model.intercept_[0], 3))
+    print("support vectors it kept:", model.support_vectors_.tolist())`,
+        hint: R`<code>model = SVC(kernel="linear", C=1 / (2 * 0.05 * len(X))).fit(X, ys)</code>`,
+        solution: R`from sklearn.svm import SVC
+
+model = SVC(kernel="linear", C=1 / (2 * 0.05 * len(X))).fit(X, ys)
+
+w_mine, b_mine = train(X, ys, 0.05, 0.1, 1000)
+print("mine:        ", [round(v, 3) for v in w_mine], round(b_mine, 3))
+if model is not None:
+    print("scikit-learn:", [round(v, 3) for v in model.coef_[0]], round(model.intercept_[0], 3))
+    print("support vectors it kept:", model.support_vectors_.tolist())`,
+        tests: [
+          { name: 'model is a fitted linear SVC', check: R`from sklearn.svm import SVC as _S; assert isinstance(model, _S) and model.kernel == "linear" and hasattr(model, "coef_"), "fit SVC(kernel='linear', ...)"` },
+          { name: 'C matches λ = 0.05', check: R`assert close(model.C, 2.5, 1e-9), f"C is {model.C}, expected 1 / (2 × 0.05 × 4) = 2.5"` },
+          { name: 'same street as yours', check: R`assert all(close(a, c, 0.05) for a, c in zip(model.coef_[0], w_mine)) and close(model.intercept_[0], b_mine, 0.06), f"scikit-learn {model.coef_[0]}, {model.intercept_[0]:.3f}; yours {w_mine}, {b_mine:.3f}"` },
         ],
       },
     ],

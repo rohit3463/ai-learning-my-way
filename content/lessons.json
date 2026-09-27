@@ -14,7 +14,7 @@
       "code": [],
       "videos": [],
       "lab": "linear-regression",
-      "labVersion": 2
+      "labVersion": 3
     },
     {
       "slug": "logistic-regression",
@@ -30,7 +30,7 @@
       "code": [],
       "videos": [],
       "lab": "logistic-regression",
-      "labVersion": 1
+      "labVersion": 2
     },
     {
       "slug": "support-vector-machines",
@@ -46,7 +46,7 @@
       "code": [],
       "videos": [],
       "lab": "support-vector-machines",
-      "labVersion": 1
+      "labVersion": 2
     },
     {
       "slug": "k-nearest-neighbors",
@@ -62,7 +62,7 @@
       "code": [],
       "videos": [],
       "lab": "k-nearest-neighbors",
-      "labVersion": 1
+      "labVersion": 2
     },
     {
       "slug": "naive-bayes",
@@ -78,7 +78,7 @@
       "code": [],
       "videos": [],
       "lab": "naive-bayes",
-      "labVersion": 1
+      "labVersion": 2
     },
     {
       "slug": "decision-trees",
@@ -94,7 +94,7 @@
       "code": [],
       "videos": [],
       "lab": "decision-trees",
-      "labVersion": 1
+      "labVersion": 2
     }
   ]
 }

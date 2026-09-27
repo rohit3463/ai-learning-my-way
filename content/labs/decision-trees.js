@@ -3,11 +3,12 @@
 // Tests run after all earlier steps' code. close(a, b, tol=0.01) is provided.
 (() => {
   const R = String.raw;
+  const NOTE = String.raw`<p class="ide-note">The first run downloads scikit-learn into your browser (about 40 MB, once). It can take up to a minute; later runs are instant.</p>`;
   window.LABS = window.LABS || {};
   window.LABS['decision-trees'] = {
     file: 'decision_tree.py',
     title: 'Write a decision tree from scratch',
-    intro: R`Twelve small steps: measure mess with Gini impurity, split the data, search for the best question, grow the tree recursively, and choose a depth that does not memorise the noise. Plain Python, no libraries.`,
+    intro: R`Thirteen small steps: measure mess with Gini impurity, split the data, search for the best question, grow the tree recursively, and choose a depth that does not memorise the noise. Plain Python, no libraries. The last step checks your work against scikit-learn, the library used in practice.`,
     doneTitle: 'You wrote a decision tree from scratch.',
     doneText: 'Every line below is yours: Gini impurity, splitting, the search for the best question, recursive growing, prediction and choosing a depth. The lesson is marked as done.',
     finalMessage: 'All tests pass. Your decision tree works.',
@@ -291,6 +292,39 @@ _best = 1 + _accs.index(max(_accs))
 assert best_depth == _best, f"best_depth is {best_depth}, but depth {_best} scores {max(_accs):.0%} on the test points"` },
           { name: 'tree is built with that depth', check: R`assert tree is not None and depth_of(tree) <= best_depth and accuracy(tree, test_X, test_y) == accuracy(build(train_X, train_y, 0, best_depth), test_X, test_y), "build tree with max_depth = best_depth"` },
           { name: 'deeper is not always better', check: R`assert accuracy(build(train_X, train_y, 0, 8), train_X, train_y) >= accuracy(tree, train_X, train_y), "the deepest tree should fit the training points at least as well"` },
+        ],
+      },
+      {
+        id: 'sklearn', title: 'Check with scikit-learn',
+        brief: R`<p>scikit-learn's <code>DecisionTreeClassifier</code> grows the same kind of tree with Gini impurity. After fitting, <code>model.tree_.feature[0]</code> and <code>model.tree_.threshold[0]</code> are the first question it asks.</p>
+          <p>Fit a depth-1 tree on the ten worked-example points and check that its first question matches your <code>best_split</code>. Then fit one with <code>max_depth=best_depth</code> on the noisy training data and score it on the test points with <code>model.score</code>.</p>${NOTE}`,
+        starter: R`from sklearn.tree import DecisionTreeClassifier
+
+stump = None     # replace: DecisionTreeClassifier(max_depth=1, random_state=0) fitted on X and ys
+model = None     # replace: DecisionTreeClassifier(max_depth=best_depth, random_state=0) fitted on train_X, train_y
+sk_acc = None    # replace: model's accuracy on test_X, test_y
+
+f, t, m = best_split(X, ys)
+print("first question, mine:         x", f, ">", t)
+if stump is not None:
+    print("first question, scikit-learn: x", stump.tree_.feature[0], ">", stump.tree_.threshold[0])
+print("test accuracy, mine:", f"{accuracy(tree, test_X, test_y):.0%}", " scikit-learn:", sk_acc)`,
+        hint: R`<code>stump = DecisionTreeClassifier(max_depth=1, random_state=0).fit(X, ys)</code>, the same with <code>max_depth=best_depth</code> on the training data for <code>model</code>, and <code>sk_acc = model.score(test_X, test_y)</code>.`,
+        solution: R`from sklearn.tree import DecisionTreeClassifier
+
+stump = DecisionTreeClassifier(max_depth=1, random_state=0).fit(X, ys)
+model = DecisionTreeClassifier(max_depth=best_depth, random_state=0).fit(train_X, train_y)
+sk_acc = model.score(test_X, test_y)
+
+f, t, m = best_split(X, ys)
+print("first question, mine:         x", f, ">", t)
+if stump is not None:
+    print("first question, scikit-learn: x", stump.tree_.feature[0], ">", stump.tree_.threshold[0])
+print("test accuracy, mine:", f"{accuracy(tree, test_X, test_y):.0%}", " scikit-learn:", f"{sk_acc:.0%}")`,
+        tests: [
+          { name: 'the same first question', check: R`_f, _t, _m = best_split(X, ys); assert stump is not None and stump.tree_.feature[0] == _f and close(stump.tree_.threshold[0], _t, 1e-9), "fit a depth-1 tree on X and ys"` },
+          { name: 'model uses your best depth', check: R`assert model is not None and model.max_depth == best_depth, f"use max_depth=best_depth ({best_depth})"` },
+          { name: 'sk_acc is its test accuracy, close to yours', check: R`assert sk_acc is not None and close(sk_acc, model.score(test_X, test_y), 1e-9) and abs(sk_acc - accuracy(tree, test_X, test_y)) <= 0.1, f"scikit-learn {sk_acc}, yours {accuracy(tree, test_X, test_y)}"` },
         ],
       },
     ],

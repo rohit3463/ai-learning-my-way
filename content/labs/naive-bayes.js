@@ -3,11 +3,12 @@
 // Tests run after all earlier steps' code. close(a, b, tol=0.01) is provided.
 (() => {
   const R = String.raw;
+  const NOTE = String.raw`<p class="ide-note">The first run downloads scikit-learn into your browser (about 40 MB, once). It can take up to a minute; later runs are instant.</p>`;
   window.LABS = window.LABS || {};
   window.LABS['naive-bayes'] = {
     file: 'naive_bayes.py',
     title: 'Write a naive Bayes spam filter from scratch',
-    intro: R`Twelve small steps: split messages into words, count them, turn counts into chances with add-one smoothing, and combine the clues with Bayes' rule. Plain Python, with only the built-in <code>math</code> module.`,
+    intro: R`Thirteen small steps: split messages into words, count them, turn counts into chances with add-one smoothing, and combine the clues with Bayes' rule. Plain Python, with only the built-in <code>math</code> module. The last step checks your work against scikit-learn, the library used in practice.`,
     doneTitle: 'You wrote a naive Bayes spam filter from scratch.',
     doneText: 'Every line below is yours: the prior, the word counts, smoothing, scores, Bayes’ rule and logarithms. The lesson is marked as done.',
     finalMessage: 'All tests pass. Your spam filter works.',
@@ -248,6 +249,41 @@ for text in inbox:
         tests: [
           { name: 'the model is built from the messages', check: R`assert prior == priors(messages) and counts == word_counts(messages) and V == 11, f"V is {V}"` },
           { name: 'the inbox is sorted sensibly', check: R`r = [classify(t, prior, counts, V) for t in inbox]; assert r == ["spam", "ham", "spam", "ham", "ham"], f"got {r}"` },
+        ],
+      },
+      {
+        id: 'sklearn', title: 'Check with scikit-learn',
+        brief: R`<p>scikit-learn splits text into word counts with <code>CountVectorizer</code>, and <code>MultinomialNB</code> is exactly the model you built. Its <code>alpha=1</code> is add-one smoothing.</p>
+          <p>Fit both on the messages, then compare scikit-learn's chance that "free money now" is spam with yours. <code>predict_proba</code> gives one column per class, in the order of <code>model.classes_</code>.</p>${NOTE}`,
+        starter: R`from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+
+texts = [t for t, _ in messages]
+labs = [l for _, l in messages]
+
+vec = None       # replace: a CountVectorizer fitted on texts
+model = None     # replace: MultinomialNB(alpha=1) fitted on the word counts and labs
+sk_spam = None   # replace: scikit-learn's chance that "free money now" is spam
+
+print("mine:        ", round(chance_of_spam("free money now", prior, counts, V), 4))
+print("scikit-learn:", sk_spam if sk_spam is None else round(sk_spam, 4))`,
+        hint: R`<code>vec = CountVectorizer().fit(texts)</code>, <code>model = MultinomialNB(alpha=1).fit(vec.transform(texts), labs)</code>, and <code>sk_spam = model.predict_proba(vec.transform(["free money now"]))[0][list(model.classes_).index("spam")]</code>.`,
+        solution: R`from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+
+texts = [t for t, _ in messages]
+labs = [l for _, l in messages]
+
+vec = CountVectorizer().fit(texts)
+model = MultinomialNB(alpha=1).fit(vec.transform(texts), labs)
+sk_spam = model.predict_proba(vec.transform(["free money now"]))[0][list(model.classes_).index("spam")]
+
+print("mine:        ", round(chance_of_spam("free money now", prior, counts, V), 4))
+print("scikit-learn:", sk_spam if sk_spam is None else round(sk_spam, 4))`,
+        tests: [
+          { name: 'the same 11-word vocabulary', check: R`assert vec is not None and len(vec.vocabulary_) == 11, "fit a CountVectorizer on the message texts"` },
+          { name: 'smoothing is add-one', check: R`assert model is not None and model.alpha == 1, "use MultinomialNB(alpha=1)"` },
+          { name: 'same chance of spam as yours', check: R`assert sk_spam is not None and close(sk_spam, chance_of_spam("free money now", prior, counts, V), 1e-6), f"scikit-learn {sk_spam}"` },
         ],
       },
     ],

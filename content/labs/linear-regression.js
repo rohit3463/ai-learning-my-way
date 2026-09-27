@@ -5,6 +5,7 @@
 // close(a, b, tol=0.01) is provided for comparing decimals.
 (() => {
   const R = String.raw;
+  const NOTE = String.raw`<p class="ide-note">The first run downloads scikit-learn into your browser (about 40 MB, once). It can take up to a minute; later runs are instant.</p>`;
   window.LABS = window.LABS || {};
   window.LABS['linear-regression'] = {
     file: 'linear_regression.py',
@@ -12,7 +13,7 @@
     doneTitle: 'You wrote linear regression from scratch.',
     doneText: 'Every line below is yours: data, predictions, errors, loss, gradients, and the training loop. The lesson is marked as done.',
     finalMessage: 'All tests pass. Your linear regression works.',
-    intro: R`Twelve small steps, one or two ideas at a time. Write each piece, run its tests, and move on. At the end you will have a working program that learns a line from data, in plain Python with no libraries.`,
+    intro: R`Thirteen small steps, one or two ideas at a time. Write each piece, run its tests, and move on. At the end you will have a working program that learns a line from data, in plain Python with no libraries. The last step checks your work against scikit-learn, the library used in practice.`,
     steps: [
       {
         id: 'data',
@@ -276,6 +277,35 @@ _bw = sum((x - _mx) * (y - _my) for x, y in zip(sizes, prices)) / sum((x - _mx) 
 _bb = _my - _bw * _mx
 assert close(w, _bw, 0.02) and close(b, _bb, 0.02), f"w = {w:.3f}, b = {b:.3f}. The best line is w = {_bw:.3f}, b = {_bb:.3f}"` },
           { name: 'guess is the prediction for size 1.6', check: R`assert close(guess, predict(w, b, 1.6), 1e-6) and guess > 0, f"guess is {guess}, expected predict(w, b, 1.6) = {predict(w, b, 1.6):.3f}"` },
+        ],
+      },
+      {
+        id: 'sklearn', title: 'Check with scikit-learn',
+        brief: R`<p>In practice you would use a library. <strong>scikit-learn</strong> fits the same line in one call, solving for the best \(w\) and \(b\) directly, with no learning rate.</p>
+          <p>Fit a <code>LinearRegression</code> on <code>xs</code> and <code>ys</code>. It expects the inputs as a table with one row per point, so reshape <code>xs</code> into one column. Then compare its slope (<code>model.coef_[0]</code>) and intercept (<code>model.intercept_</code>) with yours.</p>${NOTE}`,
+        starter: R`import numpy as np
+from sklearn.linear_model import LinearRegression
+
+model = None   # replace: LinearRegression().fit(...) on xs and ys
+
+w_mine, b_mine = train(xs, ys, 0.05, 2000)
+print("mine:        ", round(w_mine, 3), round(b_mine, 3))
+if model is not None:
+    print("scikit-learn:", round(model.coef_[0], 3), round(model.intercept_, 3))`,
+        hint: R`<code>model = LinearRegression().fit(np.array(xs).reshape(-1, 1), ys)</code>`,
+        solution: R`import numpy as np
+from sklearn.linear_model import LinearRegression
+
+model = LinearRegression().fit(np.array(xs).reshape(-1, 1), ys)
+
+w_mine, b_mine = train(xs, ys, 0.05, 2000)
+print("mine:        ", round(w_mine, 3), round(b_mine, 3))
+if model is not None:
+    print("scikit-learn:", round(model.coef_[0], 3), round(model.intercept_, 3))`,
+        tests: [
+          { name: 'model is a fitted LinearRegression', check: R`from sklearn.linear_model import LinearRegression as _LR; assert isinstance(model, _LR) and hasattr(model, "coef_"), "fit a LinearRegression on xs and ys"` },
+          { name: 'same slope as yours', check: R`assert close(model.coef_[0], w_mine, 0.01), f"scikit-learn {model.coef_[0]:.3f}, yours {w_mine:.3f}"` },
+          { name: 'same intercept as yours', check: R`assert close(model.intercept_, b_mine, 0.01), f"scikit-learn {model.intercept_:.3f}, yours {b_mine:.3f}"` },
         ],
       },
     ],
