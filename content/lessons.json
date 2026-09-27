@@ -6,9 +6,10 @@
       "summary": "Everything the course leans on: vectors, distance, the dot product, matrices, derivatives, logarithms and probability.",
       "minutes": 45,
       "film": {
-        "file": "math-toolkit.html?v=1",
+        "file": "math-toolkit.html?v=2",
         "title": "The Toolkit",
-        "note": "2 min 18 s, best with sound and narration on"
+        "note": "2 min 18 s, best with sound and narration on",
+        "video": "videos/math-toolkit.mp4"
       },
       "doc": true,
       "code": [],
@@ -22,9 +23,10 @@
       "summary": "How a straight line learns to fit noisy data: errors, squared loss, gradients and gradient descent.",
       "minutes": 40,
       "film": {
-        "file": "linear-regression.html?v=4",
+        "file": "linear-regression.html?v=5",
         "title": "The Line That Learned",
-        "note": "2 min 12 s, best with sound and narration on"
+        "note": "2 min 12 s, best with sound and narration on",
+        "video": "videos/linear-regression.mp4"
       },
       "doc": true,
       "code": [],
@@ -38,9 +40,10 @@
       "summary": "Predicting yes or no: the sigmoid squash, log loss, each point's pull, and the border between two classes.",
       "minutes": 45,
       "film": {
-        "file": "logistic-regression.html?v=2",
+        "file": "logistic-regression.html?v=3",
         "title": "How Sure to Be",
-        "note": "2 min 22 s, best with sound and narration on"
+        "note": "2 min 22 s, best with sound and narration on",
+        "video": "videos/logistic-regression.mp4"
       },
       "doc": true,
       "code": [],
@@ -54,9 +57,10 @@
       "summary": "Finding the safest border: margins, the widest street, support vectors and the hinge loss.",
       "minutes": 45,
       "film": {
-        "file": "support-vector-machines.html?v=2",
+        "file": "support-vector-machines.html?v=3",
         "title": "The Widest Street",
-        "note": "2 min 22 s, best with sound and narration on"
+        "note": "2 min 22 s, best with sound and narration on",
+        "video": "videos/support-vector-machines.mp4"
       },
       "doc": true,
       "code": [],
@@ -70,9 +74,10 @@
       "summary": "Classify a point by asking its neighbours: distance, the vote, choosing k, and why measurements need the same scale.",
       "minutes": 40,
       "film": {
-        "file": "k-nearest-neighbors.html?v=1",
+        "file": "k-nearest-neighbors.html?v=2",
         "title": "Ask the Neighbours",
-        "note": "2 min 10 s, best with sound and narration on"
+        "note": "2 min 10 s, best with sound and narration on",
+        "video": "videos/k-nearest-neighbors.mp4"
       },
       "doc": true,
       "code": [],
@@ -86,9 +91,10 @@
       "summary": "A spam filter from word counts: priors, likelihoods, Bayes' rule, the naive assumption and add-one smoothing.",
       "minutes": 40,
       "film": {
-        "file": "naive-bayes.html?v=1",
+        "file": "naive-bayes.html?v=2",
         "title": "Counting Words",
-        "note": "2 min 10 s, best with sound and narration on"
+        "note": "2 min 10 s, best with sound and narration on",
+        "video": "videos/naive-bayes.mp4"
       },
       "doc": true,
       "code": [],
@@ -102,9 +108,10 @@
       "summary": "Twenty questions for data: Gini impurity, finding the best split, growing a tree, and stopping before it memorises noise.",
       "minutes": 40,
       "film": {
-        "file": "decision-trees.html?v=1",
+        "file": "decision-trees.html?v=2",
         "title": "Twenty Questions",
-        "note": "2 min 12 s, best with sound and narration on"
+        "note": "2 min 12 s, best with sound and narration on",
+        "video": "videos/decision-trees.mp4"
       },
       "doc": true,
       "code": [],

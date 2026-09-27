@@ -1,0 +1,7 @@
+{
+  "name": "ai-learning-my-way-tools",
+  "private": true,
+  "type": "module",
+  "description": "Renders the lesson films to YouTube-ready MP4 videos.",
+  "dependencies": { "puppeteer-core": "^23.11.1" }
+}

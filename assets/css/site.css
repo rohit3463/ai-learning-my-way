@@ -386,3 +386,7 @@ details.code-file pre { margin: 0 12px 12px; }
   .ide-kbd { display: none; }
 }
 .ide-brief .ide-note { font-size: 13.5px; color: var(--ide-dim); border-left: 2px solid var(--ide-amber); padding-left: 10px; }
+.film-list { align-items: start; }
+.film-item { display: grid; gap: 8px; }
+.film-dl { margin: 0; font-size: 14px; }
+.film-links { white-space: nowrap; }

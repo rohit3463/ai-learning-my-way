@@ -64,7 +64,7 @@
   }
   .eq { font-family: var(--serif); font-weight: 500; font-size: 1.55em; line-height: 1.3; white-space: nowrap; font-variant-numeric: lining-nums; }
   .nt { text-transform: none; letter-spacing: 0; }
-  .eq.sm { font-size: 1.28em; }
+  .eq.sm { font-size: 1.28em; white-space: normal; }
   .eq i { font-style: italic; }
   .eq sub, .eq sup { font-size: .6em; font-style: italic; }
   .a { color: var(--amber); } .r { color: var(--rose); } .g { color: var(--lilac); } .s { color: var(--star); }
@@ -675,7 +675,7 @@
     }
     ctx.globalAlpha = 1; ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
     ctx.save(); ctx.globalAlpha = .045;
-    const ox = reduce ? 0 : (Math.random() * 160) | 0, oy = reduce ? 0 : (Math.random() * 160) | 0;
+    const still = reduce || window.__stillGrain, ox = still ? 0 : (Math.random() * 160) | 0, oy = still ? 0 : (Math.random() * 160) | 0;
     ctx.translate(ox, oy); ctx.fillStyle = grainPat; ctx.fillRect(-ox, -oy, W, H); ctx.restore();
     ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, BAR); ctx.fillRect(0, H - BAR, W, BAR);
   }
@@ -737,7 +737,7 @@
   }
   function pluck(freq, vel) {
     if (!audio || !soundOn) return;
-    const { ac, pluckBus } = audio, now = ac.currentTime;
+    const { ac, pluckBus } = audio, now = audio.clock ?? ac.currentTime;
     [[freq, 'triangle', 1], [freq * 2, 'sine', .3]].forEach(([f, type, m]) => {
       const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = f;
       g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(vel * m, now + .012);
@@ -747,7 +747,7 @@
   }
   function updateAudio(t) {
     if (!audio) return;
-    const now = audio.ac.currentTime, dis = currentLossNorm(t) * (1 - E(t, 126, 129));
+    const now = audio.clock ?? audio.ac.currentTime, dis = currentLossNorm(t) * (1 - E(t, 126, 129));
     const level = soundOn && playing ? .2 * (.6 + .4 * E(t, 0, 3)) * (1 + .4 * E(t, 128, 132)) * (1 - E(t, 138, 142)) : 0;
     audio.master.gain.setTargetAtTime(level * (narr.speaking() ? .45 : 1), now, .25);
     audio.voices.forEach(v => v.o.detune.setTargetAtTime(v.sign * dis * 60, now, .35));
@@ -852,7 +852,50 @@
     render(t); updateDOM(t); updateAudio(t);
     requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+
+  // ── render mode (?render): lets a script draw any moment and render the music offline for video export ──
+  const RENDER = new URLSearchParams(location.search).has('render');
+  if (RENDER) {
+    playing = false;
+    window.__stillGrain = true;   // moving grain is noise that video compression cannot squeeze
+    const hide = document.createElement('style');
+    hide.textContent = '.controls, .chapters, #replay { display: none !important; }';
+    document.head.appendChild(hide);
+    const wav = (buf) => {
+      const d = buf.getChannelData(0), n = d.length, out = new DataView(new ArrayBuffer(44 + n * 2));
+      const str = (o, s) => { for (let i = 0; i < s.length; i++) out.setUint8(o + i, s.charCodeAt(i)); };
+      str(0, 'RIFF'); out.setUint32(4, 36 + n * 2, true); str(8, 'WAVEfmt '); out.setUint32(16, 16, true);
+      out.setUint16(20, 1, true); out.setUint16(22, 1, true); out.setUint32(24, buf.sampleRate, true);
+      out.setUint32(28, buf.sampleRate * 2, true); out.setUint16(32, 2, true); out.setUint16(34, 16, true);
+      str(36, 'data'); out.setUint32(40, n * 2, true);
+      for (let i = 0; i < n; i++) out.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[i])) * 32767, true);
+      const bytes = new Uint8Array(out.buffer); let s = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      return btoa(s);
+    };
+    window.__film = {
+      DUR, SUBS, CHAPTERS,
+      renderAt(tt) { t = tt; render(tt); updateDOM(tt); },
+      // samples[i]: film time at video time i * step; speaking[i]: narration playing then (ducks the music)
+      async music(samples, step, speaking) {
+        const total = samples.length * step + 2, off = new OfflineAudioContext(1, Math.ceil(total * 48000), 48000);
+        const Real = window.AudioContext; window.AudioContext = function () { return off; };
+        audio = makeAudio(); window.AudioContext = Real;
+        soundOn = true; playing = true;
+        let spk = false; const realSpeaking = narr.speaking; narr.speaking = () => spk;
+        let prev = samples[0];
+        for (let i = 0; i < samples.length; i++) {
+          audio.clock = i * step; spk = !!speaking[i];
+          onAdvance(prev, samples[i]); updateAudio(samples[i]); prev = samples[i];
+        }
+        audio.master.gain.setTargetAtTime(0, samples.length * step, .4);
+        const buf = await off.startRendering();
+        narr.speaking = realSpeaking; playing = false; soundOn = false;
+        return wav(buf);
+      },
+    };
+  }
+  if (!RENDER) requestAnimationFrame(frame);
 })();
 </script>
 </body>

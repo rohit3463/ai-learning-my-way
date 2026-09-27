@@ -38,3 +38,18 @@ The site is plain HTML with no build step. GitHub Pages serves it from the `main
 After changing `assets/js/site.js` or `assets/css/site.css`, bump the `?v=` number where they are linked in
 `index.html`, `lesson.html` and `films.html`. Browsers cache these files for up to 10 minutes, and the new number
 makes them fetch the fresh copy straight away.
+
+## Rendering the films to video
+
+`tools/` turns each film into a 1920×1080, 30 fps MP4 for YouTube, with narration (macOS `say`), the film's music,
+loudness levelled to about −14 LUFS, plus an `.srt` caption file, chapter timestamps, a thumbnail and a ready-to-paste
+title and description. Requirements: macOS, Google Chrome, `ffmpeg` (`brew install ffmpeg`) and Node.
+
+```sh
+cd tools && npm install
+(cd .. && python3 -m http.server 8766 &)          # serve the site locally
+caffeinate -i node render-film.mjs linear-regression ../../videos
+node youtube-meta.mjs ../../videos ..            # writes <slug>.youtube.txt
+```
+
+The site's download links (`videos/*.mp4`) are 720p copies of those masters.

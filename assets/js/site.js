@@ -136,7 +136,7 @@
       const filmSrc = l.film ? `films/${l.film.file}${l.film.start ? (l.film.file.includes('?') ? '&' : '?') + 't=' + l.film.start : ''}` : '';
       const film = l.film ? `
         <div class="film-frame"><iframe src="${esc(filmSrc)}" title="${esc(l.film.title)}" loading="lazy" allow="fullscreen"></iframe></div>
-        <div class="film-caption"><span>Film: <em>${esc(l.film.title)}</em>${l.film.note ? ' · ' + esc(l.film.note) : ''}</span><a href="${esc(filmSrc)}">Open full screen ↗</a></div>` : '';
+        <div class="film-caption"><span>Film: <em>${esc(l.film.title)}</em>${l.film.note ? ' · ' + esc(l.film.note) : ''}</span><span class="film-links">${l.film.video ? `<a href="${esc(l.film.video)}" download>Download video (MP4)</a> · ` : ''}<a href="${esc(filmSrc)}">Open full screen ↗</a></span></div>` : '';
 
       const videos = (l.videos || []).length ? `<h2 id="watch">Watch</h2><div class="videos">${l.videos.map(videoCard).join('')}</div>` : '';
       const code = (l.code || []).length ? `<h2 id="code">Code</h2>
