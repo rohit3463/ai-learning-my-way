@@ -1,0 +1,79 @@
+<!--
+  Lesson notes: K-Nearest Neighbors.
+  Math: \( ... \) inline, \[ ... \] centered. Every <h2> appears in "On this page".
+-->
+
+<h2>The goal</h2>
+<p>We have points that already have a label, such as "blue" or "red". A new point arrives without one. What label should it get?</p>
+<p>K-nearest neighbours (KNN) answers with the simplest idea possible: <strong>look at the points closest to it, and copy what most of them are</strong>. There is no line to fit and no weights to learn.</p>
+
+<h2>Step 1: distance</h2>
+<p>"Closest" needs a distance. For two points \((x_1, x_2)\) and \((q_1, q_2)\), use the straight-line distance from Pythagoras:</p>
+\[ d = \sqrt{(x_1 - q_1)^2 + (x_2 - q_2)^2} \]
+<p>With more measurements, keep adding squared differences under the square root:</p>
+\[ d = \sqrt{(x_1 - q_1)^2 + (x_2 - q_2)^2 + \dots + (x_m - q_m)^2} \]
+<p>This is called the <strong>Euclidean distance</strong>. See it drawn as a triangle in <a href="films/k-nearest-neighbors.html?t=30">Act II</a>.</p>
+
+<h2>Step 2: find the k nearest</h2>
+<p>Measure the distance from the new point to <em>every</em> labelled point, sort from smallest to largest, and keep the first \(k\). The number \(k\) is chosen by you, for example 1, 3 or 5.</p>
+
+<h2>Step 3: vote</h2>
+<p>Each of the \(k\) neighbours votes for its own label. The label with the most votes wins.</p>
+<blockquote><p><strong>Use an odd k with two classes.</strong> Then a vote can never end in a tie.</p></blockquote>
+<p>The whole method, from a new point to an answer, is just those three steps (<a href="films/k-nearest-neighbors.html?t=40">Act III</a>).</p>
+
+<h2>A worked example by hand</h2>
+<p>Six labelled points and a stranger at \((3.5, 3)\):</p>
+<table>
+  <thead><tr><th>Point</th><th>Label</th><th>Distance to \((3.5, 3)\)</th></tr></thead>
+  <tbody>
+    <tr><td>\((5, 4)\)</td><td>red</td><td>\(\sqrt{1.5^2 + 1^2} = 1.80\)</td></tr>
+    <tr><td>\((1.5, 3)\)</td><td>blue</td><td>\(\sqrt{2^2 + 0^2} = 2.00\)</td></tr>
+    <tr><td>\((2, 1.5)\)</td><td>blue</td><td>\(\sqrt{1.5^2 + 1.5^2} = 2.12\)</td></tr>
+    <tr><td>\((4.5, 6)\)</td><td>red</td><td>\(\sqrt{1^2 + 3^2} = 3.16\)</td></tr>
+    <tr><td>\((1, 1)\)</td><td>blue</td><td>\(\sqrt{2.5^2 + 2^2} = 3.20\)</td></tr>
+    <tr><td>\((6, 5)\)</td><td>red</td><td>\(\sqrt{2.5^2 + 2^2} = 3.20\)</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li>With \(k = 1\), the single nearest point is red, so the stranger is <strong>red</strong>.</li>
+  <li>With \(k = 3\), the nearest three are red, blue, blue. Blue wins 2 to 1, so the stranger is <strong>blue</strong>.</li>
+</ul>
+<p>The same point gets different answers depending on \(k\). Choosing \(k\) well matters.</p>
+
+<h2>Choosing k</h2>
+<table>
+  <thead><tr><th>k</th><th>What happens</th></tr></thead>
+  <tbody>
+    <tr><td>small (like 1)</td><td>Follows every point, including mistakes in the data. The borders are jagged, with little islands around noisy points.</td></tr>
+    <tr><td>medium</td><td>Smooths out the noise but keeps the real shape.</td></tr>
+    <tr><td>large</td><td>Blurs everything. With \(k\) equal to the number of points, every answer is just the most common label overall.</td></tr>
+  </tbody>
+</table>
+<p>To choose, keep some labelled points aside, try several values of \(k\), and pick the one that gets the most of those points right:</p>
+\[ \text{accuracy} = \frac{\text{correct predictions}}{\text{number of test points}} \]
+<p>Watch the borders change from \(k = 1\) to \(k = 25\) in <a href="films/k-nearest-neighbors.html?t=58">Act IV</a>.</p>
+
+<h2>No training, slow answers</h2>
+<p>KNN has no training step: the model <em>is</em> the stored data. Adding a new example changes future answers immediately.</p>
+<p>The cost comes later. Every prediction measures the distance to every stored point, so with \(n\) points each answer takes \(n\) distance calculations. For large datasets, special data structures are used to skip far-away points.</p>
+
+<h2>Scale your measurements</h2>
+<p>Distances add up the differences in every measurement. If one measurement uses much bigger numbers, it drowns out the rest.</p>
+<p>Say we describe customers by age (20 to 60) and income (25,000 to 110,000). A difference of 30 years adds \(30^2 = 900\) to the squared distance. A difference of 8,000 in income adds \(8000^2 = 64{,}000{,}000\). Age barely counts at all (<a href="films/k-nearest-neighbors.html?t=100">Act VI</a>).</p>
+<p>The fix is to rescale each measurement to the range 0 to 1 before measuring distances:</p>
+\[ x' = \frac{x - \min}{\max - \min} \]
+<p>Here min and max are the smallest and largest values of that measurement in the training data. A new point must be rescaled with the same min and max.</p>
+<p>In the coding lab, a 30-year-old earning 62,000 is predicted to <strong>buy</strong> on raw numbers, where only income matters, but <strong>not buy</strong> once both measurements are rescaled, because the nearest customers by age and income together are young people who didn't buy.</p>
+
+<h2>Symbols at a glance</h2>
+<table>
+  <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\((q_1, q_2)\)</td><td>the new point we want to label</td></tr>
+    <tr><td>\(d = \sqrt{(x_1 - q_1)^2 + (x_2 - q_2)^2}\)</td><td>distance between a stored point and the new point</td></tr>
+    <tr><td>\(k\)</td><td>how many neighbours vote</td></tr>
+    <tr><td>\(n\)</td><td>number of stored points</td></tr>
+    <tr><td>\(x' = (x - \min) \div (\max - \min)\)</td><td>rescaling a measurement to the range 0 to 1</td></tr>
+  </tbody>
+</table>

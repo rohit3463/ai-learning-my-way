@@ -47,6 +47,54 @@
       "videos": [],
       "lab": "support-vector-machines",
       "labVersion": 1
+    },
+    {
+      "slug": "k-nearest-neighbors",
+      "title": "K-Nearest Neighbors",
+      "summary": "Classify a point by asking its neighbours: distance, the vote, choosing k, and why measurements need the same scale.",
+      "minutes": 40,
+      "film": {
+        "file": "k-nearest-neighbors.html?v=1",
+        "title": "Ask the Neighbours",
+        "note": "2 min 10 s, best with sound and narration on"
+      },
+      "doc": true,
+      "code": [],
+      "videos": [],
+      "lab": "k-nearest-neighbors",
+      "labVersion": 1
+    },
+    {
+      "slug": "naive-bayes",
+      "title": "Naive Bayes",
+      "summary": "A spam filter from word counts: priors, likelihoods, Bayes' rule, the naive assumption and add-one smoothing.",
+      "minutes": 40,
+      "film": {
+        "file": "naive-bayes.html?v=1",
+        "title": "Counting Words",
+        "note": "2 min 10 s, best with sound and narration on"
+      },
+      "doc": true,
+      "code": [],
+      "videos": [],
+      "lab": "naive-bayes",
+      "labVersion": 1
+    },
+    {
+      "slug": "decision-trees",
+      "title": "Decision Trees",
+      "summary": "Twenty questions for data: Gini impurity, finding the best split, growing a tree, and stopping before it memorises noise.",
+      "minutes": 40,
+      "film": {
+        "file": "decision-trees.html?v=1",
+        "title": "Twenty Questions",
+        "note": "2 min 12 s, best with sound and narration on"
+      },
+      "doc": true,
+      "code": [],
+      "videos": [],
+      "lab": "decision-trees",
+      "labVersion": 1
     }
   ]
 }

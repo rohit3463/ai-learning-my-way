@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ask the Neighbours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --void: #05070d;
+    --ink: #0b1120;
+    --bone: #eee6d6;
+    --dim: #8d93a6;
+    --amber: #f4b860;
+    --rose: #ef8193;
+    --star: #a9d6f5;
+    --lilac: #c4b3ff;
+    --hair: rgba(238, 230, 214, .16);
+    --bar: 24px;
+    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--void);
+    color: var(--bone);
+    font: 15px/1.45 var(--sans);
+    overflow: hidden;
+  }
+  .theatre { height: 100%; display: flex; flex-direction: column; }
+
+  .stage {
+    position: relative;
+    flex: 1;
+    min-height: 420px;
+    overflow: hidden;
+    background: var(--ink);
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas: "plot panel" "plot math" "sub sub";
+    gap: 14px clamp(20px, 3vw, 40px);
+    padding: calc(var(--bar) + 20px) clamp(16px, 4vw, 56px) calc(var(--bar) + 10px);
+  }
+  #film { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .slot, .math, .sub { position: relative; z-index: 1; min-height: 0; }
+  .plot { grid-area: plot; }
+  .panel { grid-area: panel; }
+
+  .math { grid-area: math; height: 9.4em; font-size: 16px; transition: none; }
+  .math .lbl, .kicker, .chapter .act {
+    font: 600 10.5px/1.2 var(--sans);
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0 0 .5em;
+  }
+  .eq { font-family: var(--serif); font-weight: 500; font-size: 1.55em; line-height: 1.3; white-space: nowrap; font-variant-numeric: lining-nums; }
+  .nt { text-transform: none; letter-spacing: 0; }
+  .eq.sm { font-size: 1.28em; }
+  .eq i { font-style: italic; }
+  .eq sub, .eq sup { font-size: .6em; font-style: italic; }
+  .a { color: var(--amber); } .r { color: var(--rose); } .g { color: var(--lilac); } .s { color: var(--star); }
+  .num {
+    font: 500 .6em/1 var(--mono);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    padding: .18em .4em;
+    border-radius: 4px;
+    background: rgba(238, 230, 214, .08);
+    vertical-align: .18em;
+  }
+  .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .66em; line-height: 1.08; margin: 0 .1em; }
+  .fr > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .2em; }
+  .note { color: var(--dim); font-size: .9em; max-width: 46ch; margin: .45em 0 0; }
+
+  .sub {
+    grid-area: sub;
+    justify-self: center;
+    text-align: center;
+    max-width: 54ch;
+    min-height: 2.9em;
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.45;
+    text-wrap: balance;
+    text-shadow: 0 1px 14px #000, 0 0 2px #000;
+  }
+
+  .titlecard {
+    position: absolute; inset: 0; z-index: 2;
+    display: grid; place-content: center; gap: 14px;
+    text-align: center; pointer-events: none; padding-inline: 16px;
+  }
+  .titlecard h1 {
+    margin: 0;
+    font: italic 500 clamp(44px, 7.4vw, 104px)/1 var(--serif);
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    text-shadow: 0 0 48px rgba(244, 184, 96, .35);
+  }
+  .titlecard .by { font: italic 500 clamp(17px, 1.8vw, 22px)/1.3 var(--serif); color: var(--dim); }
+
+  .chapter {
+    position: absolute; z-index: 2; pointer-events: none;
+    left: clamp(16px, 4vw, 56px); top: calc(var(--bar) + 14px);
+  }
+  .chapter .act { color: var(--amber); }
+  .chapter .name { font: italic 500 clamp(28px, 3.2vw, 42px)/1.05 var(--serif); text-shadow: 0 2px 20px #000; }
+
+  .endcard {
+    position: absolute; inset: 0; z-index: 3;
+    display: grid; place-content: center; justify-items: center; gap: 16px;
+    padding-inline: 16px; pointer-events: none;
+  }
+  .endcard > * { pointer-events: auto; }
+  .endcard .fin { font: italic 500 clamp(34px, 4.6vw, 60px)/1 var(--serif); text-shadow: 0 0 40px rgba(244, 184, 96, .4); }
+
+  button {
+    font: 500 13px/1 var(--sans);
+    color: var(--bone);
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover { border-color: rgba(238, 230, 214, .4); }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  button.on, button[aria-pressed="true"] { color: var(--amber); border-color: rgba(244, 184, 96, .55); }
+  .endcard button { font-size: 14px; padding: 10px 20px; }
+
+  .controls { display: flex; align-items: center; gap: 12px; padding: 10px 16px 6px; }
+  .scrubwrap { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+  #scrub { width: 100%; accent-color: var(--amber); margin: 0; }
+  .ticks { position: absolute; inset: 0; pointer-events: none; }
+  .ticks span { position: absolute; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: rgba(238, 230, 214, .35); }
+  .home { font: 500 13px/1 var(--sans); color: var(--dim); white-space: nowrap; }
+  .home:hover { color: var(--amber); }
+  .time { font: 12px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--dim); }
+  .chapters { display: flex; gap: 6px; overflow-x: auto; padding: 4px 16px 12px; scrollbar-width: none; }
+  .chapters button { font-size: 12px; padding: 6px 11px; color: var(--dim); }
+  .chapters button.on { color: var(--amber); }
+
+  @media (max-aspect-ratio: 1/1), (max-width: 760px) {
+    .stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) auto auto;
+      grid-template-areas: "plot" "panel" "math" "sub";
+      gap: 10px;
+    }
+    .math { font-size: 13px; height: 8.8em; }
+    .sub { font-size: 14.5px; }
+    .time, .home { display: none; }
+    .controls { flex-wrap: wrap; row-gap: 8px; }
+    .scrubwrap { order: -1; flex-basis: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="theatre">
+  <div class="stage" id="stage">
+    <canvas id="film" aria-label="Animated film about k-nearest neighbours: distance, voting, choosing k and scaling"></canvas>
+    <div class="slot plot" id="slotPlot"></div>
+    <div class="slot panel" id="slotPanel"></div>
+    <div class="math" id="math" aria-live="off"></div>
+    <div class="sub" id="sub"></div>
+
+    <div class="titlecard" id="titlecard">
+      <div class="kicker">A short film about k-nearest neighbours</div>
+      <h1>Ask the Neighbours</h1>
+      <div class="by">no rules, no training, just the company a point keeps</div>
+    </div>
+    <div class="chapter" id="chapter"><div class="act" id="chapAct"></div><div class="name" id="chapName"></div></div>
+    <div class="endcard" id="endcard" hidden>
+      <div class="fin">fin.</div>
+      <button id="replay" type="button">Watch again</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="play" type="button">Pause</button>
+    <div class="scrubwrap">
+      <input id="scrub" type="range" min="0" max="130" step="0.01" value="0" aria-label="Film position">
+      <div class="ticks" id="ticks"></div>
+    </div>
+    <span class="time" id="time">0:00 / 2:10</span>
+    <button id="sound" type="button" aria-pressed="false">Sound off</button>
+    <button id="narrate" type="button" aria-pressed="false">Narration off</button>
+    <a class="home" href="../" target="_top">All lessons</a>
+  </div>
+  <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
+</div>
+
+<script src="film-kit.js?v=1"></script>
+<script>
+(() => {
+  const { TAU, clamp, lerp, ease, seg, E, win, fmt, paren, COL, rgba, hexRGB, mixHex, mulberry32, gaussFrom, shuffled } = FilmKit.util;
+  const rnd = mulberry32(3131), gauss = gaussFrom(rnd);
+  const A = COL.rose, B = COL.star;                     // class "rose" (1) and class "blue" (0)
+  const colOf = c => c ? A : B;
+  const truth = (x, y) => y > .9 * Math.sin(x * .9) - .1 ? 1 : 0;
+  function makePoints(n, flips) {
+    const out = [];
+    for (let i = 0; i < n; i++) { const x = -3.4 + rnd() * 6.8, y = -2.2 + rnd() * 4.4; out.push({ x, y, c: truth(x, y) }); }
+    for (let f = 0; f < flips; f++) { const p = out[Math.floor(rnd() * n)]; p.c = 1 - p.c; }
+    return out;
+  }
+  const P = makePoints(58, 4);
+  const VAL = makePoints(120, 8);
+  const EXTRA = [{ x: .9, y: -.9, c: 1 }, { x: 1.3, y: -1.25, c: 1 }, { x: .6, y: -1.35, c: 1 }, { x: 1.1, y: -.55, c: 1 }];
+  const Q = { x: .35, y: .1 };
+  const d2 = (a, b, sx = 1) => (sx * (a.x - b.x)) ** 2 + (a.y - b.y) ** 2;
+  function knn(pts, q, k, sx = 1) {
+    return pts.map((p, i) => ({ i, p, d: Math.sqrt(d2(p, q, sx)) })).sort((a, b) => a.d - b.d).slice(0, k);
+  }
+  const vote = nb => { const s = nb.reduce((a, n) => a + n.p.c, 0); return s * 2 > nb.length ? 1 : 0; };
+  const K = 5;
+  const NB = knn(P, Q, K), R5 = NB[K - 1].d, VOTES = NB.reduce((a, n) => a + n.p.c, 0), QCLASS = vote(NB);
+  const SHOW = NB[K - 1];                                    // the neighbour whose distance we work out
+  const ORDER = P.map((p, i) => ({ i, d: Math.sqrt(d2(p, Q)) })).sort((a, b) => a.d - b.d);
+  const acc = k => VAL.filter(v => vote(knn(P, v, k)) === v.c).length / VAL.length;
+  const KS = []; for (let k = 1; k <= 31; k += 2) KS.push({ k, a: acc(k) });
+  const SX = 6;                                          // Act VI: x₁ measured in much bigger units
+  const NBS = knn(P, Q, K, SX);
+  const RANK = []; shuffled(P.length, rnd).forEach((i, k) => RANK[i] = k);
+  const START = P.map(() => ({ fx: .06 + rnd() * .88, fy: .12 + rnd() * .72, ph: rnd() * TAU }));
+
+  const DUR = 130;
+  const CHAPTERS = [
+    { t: 0, act: '', name: 'Opening' },
+    { t: 8, act: 'Act I', name: 'A Stranger Arrives' },
+    { t: 22, act: 'Act II', name: 'How Far?' },
+    { t: 40, act: 'Act III', name: 'The Vote' },
+    { t: 58, act: 'Act IV', name: 'How Many Neighbours?' },
+    { t: 80, act: 'Act V', name: 'Nothing to Train' },
+    { t: 100, act: 'Act VI', name: 'Units Matter' },
+    { t: 117, act: 'Epilogue', name: 'Ask the Neighbours' },
+  ];
+  const SUBS = [
+    [0.6, 7.4, 'Every point here already knows who it is.'],
+    [8.6, 13.6, 'Two measurements each, and a colour: rose, or blue.'],
+    [14.0, 21.4, 'Then a stranger arrives, with no colour of its own. What should it be?'],
+    [22.6, 29.6, 'The simplest idea in all of machine learning: look at who lives nearby.'],
+    [30.0, 39.4, 'Nearby means distance. Across and up, like the sides of a triangle, and Pythagoras does the rest.'],
+    [40.6, 46.0, 'Take the k closest points. Here, k is five.'],
+    [46.4, 51.8, 'Each neighbour casts one vote for its own colour.'],
+    [52.2, 57.6, 'The majority wins, and the stranger takes its colour.'],
+    [58.6, 65.6, 'With just one neighbour, every noisy point gets its own little island.'],
+    [66.0, 71.8, 'With five, the islands wash away and the border smooths out.'],
+    [72.2, 79.4, 'With too many, the border blurs until real shapes disappear. The best k is found by testing.'],
+    [80.6, 87.0, 'There is no training step. The model is the data itself.'],
+    [87.4, 93.8, 'Add new examples, and the map changes the moment they arrive.'],
+    [94.2, 99.6, 'The price is paid later: every question means measuring the distance to every point.'],
+    [100.6, 106.6, 'Distances only make sense if the measurements share a scale.'],
+    [107.0, 112.2, 'Measure one of them in much bigger units, and it drowns out the other.'],
+    [112.6, 116.8, 'Rescale both to the same range, and the neighbourhood is round again.'],
+    [117.6, 122.4, 'It never learned a rule.'],
+    [122.8, 129.4, 'It remembered everything, and when in doubt, it asked the ones closest to it.'],
+  ];
+
+  // ───────── field maps (decision regions) ─────────
+  const fieldCache = new Map();
+  function field(G, key, pts, k, sx = 1) {
+    const ck = `${key}|${Math.round(G.R.w)}x${Math.round(G.R.h)}`;
+    if (fieldCache.has(ck)) return fieldCache.get(ck);
+    const fw = Math.max(8, Math.round(G.R.w / 6)), fh = Math.max(6, Math.round(G.R.h / 6));
+    const c = document.createElement('canvas'); c.width = fw; c.height = fh;
+    const cx = c.getContext('2d'), id = cx.createImageData(fw, fh), d = id.data, ca = hexRGB(A), cb = hexRGB(B);
+    for (let j = 0; j < fh; j++) for (let i = 0; i < fw; i++) {
+      const q = G.inv((i + .5) / fw * G.R.w + G.R.x, (j + .5) / fh * G.R.h + G.R.y);
+      const nb = knn(pts, q, k, sx), share = nb.reduce((a, n) => a + n.p.c, 0) / k, col = share > .5 ? ca : cb, o = (j * fw + i) * 4;
+      d[o] = col[0]; d[o + 1] = col[1]; d[o + 2] = col[2]; d[o + 3] = Math.round(255 * (.1 + .22 * Math.abs(2 * share - 1)));
+    }
+    cx.putImageData(id, 0, 0);
+    fieldCache.set(ck, c);
+    return c;
+  }
+
+  function plane(g) {
+    const R = g.RM, s = Math.min(R.w / 7.6, R.h / 5.1), cx = R.x + R.w / 2, cy = R.y + R.h / 2;
+    return { R, s, PX: x => cx + x * s, PY: y => cy - y * s, inv: (px, py) => ({ x: (px - cx) / s, y: (cy - py) / s }) };
+  }
+
+  function currentK(t) { return t < 66 ? 1 : t < 72 ? 5 : 25; }
+
+  function draw(t, g) {
+    const { ctx } = g, G = plane(g), R = G.R, fin = E(t, 117, 120);
+    ctx.save();
+    g.rrect(R.x, R.y, R.w, R.h, 10); ctx.clip();
+    // grid
+    const gA = E(t, 10.5, 13);
+    ctx.globalAlpha = gA; ctx.strokeStyle = rgba(COL.bone, .05); ctx.lineWidth = 1;
+    for (let v = -4; v <= 4; v++) {
+      ctx.beginPath(); ctx.moveTo(G.PX(v), R.y); ctx.lineTo(G.PX(v), R.y + R.h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(R.x, G.PY(v)); ctx.lineTo(R.x + R.w, G.PY(v)); ctx.stroke();
+    }
+    // Act IV + V: decision regions
+    const fA = win(t, 58.4, 100.2, .8) * (1 - .5 * fin);
+    if (fA > 0) {
+      ctx.imageSmoothingEnabled = true;
+      if (t < 80) {
+        [[1, 58.4, 66.2], [5, 65.8, 72.2], [25, 71.8, 80.2]].forEach(([k, a, b]) => {
+          const w_ = win(t, a, b, .5); if (w_ <= 0) return;
+          ctx.globalAlpha = fA * w_; ctx.drawImage(field(G, 'k' + k, P, k), R.x, R.y, R.w, R.h);
+        });
+      } else {
+        const added = Math.min(EXTRA.length, Math.max(0, Math.floor((t - 87.4) / 1.3) + 1));
+        ctx.globalAlpha = fA; ctx.drawImage(field(G, 'add' + added, P.concat(EXTRA.slice(0, added)), 5), R.x, R.y, R.w, R.h);
+      }
+    }
+    if (t > 117) { ctx.globalAlpha = .6 * fin; ctx.drawImage(field(G, 'k5', P, 5), R.x, R.y, R.w, R.h); }
+    ctx.globalAlpha = 1;
+
+    const qx = G.PX(Q.x), qy = G.PY(Q.y), qA = win(t, 14, 58.2, .8) + win(t, 100.2, 117.4, .8) * 1;
+    // Act II: distance threads to every point
+    const thr = win(t, 23, 40.4, .8);
+    if (thr > 0) {
+      P.forEach((p, i) => {
+        const r = E(t, 23 + i * .05, 24 + i * .05);
+        ctx.globalAlpha = thr * r * (p === SHOW.p && t > 30 ? .9 : .22);
+        g.line(qx, qy, lerp(qx, G.PX(p.x), r), lerp(qy, G.PY(p.y), r), p === SHOW.p && t > 30 ? COL.amber : COL.bone, p === SHOW.p && t > 30 ? 2 : 1);
+      });
+      const tri = win(t, 30.4, 40.4, .6);
+      if (tri > 0) {
+        const sx = G.PX(SHOW.p.x), sy = G.PY(SHOW.p.y);
+        ctx.globalAlpha = tri;
+        g.dashed(qx, qy, sx, qy, COL.lilac, 1.5, [5, 4]); g.dashed(sx, qy, sx, sy, COL.lilac, 1.5, [5, 4]);
+        g.txt(`Δx₁ = ${fmt(SHOW.p.x - Q.x)}`, (qx + sx) / 2, qy + (sy < qy ? 16 : -8), { c: COL.lilac, s: 12, al: 'center', mono: true });
+        g.txt(`Δx₂ = ${fmt(SHOW.p.y - Q.y)}`, sx + (sx > qx ? 8 : -8), (qy + sy) / 2, { c: COL.lilac, s: 12, al: sx > qx ? 'left' : 'right', mono: true });
+      }
+    }
+    // Act III: the neighbourhood circle
+    const circ = win(t, 40.8, 58.2, .8);
+    if (circ > 0) {
+      const r = R5 * G.s * E(t, 41, 45) + 6;
+      ctx.globalAlpha = circ; ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.6; ctx.setLineDash([6, 5]);
+      ctx.beginPath(); ctx.arc(qx, qy, r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = rgba(COL.amber, .05); ctx.fill();
+    }
+    // Act VI: stretched units make the neighbourhood a thin ellipse
+    const ell = win(t, 106.8, 117.4, .6);
+    if (ell > 0) {
+      const squash = 1 - E(t, 112.6, 115);
+      const rr = knn(P, Q, K, lerp(1, SX, squash))[K - 1].d;
+      ctx.globalAlpha = ell; ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.6; ctx.setLineDash([6, 5]);
+      ctx.beginPath(); ctx.ellipse(qx, qy, rr * G.s / lerp(1, SX, squash) + 4, rr * G.s + 4, 0, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // points
+    const nbSet = new Set(NB.map(n => n.i)), nbsSet = new Set(knn(P, Q, K, lerp(1, SX, 1 - E(t, 112.6, 115))).map(n => n.i));
+    const dimRest = win(t, 45, 58.2, .8), dimRest6 = win(t, 107.2, 117.4, .6);
+    P.forEach((p, i) => {
+      const st = START[i], f = E(t, 8.6 + RANK[i] * .06, 11.8 + RANK[i] * .06);
+      const x = lerp(st.fx * g.W, G.PX(p.x), f), y = lerp(st.fy * g.H + Math.sin(t * .4 + st.ph) * 4, G.PY(p.y), f) - Math.sin(Math.PI * f) * 50;
+      const isNb = nbSet.has(i), isNb6 = nbsSet.has(i);
+      ctx.globalAlpha = lerp(.6 + .4 * Math.sin(t * 1.7 + st.ph), 1, f) * (isNb ? 1 : 1 - .6 * dimRest) * (isNb6 ? 1 : 1 - .6 * dimRest6);
+      const col = f < 1 ? mixHex(COL.bone, colOf(p.c), E(t, 11.4, 13)) : colOf(p.c);
+      g.glowDot(x, y, lerp(1.9, 3.8, f), col, 10 + fin * 6);
+      if ((isNb && dimRest > 0) || (isNb6 && dimRest6 > 0)) {
+        ctx.save(); ctx.globalAlpha = Math.max(isNb ? dimRest : 0, isNb6 ? dimRest6 : 0); ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.arc(x, y, 8 + Math.sin(t * 3) * 1.2, 0, TAU); ctx.stroke(); ctx.restore();
+      }
+    });
+    EXTRA.forEach((p, i) => {
+      const a = win(t, 87.4 + i * 1.3, 100.2, .5); if (a <= 0) return;
+      ctx.globalAlpha = a;
+      g.glowDot(G.PX(p.x), G.PY(p.y) - (1 - E(t, 87.4 + i * 1.3, 88.2 + i * 1.3)) * 40, 4.2, colOf(p.c), 16);
+    });
+    // the stranger
+    if (qA > 0) {
+      const decided = E(t, 52.2, 54);
+      ctx.globalAlpha = Math.min(1, qA) * E(t, 14, 15.5);
+      const col = decided > 0 && t < 60 ? mixHex(COL.bone, colOf(QCLASS), decided) : COL.bone;
+      g.glowDot(qx, qy, 5.5, col, 20);
+      ctx.strokeStyle = rgba(COL.bone, .8); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(qx, qy, 11 + Math.sin(t * 2.4) * 2, 0, TAU); ctx.stroke();
+      if (decided < .5 || t > 100) g.txt('?', qx + 13, qy - 11, { c: COL.bone, s: 18, serif: true, w: 600 });
+    }
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha = gA;
+    const stretch = t > 106.8 && t < 117.4 ? 1 - E(t, 112.6, 115) : 0;
+    g.txt(stretch > .5 ? 'x₁ (in thousands) →' : 'x₁ →', R.x + R.w - 10, R.y + R.h - 10, { serif: true, it: true, s: 16, c: stretch > .5 ? COL.rose : COL.bone, al: 'right' });
+    g.txt('x₂ ↑', R.x + 10, R.y + 20, { serif: true, it: true, s: 16, c: COL.bone });
+    if (t >= 58.4 && t < 80) g.txt(`k = ${currentK(t)}`, R.x + R.w - 12, R.y + 24, { mono: true, s: 15, c: COL.amber, al: 'right', w: 600 });
+    ctx.restore();
+    drawPanel(t, g);
+  }
+
+  // ───────── panel ─────────
+  function drawPanel(t, g) {
+    const R = g.RP, { ctx } = g;
+    const a1 = win(t, 24, 40.4, .8);
+    if (a1 > 0) {           // sorted distances
+      const S = g.scaler(R, [0, 20], [0, 5], { l: 26, r: 10, t: 30, b: 20 });
+      ctx.save(); ctx.globalAlpha = a1;
+      g.cap('DISTANCE TO THE STRANGER, NEAREST FIRST', R.x + 10, R.y + 12);
+      const bw = S.iw / 20 * .7;
+      ORDER.slice(0, 20).forEach((o, j) => {
+        const gr = E(t, 25 + j * .12, 26.2 + j * .12), p = P[o.i], h = Math.min(5, o.d) * gr;
+        ctx.fillStyle = rgba(colOf(p.c), .8); ctx.fillRect(S.X(j + .5) - bw / 2, S.Y(h), bw, S.Y(0) - S.Y(h));
+      });
+      [0, 1, 2, 3, 4].forEach(v => g.txt('' + v, S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' }));
+      g.txt('20 nearest of ' + P.length, S.ix + S.iw, S.iy + S.ih + 14, { s: 10, al: 'right' });
+      ctx.restore();
+    }
+    const a2 = win(t, 40.8, 58.2, .8);
+    if (a2 > 0) {           // the vote
+      ctx.save(); ctx.globalAlpha = a2;
+      g.cap(`THE VOTE · k = ${K}`, R.x + 10, R.y + 12);
+      const rows = [[1, 'rose', A], [0, 'blue', B]];
+      rows.forEach(([c, name, col], j) => {
+        const y = R.y + 50 + j * 54, votes = NB.filter(n => n.p.c === c);
+        g.txt(name, R.x + 12, y + 18, { s: 14, c: col, w: 600 });
+        votes.forEach((n, v) => {
+          const on = E(t, 46.6 + NB.indexOf(n) * .7, 47.2 + NB.indexOf(n) * .7);
+          ctx.globalAlpha = a2 * on; g.glowDot(R.x + 80 + v * 28, y + 12, 9, col, 12);
+        });
+        ctx.globalAlpha = a2;
+        g.txt(String(votes.filter(n => t > 46.8 + NB.indexOf(n) * .7).length), R.x + R.w - 20, y + 20, { mono: true, s: 22, c: COL.bone, al: 'right', w: 600 });
+      });
+      const dec = E(t, 52.2, 53.4);
+      if (dec > 0) { ctx.globalAlpha = a2 * dec; g.txt(`→ the stranger is ${QCLASS ? 'rose' : 'blue'}`, R.x + 12, R.y + 172, { serif: true, it: true, s: 20, c: colOf(QCLASS), w: 600 }); }
+      ctx.restore();
+    }
+    const a3 = win(t, 58.6, 80.2, .8);
+    if (a3 > 0) {           // accuracy vs k
+      const S = g.scaler(R, [0, 32], [.5, 1], { l: 34, r: 12, t: 30, b: 22 });
+      ctx.save(); ctx.globalAlpha = a3;
+      g.cap('ACCURACY ON NEW POINTS, BY k', R.x + 10, R.y + 12);
+      [.5, .75, 1].forEach(v => { g.line(S.ix, S.Y(v), S.ix + S.iw, S.Y(v), rgba(COL.bone, .07)); g.txt(Math.round(v * 100) + '%', S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' }); });
+      [1, 5, 11, 21, 31].forEach(k => g.txt('' + k, S.X(k), S.iy + S.ih + 14, { mono: true, s: 10, al: 'center' }));
+      ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.8; ctx.beginPath();
+      KS.forEach((o, i) => i ? ctx.lineTo(S.X(o.k), S.Y(o.a)) : ctx.moveTo(S.X(o.k), S.Y(o.a))); ctx.stroke();
+      const k = currentK(t), o = KS.find(z => z.k === k);
+      g.glowDot(S.X(k), S.Y(o.a), 5, COL.amber, 14);
+      g.txt(`k = ${k}: ${Math.round(o.a * 100)}%`, S.X(k) + (k > 20 ? -10 : 10), S.Y(o.a) - 10, { mono: true, s: 11, c: COL.bone, al: k > 20 ? 'right' : 'left' });
+      ctx.restore();
+    }
+    const a4 = win(t, 94.4, 100.4, .6);
+    if (a4 > 0) {
+      ctx.save(); ctx.globalAlpha = a4;
+      g.cap('THE COST OF ONE QUESTION', R.x + 10, R.y + 12);
+      g.txt(`${P.length + EXTRA.length} distances to measure`, R.x + 12, R.y + 60, { serif: true, it: true, s: 24, c: COL.bone, w: 600 });
+      g.txt('A million stored examples means a million distances, every time.', R.x + 12, R.y + 88, { s: 12.5, c: COL.dim });
+      ctx.restore();
+    }
+    const a5 = win(t, 100.6, 117.4, .8);
+    if (a5 > 0) {           // ranges before and after rescaling
+      ctx.save(); ctx.globalAlpha = a5;
+      g.cap('THE RANGE OF EACH MEASUREMENT', R.x + 10, R.y + 12);
+      const fixd = E(t, 112.6, 115), big = E(t, 107, 109) * (1 - fixd);
+      const full = R.w - 110;
+      [['x₁', lerp(.12, 1, big) * (1 - fixd) + fixd * .12], ['x₂', .12]].forEach(([name, w_], j) => {
+        const y = R.y + 44 + j * 40;
+        g.txt(name, R.x + 12, y + 14, { serif: true, it: true, s: 17, c: COL.bone });
+        ctx.fillStyle = rgba(j ? COL.star : COL.rose, .7); ctx.fillRect(R.x + 50, y, Math.max(6, full * w_), 18);
+      });
+      g.txt(fixd > .5 ? 'both rescaled to 0 – 1' : big > .5 ? 'x₁ now spans thousands' : 'similar ranges', R.x + 12, R.y + 142, { s: 12.5, c: fixd > .5 ? COL.mint : big > .5 ? COL.rose : COL.dim });
+      ctx.restore();
+    }
+  }
+
+  // ───────── math cards ─────────
+  const num = s => `<span class="num">${s}</span>`;
+  const dx = SHOW.p.x - Q.x, dy = SHOW.p.y - Q.y;
+  const MATH = [
+    { t0: 8.4, t1: 22, html: () => `<p class="lbl">Labelled points</p>
+       <div class="eq sm">each point: (<i>x</i><sub>1</sub>, <i>x</i><sub>2</sub>) and a class</div>
+       <div class="eq sm">stranger: (${fmt(Q.x)}, ${fmt(Q.y)}) and class <span class="g">?</span></div>
+       <p class="note">k-nearest neighbours predicts the stranger's class from the points around it.</p>` },
+    { t0: 22.4, t1: 40, html: t => `<p class="lbl">Distance</p>
+       <div class="eq sm"><i>d</i> = √((<i>x</i><sub>1</sub> − <i>q</i><sub>1</sub>)<sup>2</sup> + (<i>x</i><sub>2</sub> − <i>q</i><sub>2</sub>)<sup>2</sup>)</div>
+       ${t > 30 ? `<div class="eq sm"><i>d</i> = √(${paren(dx, 2)}<sup>2</sup> + ${paren(dy, 2)}<sup>2</sup>) = ${num(fmt(Math.hypot(dx, dy)))}</div>` : ''}
+       <p class="note">This is Pythagoras: the straight-line distance between two points.</p>` },
+    { t0: 40.4, t1: 58, html: () => `<p class="lbl">Majority vote</p>
+       <div class="eq sm">k = ${K} nearest: <span class="r">${VOTES} rose</span>, <span class="s">${K - VOTES} blue</span></div>
+       <div class="eq sm">prediction: <span class="${QCLASS ? 'r' : 's'}">${QCLASS ? 'rose' : 'blue'}</span></div>
+       <p class="note">Use an odd k with two classes, so the vote can never tie.</p>` },
+    { t0: 58.4, t1: 80, html: t => { const k = currentK(t), o = KS.find(z => z.k === k); const best = KS.reduce((a, b) => b.a > a.a ? b : a);
+       return `<p class="lbl">Choosing k</p>
+       <div class="eq sm">k = ${num(k)} &nbsp; accuracy on new points = ${num(Math.round(o.a * 100) + '%')}</div>
+       <p class="note">Small k: jumpy, fooled by noise. Large k: too smooth. Here the best tested value is k = ${best.k} (${Math.round(best.a * 100)}%).</p>`; } },
+    { t0: 80.4, t1: 100, html: () => `<p class="lbl">A lazy learner</p>
+       <div class="eq sm">training: store the points</div>
+       <div class="eq sm">predicting: measure <i>n</i> distances, sort, vote</div>
+       <p class="note">Fast to train, slow to ask. Clever data structures can cut the search, but the idea is the same.</p>` },
+    { t0: 100.4, t1: 117, html: () => `<p class="lbl">Rescale first</p>
+       <div class="eq sm"><i>x</i>′ = ${`<span class="fr"><span><i>x</i> − min</span><span>max − min</span></span>`}</div>
+       <p class="note">Every measurement then runs from 0 to 1, so each counts equally in the distance.</p>` },
+    { t0: 117.4, t1: 130.5, html: () => `<p class="lbl">The whole method</p>
+       <div class="eq sm">1. measure the distance to every point</div>
+       <div class="eq sm">2. keep the k nearest &nbsp; 3. majority vote</div>` },
+  ];
+
+  const mood = t => t < 40 ? .45 : t < 52 ? .35 : t < 58 ? .1 : t < 66 ? .6 : t < 72 ? .15 : t < 80 ? .4 : t < 100 ? .2 : t < 112.6 ? .7 : .1;
+  const events = NB.map((n, j) => ({ t: 46.8 + j * .7, fn: (pl, note) => pl(n.p.c ? 587.33 : 440, .06) }))
+    .concat([{ t: 52.4, fn: pl => pl(880, .08) }], EXTRA.map((_, i) => ({ t: 87.4 + i * 1.3, fn: (pl, note) => pl(note(.4 + i * .12), .05) })));
+  FilmKit.run({ DUR, CHAPTERS, SUBS, MATH, draw, mood, events, chord: [73.42, 110, 146.83, 185, 220], penta: [293.66, 329.63, 369.99, 440, 493.88, 587.33, 659.25, 739.99, 880] });
+})();
+
+</script>
+</body>
+</html>

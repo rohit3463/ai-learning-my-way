@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Counting Words</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --void: #05070d;
+    --ink: #0b1120;
+    --bone: #eee6d6;
+    --dim: #8d93a6;
+    --amber: #f4b860;
+    --rose: #ef8193;
+    --star: #a9d6f5;
+    --lilac: #c4b3ff;
+    --hair: rgba(238, 230, 214, .16);
+    --bar: 24px;
+    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--void);
+    color: var(--bone);
+    font: 15px/1.45 var(--sans);
+    overflow: hidden;
+  }
+  .theatre { height: 100%; display: flex; flex-direction: column; }
+
+  .stage {
+    position: relative;
+    flex: 1;
+    min-height: 420px;
+    overflow: hidden;
+    background: var(--ink);
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas: "plot panel" "plot math" "sub sub";
+    gap: 14px clamp(20px, 3vw, 40px);
+    padding: calc(var(--bar) + 20px) clamp(16px, 4vw, 56px) calc(var(--bar) + 10px);
+  }
+  #film { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .slot, .math, .sub { position: relative; z-index: 1; min-height: 0; }
+  .plot { grid-area: plot; }
+  .panel { grid-area: panel; }
+
+  .math { grid-area: math; height: 9.4em; font-size: 16px; transition: none; }
+  .math .lbl, .kicker, .chapter .act {
+    font: 600 10.5px/1.2 var(--sans);
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0 0 .5em;
+  }
+  .eq { font-family: var(--serif); font-weight: 500; font-size: 1.55em; line-height: 1.3; white-space: nowrap; font-variant-numeric: lining-nums; }
+  .nt { text-transform: none; letter-spacing: 0; }
+  .eq.sm { font-size: 1.28em; }
+  .eq i { font-style: italic; }
+  .eq sub, .eq sup { font-size: .6em; font-style: italic; }
+  .a { color: var(--amber); } .r { color: var(--rose); } .g { color: var(--lilac); } .s { color: var(--star); }
+  .num {
+    font: 500 .6em/1 var(--mono);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    padding: .18em .4em;
+    border-radius: 4px;
+    background: rgba(238, 230, 214, .08);
+    vertical-align: .18em;
+  }
+  .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .66em; line-height: 1.08; margin: 0 .1em; }
+  .fr > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .2em; }
+  .note { color: var(--dim); font-size: .9em; max-width: 46ch; margin: .45em 0 0; }
+
+  .sub {
+    grid-area: sub;
+    justify-self: center;
+    text-align: center;
+    max-width: 54ch;
+    min-height: 2.9em;
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.45;
+    text-wrap: balance;
+    text-shadow: 0 1px 14px #000, 0 0 2px #000;
+  }
+
+  .titlecard {
+    position: absolute; inset: 0; z-index: 2;
+    display: grid; place-content: center; gap: 14px;
+    text-align: center; pointer-events: none; padding-inline: 16px;
+  }
+  .titlecard h1 {
+    margin: 0;
+    font: italic 500 clamp(44px, 7.4vw, 104px)/1 var(--serif);
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    text-shadow: 0 0 48px rgba(244, 184, 96, .35);
+  }
+  .titlecard .by { font: italic 500 clamp(17px, 1.8vw, 22px)/1.3 var(--serif); color: var(--dim); }
+
+  .chapter {
+    position: absolute; z-index: 2; pointer-events: none;
+    left: clamp(16px, 4vw, 56px); top: calc(var(--bar) + 14px);
+  }
+  .chapter .act { color: var(--amber); }
+  .chapter .name { font: italic 500 clamp(28px, 3.2vw, 42px)/1.05 var(--serif); text-shadow: 0 2px 20px #000; }
+
+  .endcard {
+    position: absolute; inset: 0; z-index: 3;
+    display: grid; place-content: center; justify-items: center; gap: 16px;
+    padding-inline: 16px; pointer-events: none;
+  }
+  .endcard > * { pointer-events: auto; }
+  .endcard .fin { font: italic 500 clamp(34px, 4.6vw, 60px)/1 var(--serif); text-shadow: 0 0 40px rgba(244, 184, 96, .4); }
+
+  button {
+    font: 500 13px/1 var(--sans);
+    color: var(--bone);
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover { border-color: rgba(238, 230, 214, .4); }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  button.on, button[aria-pressed="true"] { color: var(--amber); border-color: rgba(244, 184, 96, .55); }
+  .endcard button { font-size: 14px; padding: 10px 20px; }
+
+  .controls { display: flex; align-items: center; gap: 12px; padding: 10px 16px 6px; }
+  .scrubwrap { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+  #scrub { width: 100%; accent-color: var(--amber); margin: 0; }
+  .ticks { position: absolute; inset: 0; pointer-events: none; }
+  .ticks span { position: absolute; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: rgba(238, 230, 214, .35); }
+  .home { font: 500 13px/1 var(--sans); color: var(--dim); white-space: nowrap; }
+  .home:hover { color: var(--amber); }
+  .time { font: 12px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--dim); }
+  .chapters { display: flex; gap: 6px; overflow-x: auto; padding: 4px 16px 12px; scrollbar-width: none; }
+  .chapters button { font-size: 12px; padding: 6px 11px; color: var(--dim); }
+  .chapters button.on { color: var(--amber); }
+
+  @media (max-aspect-ratio: 1/1), (max-width: 760px) {
+    .stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) auto auto;
+      grid-template-areas: "plot" "panel" "math" "sub";
+      gap: 10px;
+    }
+    .math { font-size: 13px; height: 8.8em; }
+    .sub { font-size: 14.5px; }
+    .time, .home { display: none; }
+    .controls { flex-wrap: wrap; row-gap: 8px; }
+    .scrubwrap { order: -1; flex-basis: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="theatre">
+  <div class="stage" id="stage">
+    <canvas id="film" aria-label="Animated film about naive Bayes: priors, word counts, Bayes' rule and smoothing"></canvas>
+    <div class="slot plot" id="slotPlot"></div>
+    <div class="slot panel" id="slotPanel"></div>
+    <div class="math" id="math" aria-live="off"></div>
+    <div class="sub" id="sub"></div>
+
+    <div class="titlecard" id="titlecard">
+      <div class="kicker">A short film about naive Bayes</div>
+      <h1>Counting Words</h1>
+      <div class="by">seven messages, a handful of words, and one old rule about evidence</div>
+    </div>
+    <div class="chapter" id="chapter"><div class="act" id="chapAct"></div><div class="name" id="chapName"></div></div>
+    <div class="endcard" id="endcard" hidden>
+      <div class="fin">fin.</div>
+      <button id="replay" type="button">Watch again</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="play" type="button">Pause</button>
+    <div class="scrubwrap">
+      <input id="scrub" type="range" min="0" max="130" step="0.01" value="0" aria-label="Film position">
+      <div class="ticks" id="ticks"></div>
+    </div>
+    <span class="time" id="time">0:00 / 2:10</span>
+    <button id="sound" type="button" aria-pressed="false">Sound off</button>
+    <button id="narrate" type="button" aria-pressed="false">Narration off</button>
+    <a class="home" href="../" target="_top">All lessons</a>
+  </div>
+  <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
+</div>
+
+<script src="film-kit.js?v=1"></script>
+<script>
+(() => {
+  const { TAU, clamp, lerp, E, win, fmt, COL, rgba, mixHex, mulberry32 } = FilmKit.util;
+  const SP = COL.rose, HM = COL.star;
+  const MSGS = [
+    { text: 'win money now', spam: 1 }, { text: 'free money', spam: 1 }, { text: 'win free prize', spam: 1 },
+    { text: 'meeting at noon', spam: 0 }, { text: 'lunch money', spam: 0 }, { text: 'free lunch at noon', spam: 0 }, { text: 'see you now', spam: 0 },
+  ];
+  const VOCAB = ['win', 'prize', 'free', 'money', 'now', 'see', 'you', 'lunch', 'noon', 'at', 'meeting'];
+  const V = VOCAB.length;
+  const counts = [{}, {}];                         // [ham, spam]
+  const totals = [0, 0], nMsg = [0, 0];
+  MSGS.forEach(m => { nMsg[m.spam]++; m.text.split(' ').forEach(w => { counts[m.spam][w] = (counts[m.spam][w] || 0) + 1; totals[m.spam]++; }); });
+  const cnt = (c, w) => counts[c][w] || 0;
+  const prior = c => nMsg[c] / MSGS.length;
+  const lik = (c, w, smooth) => smooth ? (cnt(c, w) + 1) / (totals[c] + V) : cnt(c, w) / totals[c];
+  const score = (c, words, smooth) => words.reduce((s, w) => s * lik(c, w, smooth), prior(c));
+  const MSG1 = ['free', 'money', 'now'], MSG2 = ['win', 'lunch'];
+  const S1 = [score(0, MSG1), score(1, MSG1)], POST1 = S1[1] / (S1[0] + S1[1]);
+  const S2s = [score(0, MSG2, true), score(1, MSG2, true)], POST2 = S2s[1] / (S2s[0] + S2s[1]);
+  const frac = (a, b) => `<span class="fr"><span>${a}</span><span>${b}</span></span>`;
+  const rnd = mulberry32(77);
+  const CHIPS = [];                                 // every word occurrence, for the flight into the bars
+  MSGS.forEach((m, mi) => m.text.split(' ').forEach((w, wi) => CHIPS.push({ mi, wi, w, c: m.spam, n: 0, d: rnd() * .8 })));
+  { const seen = [{}, {}]; CHIPS.forEach(ch => { ch.n = seen[ch.c][ch.w] = (seen[ch.c][ch.w] || 0) + 1; }); }
+
+  const DUR = 130;
+  const CHAPTERS = [
+    { t: 0, act: '', name: 'Opening' },
+    { t: 8, act: 'Act I', name: 'Two Piles' },
+    { t: 22, act: 'Act II', name: 'Counting Words' },
+    { t: 42, act: 'Act III', name: 'A New Message' },
+    { t: 58, act: 'Act IV', name: 'The Naive Assumption' },
+    { t: 76, act: 'Act V', name: 'Bayes’ Rule' },
+    { t: 94, act: 'Act VI', name: 'The Zero Problem' },
+    { t: 116, act: 'Epilogue', name: 'Weighing the Evidence' },
+  ];
+  const SUBS = [
+    [0.6, 7.4, 'Every message is made of words. Some words have a reputation.'],
+    [8.6, 14.6, 'Seven messages someone already sorted: three spam, four not.'],
+    [15.0, 21.4, 'Before reading a single word, three in seven messages were spam. That is the prior.'],
+    [22.6, 29.6, 'Now tear every message into words, and count how often each word shows up in each pile.'],
+    [30.0, 36.8, 'Money appears twice among the eight spam words. So in spam, the chance of money is two in eight.'],
+    [37.2, 41.6, 'Among the twelve normal words, it appears once.'],
+    [42.6, 49.0, 'A new message arrives: free money now. Is it spam?'],
+    [49.4, 57.4, 'Look up each word in both piles. Every word is a small clue, pointing one way or the other.'],
+    [58.6, 65.6, 'Here is the naive part: pretend each word appears on its own, ignoring the words around it.'],
+    [66.0, 75.4, 'Then the clues simply multiply. Start from the prior, and multiply in one word at a time.'],
+    [76.6, 83.6, 'Spam scores about ten times higher. To turn scores into a probability, divide by their total.'],
+    [84.0, 93.4, 'Ninety one percent spam. That is Bayes’ rule: the prior, updated by the evidence.'],
+    [94.6, 101.6, 'One more message: win lunch. Win never appears in normal mail. Lunch never appears in spam.'],
+    [102.0, 107.8, 'A single zero wipes out a whole product. Both scores collapse to nothing.'],
+    [108.2, 115.4, 'The fix is humble: add one to every count. No word is ever impossible, just unlikely.'],
+    [116.6, 121.4, 'It never understood a single sentence.'],
+    [121.8, 129.4, 'It counted, and weighed the evidence one word at a time. Sometimes that is enough to tell friend from foe.'],
+  ];
+
+  // ───────── layout ─────────
+  function layout(g) {
+    const R = g.RM, top = R.y, cardsH = R.h * .34, histY = R.y + cardsH + 10, histH = R.h - cardsH - 10;
+    const rowH = histH / 2, colW = R.w / V;
+    return { R, top, cardsH, histY, rowH, colW,
+      barX: i => R.x + colW * (i + .5),
+      base: c => histY + (c ? rowH - 22 : 2 * rowH - 22),             // spam row on top, ham row below
+      unit: rowH / 5.2 };
+  }
+  function cardPos(L, mi) {
+    const m = MSGS[mi], col = m.spam ? 0 : 1, row = MSGS.filter((x, j) => j < mi && x.spam === m.spam).length;
+    const w = L.R.w / 2 - 24, h = Math.min(30, (L.cardsH - 20) / 4 - 6);
+    return { x: L.R.x + 12 + col * (L.R.w / 2), y: L.top + 22 + row * (h + 6), w, h };
+  }
+  function card(g, x, y, w, h, text, col, a, glow = 0) {
+    const { ctx } = g;
+    ctx.save(); ctx.globalAlpha *= a;
+    g.rrect(x, y, w, h, 7); ctx.fillStyle = rgba(col, .1 + .12 * glow); ctx.fill();
+    ctx.strokeStyle = rgba(col, .55 + .4 * glow); ctx.lineWidth = 1 + glow; ctx.stroke();
+    g.txt(text, x + 12, y + h / 2 + 5, { serif: true, it: true, s: Math.min(17, h * .62), c: COL.bone, w: 600 });
+    ctx.restore();
+  }
+
+  function draw(t, g) {
+    const { ctx } = g, L = layout(g), R = L.R, fin = E(t, 116, 119);
+    // Act I: the two piles
+    const cardsA = win(t, 8.6, 29.5, .8);
+    if (cardsA > 0) {
+      g.cap('SPAM', R.x + 12, L.top + 12, { c: SP, a: cardsA });
+      g.cap('NOT SPAM', R.x + R.w / 2 + 12, L.top + 12, { c: HM, a: cardsA });
+      MSGS.forEach((m, mi) => {
+        const p = cardPos(L, mi), f = E(t, 9 + mi * .6, 10.4 + mi * .6);
+        const burst = E(t, 23 + mi * .3, 25 + mi * .3);
+        card(g, p.x, p.y - (1 - f) * 30, p.w, p.h, m.text, m.spam ? SP : HM, cardsA * f * (1 - burst));
+      });
+    }
+    // histograms
+    const hA = E(t, 22.6, 24);
+    if (hA > 0) {
+      ctx.save(); ctx.globalAlpha = hA;
+      [1, 0].forEach(c => {
+        const b = L.base(c);
+        g.line(R.x + 6, b, R.x + R.w - 6, b, rgba(c ? SP : HM, .5));
+        g.cap(c ? `SPAM · ${totals[1]} WORDS` : `NOT SPAM · ${totals[0]} WORDS`, R.x + 8, b - L.rowH + 34, { c: c ? SP : HM });
+      });
+      VOCAB.forEach((w, i) => g.txt(w, L.barX(i), L.base(0) + 16, { s: 11, al: 'center', c: COL.bone, mono: true }));
+      ctx.restore();
+    }
+    // bars (+1 ghost blocks for smoothing in Act VI)
+    const smooth = win(t, 104, 116.2, .8);
+    const bw = Math.min(26, L.colW * .55);
+    VOCAB.forEach((w, i) => [1, 0].forEach(c => {
+      const b = L.base(c), x = L.barX(i) - bw / 2, n = cnt(c, w);
+      for (let k = 1; k <= n; k++) {
+        const ch = CHIPS.find(z => z.c === c && z.w === w && z.n === k);
+        const land = E(t, 24 + ch.mi * .3 + ch.d, 25.4 + ch.mi * .3 + ch.d);
+        if (land <= 0) continue;
+        const p = cardPos(L, ch.mi), sx = p.x + 16 + ch.wi * 52, sy = p.y + p.h / 2;
+        const tx = x, ty = b - k * L.unit;
+        ctx.globalAlpha = hA;
+        g.rrect(lerp(sx, tx, land), lerp(sy, ty, land) - Math.sin(Math.PI * land) * 30, bw, L.unit - 3, 3);
+        ctx.fillStyle = rgba(c ? SP : HM, .75); ctx.fill();
+      }
+      if (smooth > 0) {
+        ctx.globalAlpha = smooth;
+        g.rrect(x, b - (n + 1) * L.unit, bw, L.unit - 3, 3);
+        ctx.strokeStyle = COL.mint; ctx.setLineDash([3, 3]); ctx.lineWidth = 1.2; ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = rgba(COL.mint, .15); ctx.fill();
+      }
+      ctx.globalAlpha = hA * E(t, 27, 29);
+      g.txt(smooth > .5 ? `${n}+1` : String(n), L.barX(i), b - n * L.unit - (smooth > .5 ? L.unit + 6 : 6), { mono: true, s: 10.5, al: 'center', c: smooth > .5 ? COL.mint : n ? COL.bone : COL.dim });
+    }));
+    ctx.globalAlpha = 1;
+    // "money" highlight in Act II
+    const mh = win(t, 30, 42, .6);
+    if (mh > 0) {
+      const i = VOCAB.indexOf('money');
+      ctx.save(); ctx.globalAlpha = mh; ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.6;
+      g.rrect(L.barX(i) - L.colW / 2 + 2, L.histY, L.colW - 4, 2 * L.rowH - 4, 8); ctx.stroke(); ctx.restore();
+    }
+    // Act III–V: the new message
+    const nm = win(t, 42.6, 94.2, .8);
+    if (nm > 0) drawMessage(g, L, MSG1, t, nm, 43, POST1, 84);
+    const nm2 = win(t, 94.6, 116.4, .8);
+    if (nm2 > 0) drawMessage(g, L, MSG2, t, nm2, 95, t > 110 ? POST2 : null, 110);
+    if (fin > 0) {
+      ctx.save(); ctx.globalAlpha = fin;
+      g.txt('prior × clue × clue × clue …', R.x + R.w / 2, L.top + L.cardsH / 2 + 6, { serif: true, it: true, s: 24, c: COL.amber, al: 'center', w: 600 });
+      ctx.restore();
+    }
+    drawPanel(t, g);
+  }
+
+  function drawMessage(g, L, words, t, a, t0, post, tPost) {
+    const { ctx } = g, R = L.R;
+    const w = Math.min(R.w * .7, 90 + words.length * 90), h = 40, x = R.x + (R.w - w) / 2, y = L.top + 30;
+    const verdict = post == null ? 0 : E(t, tPost, tPost + 1.4);
+    const col = verdict > 0 ? mixHex(COL.bone, post > .5 ? SP : HM, verdict) : COL.bone;
+    ctx.save(); ctx.globalAlpha = a * E(t, t0, t0 + 1.2);
+    g.rrect(x, y - (1 - E(t, t0, t0 + 1.2)) * 30, w, h, 9);
+    ctx.fillStyle = rgba(COL.amber, .08); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = 1.6 + verdict; ctx.stroke();
+    g.cap('NEW MESSAGE', x + 12, y - 8, { c: COL.amber });
+    const chipX = j => x + 24 + j * ((w - 48) / words.length) + ((w - 48) / words.length) / 2;
+    words.forEach((wd, j) => g.txt(wd, chipX(j), y + 27, { serif: true, it: true, s: 21, al: 'center', c: COL.bone, w: 600 }));
+    // walls between words: the naive assumption
+    const walls = win(t, 59, 76, .6) * (t0 === 43 ? 1 : 0);
+    if (walls > 0) {
+      ctx.globalAlpha = a * walls;
+      for (let j = 1; j < words.length; j++) { const wx = x + 24 + j * ((w - 48) / words.length); g.dashed(wx, y + 4, wx, y + h - 4, COL.lilac, 1.5, [3, 3]); }
+    }
+    // threads to the bars
+    const th = E(t, t0 + 4, t0 + 7);
+    if (th > 0) {
+      words.forEach((wd, j) => {
+        const i = VOCAB.indexOf(wd);
+        [1, 0].forEach(c => {
+          const b = L.base(c), zero = cnt(c, wd) === 0 && t0 !== 43 && t < 108;
+          ctx.globalAlpha = a * th * .6;
+          g.dashed(chipX(j), y + h, L.barX(i), b - (cnt(c, wd) + .6) * L.unit, zero ? COL.rose : COL.amber, zero ? 2 : 1, [3, 4]);
+          if (zero) { ctx.globalAlpha = a * th; g.txt('0', L.barX(i) + 14, b - 6, { mono: true, s: 16, c: COL.rose, w: 600 }); }
+        });
+      });
+    }
+    if (verdict > 0) {
+      ctx.globalAlpha = a * verdict;
+      g.txt(`${post > .5 ? 'SPAM' : 'NOT SPAM'} · ${Math.round(post * 100)}%`, x + w + 14, y + 27, { mono: true, s: 15, c: post > .5 ? SP : HM, w: 600 });
+    }
+    ctx.restore();
+  }
+
+  // ───────── panel ─────────
+  function drawPanel(t, g) {
+    const R = g.RP, { ctx } = g;
+    const a1 = win(t, 15, 42.2, .8);
+    if (a1 > 0) {
+      ctx.save(); ctx.globalAlpha = a1;
+      g.cap('THE PRIOR · BEFORE READING ANY WORDS', R.x + 10, R.y + 12);
+      [[1, 'spam', SP], [0, 'not spam', HM]].forEach(([c, name, col], j) => {
+        const y = R.y + 44 + j * 50, w = (R.w - 150) * prior(c) * E(t, 15.4 + j * .4, 17 + j * .4);
+        g.txt(name, R.x + 12, y + 15, { s: 13, c: col, w: 600 });
+        ctx.fillStyle = rgba(col, .75); ctx.fillRect(R.x + 90, y, w, 20);
+        g.txt(`${nMsg[c]} / ${MSGS.length}`, R.x + 98 + w, y + 15, { mono: true, s: 12, c: COL.bone });
+      });
+      ctx.restore();
+    }
+    const a2 = win(t, 49.4, 58.4, .8);
+    if (a2 > 0) {
+      ctx.save(); ctx.globalAlpha = a2;
+      g.cap('EACH WORD’S CLUE', R.x + 10, R.y + 12);
+      g.txt('in spam', R.x + 130, R.y + 40, { s: 12, c: SP, w: 600 }); g.txt('in not spam', R.x + 230, R.y + 40, { s: 12, c: HM, w: 600 });
+      MSG1.forEach((w, j) => {
+        const y = R.y + 72 + j * 34, on = E(t, 50 + j * 1.2, 51 + j * 1.2);
+        ctx.globalAlpha = a2 * on;
+        g.txt(w, R.x + 14, y, { serif: true, it: true, s: 19, c: COL.bone, w: 600 });
+        g.txt(`${cnt(1, w)}/${totals[1]} = ${fmt(lik(1, w), 3)}`, R.x + 130, y, { mono: true, s: 12.5, c: COL.bone });
+        g.txt(`${cnt(0, w)}/${totals[0]} = ${fmt(lik(0, w), 3)}`, R.x + 230, y, { mono: true, s: 12.5, c: COL.bone });
+      });
+      ctx.restore();
+    }
+    const a3 = win(t, 66, 94.2, .8);
+    if (a3 > 0) {
+      ctx.save(); ctx.globalAlpha = a3;
+      g.cap('MULTIPLY THE CLUES', R.x + 10, R.y + 12);
+      [[1, 'spam', SP], [0, 'not spam', HM]].forEach(([c, name, col], j) => {
+        const y = R.y + 50 + j * 56;
+        const parts = [`${nMsg[c]}/${MSGS.length}`].concat(MSG1.map(w => `${cnt(c, w)}/${totals[c]}`));
+        const shown = Math.min(parts.length, 1 + Math.floor(Math.max(0, t - 66.6) / .9));
+        g.txt(name, R.x + 12, y, { s: 12, c: col, w: 600 });
+        g.txt(parts.slice(0, shown).join(' × ') + (shown === parts.length ? ` = ${S1[c].toFixed(5)}` : ''), R.x + 12, y + 22, { mono: true, s: 12.5, c: COL.bone });
+      });
+      const post = E(t, 77, 84);
+      if (post > 0) {
+        const y = R.y + 176, w = R.w - 24;
+        ctx.globalAlpha = a3 * post;
+        g.cap('BAYES’ RULE · CHANCE IT IS SPAM', R.x + 12, y - 10);
+        ctx.fillStyle = rgba(HM, .35); ctx.fillRect(R.x + 12, y, w, 22);
+        ctx.fillStyle = rgba(SP, .85); ctx.fillRect(R.x + 12, y, w * POST1 * E(t, 84, 87), 22);
+        g.txt(`${Math.round(POST1 * 100 * E(t, 84, 87))}%`, R.x + 20, y + 16, { mono: true, s: 13, c: '#1a1206', w: 600 });
+      }
+      ctx.restore();
+    }
+    const a4 = win(t, 96, 116.4, .8);
+    if (a4 > 0) {
+      ctx.save(); ctx.globalAlpha = a4;
+      const sm = E(t, 108.4, 110);
+      g.cap(sm > .5 ? 'WITH +1 SMOOTHING' : 'WITHOUT SMOOTHING', R.x + 10, R.y + 12, { c: sm > .5 ? COL.mint : COL.dim });
+      [[1, 'spam', SP], [0, 'not spam', HM]].forEach(([c, name, col], j) => {
+        const y = R.y + 50 + j * 56;
+        const parts = sm > .5 ? [`${nMsg[c]}/${MSGS.length}`].concat(MSG2.map(w => `${cnt(c, w) + 1}/${totals[c] + V}`))
+                              : [`${nMsg[c]}/${MSGS.length}`].concat(MSG2.map(w => `${cnt(c, w)}/${totals[c]}`));
+        const val = sm > .5 ? S2s[c] : score(c, MSG2);
+        g.txt(name, R.x + 12, y, { s: 12, c: col, w: 600 });
+        g.txt(parts.join(' × ') + (t > 102 ? ` = ${val === 0 ? '0' : val.toFixed(5)}` : ''), R.x + 12, y + 22, { mono: true, s: 12.5, c: val === 0 && t > 102 ? COL.rose : COL.bone });
+      });
+      if (t > 102.5 && sm < .5) g.txt('0 ÷ 0: no answer at all', R.x + 12, R.y + 178, { serif: true, it: true, s: 20, c: COL.rose, w: 600 });
+      if (sm > .5) g.txt(`chance of spam: ${Math.round(POST2 * 100)}%, nearly a coin toss`, R.x + 12, R.y + 178, { serif: true, it: true, s: 19, c: COL.mint, w: 600 });
+      ctx.restore();
+    }
+  }
+
+  // ───────── math cards ─────────
+  const num = s => `<span class="num">${s}</span>`;
+  const MATH = [
+    { t0: 8.4, t1: 22, html: () => `<p class="lbl">The prior</p>
+       <div class="eq sm">P(spam) = ${frac(nMsg[1], MSGS.length)} = ${num(fmt(prior(1)))} &nbsp; P(not spam) = ${frac(nMsg[0], MSGS.length)} = ${num(fmt(prior(0)))}</div>
+       <p class="note">P( ) means "the chance of". The prior is how common each class is before looking at the message.</p>` },
+    { t0: 22.4, t1: 42, html: () => `<p class="lbl">Chance of a word, given the class</p>
+       <div class="eq sm">P(word | spam) = ${frac('count of word in spam', 'all spam words')}</div>
+       <div class="eq sm">P(money | spam) = ${frac(cnt(1, 'money'), totals[1])} = ${num(fmt(lik(1, 'money'), 3))} &nbsp; P(money | not spam) = ${frac(cnt(0, 'money'), totals[0])} = ${num(fmt(lik(0, 'money'), 3))}</div>
+       <p class="note">The bar "|" reads "given".</p>` },
+    { t0: 42.4, t1: 58, html: () => `<p class="lbl">The question</p>
+       <div class="eq sm">P(spam | free money now) = ?</div>
+       <p class="note">We know the chance of each word given the class. We want the chance of the class given the words. Bayes' rule turns one into the other.</p>` },
+    { t0: 58.4, t1: 76, html: () => `<p class="lbl">Naive: words are independent</p>
+       <div class="eq sm">score(spam) = P(spam) × P(free | spam) × P(money | spam) × P(now | spam)</div>
+       <div class="eq sm">score(spam) = ${num(S1[1].toFixed(5))} &nbsp; score(not spam) = ${num(S1[0].toFixed(5))}</div>` },
+    { t0: 76.4, t1: 94, html: () => `<p class="lbl">Bayes' rule</p>
+       <div class="eq sm">P(spam | message) = ${frac('score(spam)', 'score(spam) + score(not spam)')}</div>
+       <div class="eq sm">= ${frac(S1[1].toFixed(5), `${S1[1].toFixed(5)} + ${S1[0].toFixed(5)}`)} = ${num(Math.round(POST1 * 100) + '%')}</div>` },
+    { t0: 94.4, t1: 116, html: t => t < 108 ? `<p class="lbl">One zero ruins everything</p>
+       <div class="eq sm">P(lunch | spam) = ${frac(0, totals[1])} = 0 &nbsp; P(win | not spam) = ${frac(0, totals[0])} = 0</div>
+       <p class="note">Anything multiplied by zero is zero, however strong the other clues are.</p>` : `<p class="lbl">Add-one smoothing</p>
+       <div class="eq sm">P(word | class) = ${frac('count + 1', `words in class + ${V}`)}</div>
+       <p class="note">${V} is the number of different words we have seen. Adding 1 to every count means no word is ever impossible.</p>` },
+    { t0: 116.4, t1: 130.5, html: () => `<p class="lbl">The whole method</p>
+       <div class="eq sm">score(class) = P(class) × P(word₁ | class) × P(word₂ | class) × …</div>
+       <div class="eq sm">pick the class with the biggest score</div>` },
+  ];
+
+  const mood = t => t < 22 ? .4 : t < 42 ? .3 : t < 76 ? .45 : t < 94 ? .15 : t < 108 ? .85 : .15;
+  const events = [0, 1, 2].map(j => ({ t: 50 + j * 1.2, fn: pl => pl([440, 523.25, 659.25][j], .05) }))
+    .concat([{ t: 84.2, fn: pl => pl(880, .08) }, { t: 102.2, fn: pl => pl(233.08, .08) }, { t: 108.6, fn: pl => pl(783.99, .07) }]);
+  FilmKit.run({ DUR, CHAPTERS, SUBS, MATH, draw, mood, events, chord: [98, 146.83, 196, 246.94, 293.66], penta: [392, 440, 493.88, 587.33, 659.25, 783.99] });
+})();
+
+</script>
+</body>
+</html>

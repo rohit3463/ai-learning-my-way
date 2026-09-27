@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Twenty Questions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --void: #05070d;
+    --ink: #0b1120;
+    --bone: #eee6d6;
+    --dim: #8d93a6;
+    --amber: #f4b860;
+    --rose: #ef8193;
+    --star: #a9d6f5;
+    --lilac: #c4b3ff;
+    --hair: rgba(238, 230, 214, .16);
+    --bar: 24px;
+    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--void);
+    color: var(--bone);
+    font: 15px/1.45 var(--sans);
+    overflow: hidden;
+  }
+  .theatre { height: 100%; display: flex; flex-direction: column; }
+
+  .stage {
+    position: relative;
+    flex: 1;
+    min-height: 420px;
+    overflow: hidden;
+    background: var(--ink);
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas: "plot panel" "plot math" "sub sub";
+    gap: 14px clamp(20px, 3vw, 40px);
+    padding: calc(var(--bar) + 20px) clamp(16px, 4vw, 56px) calc(var(--bar) + 10px);
+  }
+  #film { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .slot, .math, .sub { position: relative; z-index: 1; min-height: 0; }
+  .plot { grid-area: plot; }
+  .panel { grid-area: panel; }
+
+  .math { grid-area: math; height: 9.4em; font-size: 16px; transition: none; }
+  .math .lbl, .kicker, .chapter .act {
+    font: 600 10.5px/1.2 var(--sans);
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0 0 .5em;
+  }
+  .eq { font-family: var(--serif); font-weight: 500; font-size: 1.55em; line-height: 1.3; white-space: nowrap; font-variant-numeric: lining-nums; }
+  .nt { text-transform: none; letter-spacing: 0; }
+  .eq.sm { font-size: 1.28em; }
+  .eq i { font-style: italic; }
+  .eq sub, .eq sup { font-size: .6em; font-style: italic; }
+  .a { color: var(--amber); } .r { color: var(--rose); } .g { color: var(--lilac); } .s { color: var(--star); }
+  .num {
+    font: 500 .6em/1 var(--mono);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    padding: .18em .4em;
+    border-radius: 4px;
+    background: rgba(238, 230, 214, .08);
+    vertical-align: .18em;
+  }
+  .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .66em; line-height: 1.08; margin: 0 .1em; }
+  .fr > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .2em; }
+  .note { color: var(--dim); font-size: .9em; max-width: 46ch; margin: .45em 0 0; }
+
+  .sub {
+    grid-area: sub;
+    justify-self: center;
+    text-align: center;
+    max-width: 54ch;
+    min-height: 2.9em;
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.45;
+    text-wrap: balance;
+    text-shadow: 0 1px 14px #000, 0 0 2px #000;
+  }
+
+  .titlecard {
+    position: absolute; inset: 0; z-index: 2;
+    display: grid; place-content: center; gap: 14px;
+    text-align: center; pointer-events: none; padding-inline: 16px;
+  }
+  .titlecard h1 {
+    margin: 0;
+    font: italic 500 clamp(44px, 7.4vw, 104px)/1 var(--serif);
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    text-shadow: 0 0 48px rgba(244, 184, 96, .35);
+  }
+  .titlecard .by { font: italic 500 clamp(17px, 1.8vw, 22px)/1.3 var(--serif); color: var(--dim); }
+
+  .chapter {
+    position: absolute; z-index: 2; pointer-events: none;
+    left: clamp(16px, 4vw, 56px); top: calc(var(--bar) + 14px);
+  }
+  .chapter .act { color: var(--amber); }
+  .chapter .name { font: italic 500 clamp(28px, 3.2vw, 42px)/1.05 var(--serif); text-shadow: 0 2px 20px #000; }
+
+  .endcard {
+    position: absolute; inset: 0; z-index: 3;
+    display: grid; place-content: center; justify-items: center; gap: 16px;
+    padding-inline: 16px; pointer-events: none;
+  }
+  .endcard > * { pointer-events: auto; }
+  .endcard .fin { font: italic 500 clamp(34px, 4.6vw, 60px)/1 var(--serif); text-shadow: 0 0 40px rgba(244, 184, 96, .4); }
+
+  button {
+    font: 500 13px/1 var(--sans);
+    color: var(--bone);
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover { border-color: rgba(238, 230, 214, .4); }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  button.on, button[aria-pressed="true"] { color: var(--amber); border-color: rgba(244, 184, 96, .55); }
+  .endcard button { font-size: 14px; padding: 10px 20px; }
+
+  .controls { display: flex; align-items: center; gap: 12px; padding: 10px 16px 6px; }
+  .scrubwrap { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+  #scrub { width: 100%; accent-color: var(--amber); margin: 0; }
+  .ticks { position: absolute; inset: 0; pointer-events: none; }
+  .ticks span { position: absolute; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: rgba(238, 230, 214, .35); }
+  .home { font: 500 13px/1 var(--sans); color: var(--dim); white-space: nowrap; }
+  .home:hover { color: var(--amber); }
+  .time { font: 12px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--dim); }
+  .chapters { display: flex; gap: 6px; overflow-x: auto; padding: 4px 16px 12px; scrollbar-width: none; }
+  .chapters button { font-size: 12px; padding: 6px 11px; color: var(--dim); }
+  .chapters button.on { color: var(--amber); }
+
+  @media (max-aspect-ratio: 1/1), (max-width: 760px) {
+    .stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) auto auto;
+      grid-template-areas: "plot" "panel" "math" "sub";
+      gap: 10px;
+    }
+    .math { font-size: 13px; height: 8.8em; }
+    .sub { font-size: 14.5px; }
+    .time, .home { display: none; }
+    .controls { flex-wrap: wrap; row-gap: 8px; }
+    .scrubwrap { order: -1; flex-basis: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="theatre">
+  <div class="stage" id="stage">
+    <canvas id="film" aria-label="Animated film about decision trees: questions, Gini impurity, the best split, depth and overfitting"></canvas>
+    <div class="slot plot" id="slotPlot"></div>
+    <div class="slot panel" id="slotPanel"></div>
+    <div class="math" id="math" aria-live="off"></div>
+    <div class="sub" id="sub"></div>
+
+    <div class="titlecard" id="titlecard">
+      <div class="kicker">A short film about decision trees</div>
+      <h1>Twenty Questions</h1>
+      <div class="by">one yes-or-no question at a time, until the answer is clear</div>
+    </div>
+    <div class="chapter" id="chapter"><div class="act" id="chapAct"></div><div class="name" id="chapName"></div></div>
+    <div class="endcard" id="endcard" hidden>
+      <div class="fin">fin.</div>
+      <button id="replay" type="button">Watch again</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="play" type="button">Pause</button>
+    <div class="scrubwrap">
+      <input id="scrub" type="range" min="0" max="132" step="0.01" value="0" aria-label="Film position">
+      <div class="ticks" id="ticks"></div>
+    </div>
+    <span class="time" id="time">0:00 / 2:12</span>
+    <button id="sound" type="button" aria-pressed="false">Sound off</button>
+    <button id="narrate" type="button" aria-pressed="false">Narration off</button>
+    <a class="home" href="../" target="_top">All lessons</a>
+  </div>
+  <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
+</div>
+
+<script src="film-kit.js?v=1"></script>
+<script>
+(() => {
+  const { TAU, clamp, lerp, E, win, fmt, COL, rgba, mixHex, mulberry32, shuffled } = FilmKit.util;
+  const A = COL.rose, B = COL.star, colOf = c => c ? A : B;
+  const rnd = mulberry32(2718);
+  const truth = (x, y) => (x > .3 && y > -.6) || (x < -1.8 && y > .8) ? 1 : 0;
+  function makePoints(n, flips) {
+    const out = [];
+    for (let i = 0; i < n; i++) { const x = -3.3 + rnd() * 6.6, y = -2.2 + rnd() * 4.4; out.push({ x, y, c: truth(x, y) }); }
+    for (let f = 0; f < flips; f++) { const p = out[Math.floor(rnd() * n)]; p.c = 1 - p.c; }
+    return out;
+  }
+  const P = makePoints(52, 3), TEST = makePoints(160, 10);
+  const gini = pts => { if (!pts.length) return 0; const p = pts.filter(q => q.c).length / pts.length; return 1 - p * p - (1 - p) * (1 - p); };
+  const FEAT = ['x', 'y'], FNAME = ['x₁', 'x₂'];
+  function splitScore(pts, f, thr) {
+    const L = pts.filter(p => p[FEAT[f]] <= thr), R = pts.filter(p => p[FEAT[f]] > thr);
+    return (L.length * gini(L) + R.length * gini(R)) / pts.length;
+  }
+  function candidates(pts, f) {
+    const v = [...new Set(pts.map(p => p[FEAT[f]]))].sort((a, b) => a - b);
+    return v.slice(1).map((x, i) => (x + v[i]) / 2);
+  }
+  function bestSplit(pts) {
+    let best = null;
+    [0, 1].forEach(f => candidates(pts, f).forEach(thr => {
+      const s = splitScore(pts, f, thr);
+      if (!best || s < best.s - 1e-12) best = { f, thr, s };
+    }));
+    return best;
+  }
+  let nodeId = 0;
+  function build(pts, depth, maxDepth, box) {
+    const ones = pts.filter(p => p.c).length, node = { id: nodeId++, pts, depth, box, n: pts.length, ones, pred: ones * 2 >= pts.length ? 1 : 0, g: gini(pts) };
+    if (depth >= maxDepth || node.g === 0 || pts.length < 2) return node;
+    const b = bestSplit(pts);
+    if (!b || b.s >= node.g - 1e-12) return node;
+    node.f = b.f; node.thr = b.thr;
+    const lb = { ...box }, rb = { ...box };
+    if (b.f === 0) { lb.x1 = b.thr; rb.x0 = b.thr; } else { lb.y1 = b.thr; rb.y0 = b.thr; }
+    node.left = build(pts.filter(p => p[FEAT[b.f]] <= b.thr), depth + 1, maxDepth, lb);
+    node.right = build(pts.filter(p => p[FEAT[b.f]] > b.thr), depth + 1, maxDepth, rb);
+    return node;
+  }
+  const BOX = { x0: -3.5, x1: 3.5, y0: -2.4, y1: 2.4 };
+  const T3 = build(P, 0, 3, BOX);
+  const TDEEP = build(P, 0, 12, BOX);
+  const internal = root => { const out = [], q = [root]; while (q.length) { const n = q.shift(); if (n.left) { out.push(n); q.push(n.left, n.right); } } return out; };
+  const I3 = internal(T3), IDEEP = internal(TDEEP);
+  const predict = (node, p) => node.left ? predict(p[FEAT[node.f]] <= node.thr ? node.left : node.right, p) : node.pred;
+  const accOf = (tree, pts) => pts.filter(p => predict(tree, p) === p.c).length / pts.length;
+  const DEPTHS = [1, 2, 3, 4, 5, 6, 7, 8].map(d => { const tr = build(P, 0, d, BOX); return { d, train: accOf(tr, P), test: accOf(tr, TEST) }; });
+  const ROOT = bestSplit(P), SWEEP = [0, 1].map(f => candidates(P, f).map(thr => ({ thr, s: splitScore(P, f, thr) })));
+  const NEW = { x: 1.6, y: .4 };
+  const PATH = []; { let n = T3; while (n) { PATH.push(n); n = n.left ? (NEW[FEAT[n.f]] <= n.thr ? n.left : n.right) : null; } }
+  const RANK = []; shuffled(P.length, rnd).forEach((i, k) => RANK[i] = k);
+  const START = P.map(() => ({ fx: .06 + rnd() * .88, fy: .12 + rnd() * .72, ph: rnd() * TAU }));
+  const q = n => `${FNAME[n.f]} > ${fmt(n.thr, 1)}?`;
+  const ROOT_NO = P.filter(p => p[FEAT[T3.f]] <= T3.thr), ROOT_YES = P.filter(p => p[FEAT[T3.f]] > T3.thr);
+  const tally = pts => `${pts.filter(p => p.c).length} rose, ${pts.length - pts.filter(p => p.c).length} blue`;
+
+  const DUR = 132;
+  const CHAPTERS = [
+    { t: 0, act: '', name: 'Opening' },
+    { t: 8, act: 'Act I', name: 'One Question' },
+    { t: 22, act: 'Act II', name: 'Measuring Mess' },
+    { t: 40, act: 'Act III', name: 'The Best Question' },
+    { t: 60, act: 'Act IV', name: 'Growing the Tree' },
+    { t: 82, act: 'Act V', name: 'Too Many Questions' },
+    { t: 100, act: 'Act VI', name: 'Reading the Tree' },
+    { t: 118, act: 'Epilogue', name: 'Twenty Questions' },
+  ];
+  const SUBS = [
+    [0.6, 7.4, 'A game you already know: ask yes or no questions until you can guess the answer.'],
+    [8.6, 14.2, `Here are points of two colours. Ask one question about them: is x ${T3.f ? 'two' : 'one'} bigger than ${fmt(T3.thr, 1)}?`],
+    [14.6, 21.4, 'Yes on one side, no on the other. Each side is now a little tidier than the whole.'],
+    [22.6, 29.6, 'How tidy? We measure the mess with a number called Gini impurity.'],
+    [30.0, 39.4, 'A group of one colour has zero mess. A perfect half and half mix has the most, one half.'],
+    [40.6, 47.6, 'To find the best question, try every cut along x one, and score how messy the two sides are.'],
+    [48.0, 53.6, 'Then try every cut along x two.'],
+    [54.0, 59.6, 'The lowest point wins. That is the first question the tree will ask.'],
+    [60.6, 67.6, 'Then do it again, inside each side, with only the points that landed there.'],
+    [68.0, 74.6, 'Question by question, the plane is carved into boxes, and each box takes the colour of its majority.'],
+    [75.0, 81.4, 'Written out, the questions form a tree, upside down: the root at the top, the answers at the leaves.'],
+    [82.6, 89.6, 'Keep asking, and eventually every box is pure. Even the noisy points get a box of their own.'],
+    [90.0, 95.6, 'Perfect on the training points, but worse on new ones. The tree has memorised the noise.'],
+    [96.0, 99.6, 'So we stop early, by limiting the depth.'],
+    [100.6, 106.6, 'To use the tree, drop a new point in at the root.'],
+    [107.0, 113.6, 'Answer each question, and follow the branch, until you reach a leaf.'],
+    [114.0, 117.6, 'The leaf gives the answer, and you can see exactly why.'],
+    [118.6, 124.0, 'It never drew a curve, or weighed a single number.'],
+    [124.4, 131.4, 'It just kept asking the most useful question it could, until the answer was clear.'],
+  ];
+
+  // time each internal node of the depth-3 tree appears in Act IV, and of the deep tree in Act V
+  const T_IV = new Map(I3.map((n, i) => [n.id, 61 + i * (12 / Math.max(1, I3.length - 1))]));
+  const T_V = new Map(IDEEP.map((n, i) => [n.id, 82.8 + i * (6.5 / Math.max(1, IDEEP.length - 1))]));
+
+  function plane(g) {
+    const R = g.RM, s = Math.min(R.w / 7.2, R.h / 5), cx = R.x + R.w / 2, cy = R.y + R.h / 2;
+    return { R, s, PX: x => cx + x * s, PY: y => cy - y * s };
+  }
+  // leaves of a tree as it looks at time t: nodes not yet revealed act as leaves
+  function leavesAt(root, shown) {
+    const out = [], walk = n => { if (n.left && shown(n)) { walk(n.left); walk(n.right); } else out.push(n); };
+    walk(root); return out;
+  }
+  function splitsAt(root, shown) {
+    const out = [], walk = n => { if (n.left && shown(n)) { out.push(n); walk(n.left); walk(n.right); } };
+    walk(root); return out;
+  }
+  function treeState(t) {
+    if (t < 14) return null;
+    if (t < 60) return { root: T3, shown: n => n === T3, a: E(t, 14, 15.5) };
+    if (t < 82.4 || t >= 96.2) return { root: T3, shown: n => T_IV.has(n.id) && t >= T_IV.get(n.id), a: 1 };
+    return { root: TDEEP, shown: n => T_V.has(n.id) && t >= T_V.get(n.id), a: 1 };
+  }
+
+  function draw(t, g) {
+    const { ctx } = g, G = plane(g), R = G.R, fin = E(t, 118, 121);
+    ctx.save(); g.rrect(R.x, R.y, R.w, R.h, 10); ctx.clip();
+    const gA = E(t, 10.5, 13);
+    ctx.globalAlpha = gA; ctx.strokeStyle = rgba(COL.bone, .05); ctx.lineWidth = 1;
+    for (let v = -4; v <= 4; v++) {
+      ctx.beginPath(); ctx.moveTo(G.PX(v), R.y); ctx.lineTo(G.PX(v), R.y + R.h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(R.x, G.PY(v)); ctx.lineTo(R.x + R.w, G.PY(v)); ctx.stroke();
+    }
+    const st = treeState(t);
+    if (st) {
+      const box = b => [G.PX(b.x0), G.PY(b.y1), (b.x1 - b.x0) * G.s, (b.y1 - b.y0) * G.s];
+      const hl = t >= 100.4 && t < 118 ? PATH[Math.min(PATH.length - 1, Math.floor(Math.max(0, t - 107.2) / 1.6))] : null;
+      leavesAt(st.root, st.shown).forEach(n => {
+        const [x, y, w, h] = box(n.box);
+        ctx.globalAlpha = st.a * (t < 22 ? 1 : t < 40 ? 1 : 1) * (hl && t > 107 ? .35 : 1);
+        ctx.fillStyle = rgba(colOf(n.pred), .12 + .06 * fin); ctx.fillRect(x, y, w, h);
+      });
+      if (hl && t > 107) {
+        const [x, y, w, h] = box(hl.box);
+        ctx.globalAlpha = 1; ctx.strokeStyle = COL.amber; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+      }
+      splitsAt(st.root, st.shown).forEach(n => {
+        const tn = n === T3 ? 14 : (t < 82.4 || t >= 96.2 ? T_IV.get(n.id) : T_V.get(n.id)) ?? 0, grow = E(t, tn, tn + .8);
+        ctx.globalAlpha = st.a * grow; ctx.strokeStyle = n === T3 ? COL.amber : rgba(COL.amber, .75); ctx.lineWidth = n === T3 ? 2.2 : 1.5;
+        ctx.beginPath();
+        if (n.f === 0) { const x = G.PX(n.thr); ctx.moveTo(x, G.PY(n.box.y1)); ctx.lineTo(x, lerp(G.PY(n.box.y1), G.PY(n.box.y0), grow)); }
+        else { const y = G.PY(n.thr); ctx.moveTo(G.PX(n.box.x0), y); ctx.lineTo(lerp(G.PX(n.box.x0), G.PX(n.box.x1), grow), y); }
+        ctx.stroke();
+      });
+      if (t > 14 && t < 22.4) {
+        ctx.globalAlpha = win(t, 14.6, 22.4, .5);
+        const o = { mono: true, s: 12, c: COL.bone };
+        if (T3.f === 0) {
+          g.txt(`no: ${tally(ROOT_NO)}`, G.PX(T3.thr) - 12, R.y + 22, { ...o, al: 'right' });
+          g.txt(`yes: ${tally(ROOT_YES)}`, G.PX(T3.thr) + 12, R.y + 22, o);
+        } else {
+          g.txt(`yes: ${tally(ROOT_YES)}`, R.x + R.w - 12, G.PY(T3.thr) - 10, { ...o, al: 'right' });
+          g.txt(`no: ${tally(ROOT_NO)}`, R.x + R.w - 12, G.PY(T3.thr) + 20, { ...o, al: 'right' });
+        }
+      }
+    }
+    // Act III sweep line
+    const sw = win(t, 40.6, 54.2, .5);
+    if (sw > 0) {
+      const f = t < 48 ? 0 : 1, arr = SWEEP[f], u = f === 0 ? E(t, 41, 47.6) : E(t, 48.2, 53.8);
+      const c = arr[Math.min(arr.length - 1, Math.floor(u * (arr.length - 1)))];
+      ctx.globalAlpha = sw; ctx.strokeStyle = COL.lilac; ctx.lineWidth = 1.8; ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      if (f === 0) { ctx.moveTo(G.PX(c.thr), R.y); ctx.lineTo(G.PX(c.thr), R.y + R.h); } else { ctx.moveTo(R.x, G.PY(c.thr)); ctx.lineTo(R.x + R.w, G.PY(c.thr)); }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    // points
+    const noisy = new Set(P.map((p, i) => p.c !== truth(p.x, p.y) ? i : -1).filter(i => i >= 0));
+    const flagNoise = win(t, 84, 96, .6);
+    P.forEach((p, i) => {
+      const s = START[i], f = E(t, 8.6 + RANK[i] * .06, 11.8 + RANK[i] * .06);
+      const x = lerp(s.fx * g.W, G.PX(p.x), f), y = lerp(s.fy * g.H + Math.sin(t * .4 + s.ph) * 4, G.PY(p.y), f) - Math.sin(Math.PI * f) * 50;
+      ctx.globalAlpha = lerp(.6 + .4 * Math.sin(t * 1.7 + s.ph), 1, f) * (t > 100.4 && t < 118 ? .45 : 1);
+      g.glowDot(x, y, lerp(1.9, 3.8, f), f < 1 ? mixHex(COL.bone, colOf(p.c), E(t, 11.4, 13)) : colOf(p.c), 10 + fin * 6);
+      if (noisy.has(i) && flagNoise > 0) { ctx.globalAlpha = flagNoise; ctx.strokeStyle = COL.lilac; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(x, y, 9, 0, TAU); ctx.stroke(); }
+    });
+    // Act VI: the new point
+    const np = win(t, 100.6, 118, .6);
+    if (np > 0) {
+      ctx.globalAlpha = np;
+      const done = E(t, 114, 115.2), col = done > 0 ? mixHex(COL.bone, colOf(PATH[PATH.length - 1].pred), done) : COL.bone;
+      g.glowDot(G.PX(NEW.x), G.PY(NEW.y), 6, col, 20);
+      ctx.strokeStyle = rgba(COL.bone, .8); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(G.PX(NEW.x), G.PY(NEW.y), 12 + Math.sin(t * 2.4) * 2, 0, TAU); ctx.stroke();
+    }
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha = gA;
+    g.txt('x₁ →', R.x + R.w - 10, R.y + R.h - 10, { serif: true, it: true, s: 16, c: COL.bone, al: 'right' });
+    g.txt('x₂ ↑', R.x + 10, R.y + 20, { serif: true, it: true, s: 16, c: COL.bone });
+    if (t > 8.6 && t < 22.4) g.txt(q(T3), R.x + R.w / 2, R.y + R.h - 12, { serif: true, it: true, s: 20, c: COL.amber, al: 'center', w: 600, a: win(t, 9, 22.4, .6) });
+    ctx.restore();
+    drawPanel(t, g);
+  }
+
+  // ───────── panel ─────────
+  function mixBar(g, x, y, w, n, ones, label) {
+    const { ctx } = g, pr = n ? ones / n : 0;
+    ctx.fillStyle = rgba(A, .8); ctx.fillRect(x, y, w * pr, 16);
+    ctx.fillStyle = rgba(B, .8); ctx.fillRect(x + w * pr, y, w * (1 - pr), 16);
+    const gi = 1 - pr * pr - (1 - pr) * (1 - pr);
+    g.txt(label, x, y - 6, { s: 11.5, c: COL.bone });
+    g.txt(`Gini ${fmt(gi, 3)}`, x + w + 10, y + 13, { mono: true, s: 12, c: COL.amber });
+  }
+  function drawTree(g, R, root, shown, a, highlight) {
+    const { ctx } = g, leaves = [], walk = (n, d) => { n._d = d; if (n.left && shown(n)) { walk(n.left, d + 1); walk(n.right, d + 1); n._x = (n.left._x + n.right._x) / 2; } else { n._x = leaves.length; leaves.push(n); } };
+    walk(root, 0);
+    const maxD = Math.max(...leaves.map(l => l._d), 1);
+    const X = v => R.x + 30 + (R.w - 60) * (leaves.length > 1 ? v / (leaves.length - 1) : .5), Y = d => R.y + 40 + d * Math.min(56, (R.h - 70) / maxD);
+    const edges = n => { if (n.left && shown(n)) { [n.left, n.right].forEach((c, j) => {
+      const on = highlight && highlight.includes(n) && highlight.includes(c);
+      g.line(X(n._x), Y(n._d) + 10, X(c._x), Y(c._d) - 10, on ? COL.amber : rgba(COL.bone, .3), on ? 2.4 : 1.2);
+      g.txt(j ? 'yes' : 'no', (X(n._x) + X(c._x)) / 2 + (j ? 6 : -6), (Y(n._d) + Y(c._d)) / 2, { s: 10, al: j ? 'left' : 'right', c: COL.dim });
+      edges(c); }); } };
+    ctx.save(); ctx.globalAlpha = a; edges(root);
+    const nodes = n => {
+      const on = highlight && highlight.includes(n);
+      if (n.left && shown(n)) {
+        const label = q(n), w = label.length * 7 + 14;
+        g.rrect(X(n._x) - w / 2, Y(n._d) - 11, w, 22, 6); ctx.fillStyle = '#111a2e'; ctx.fill();
+        ctx.strokeStyle = on ? COL.amber : rgba(COL.amber, .5); ctx.lineWidth = on ? 2 : 1; ctx.stroke();
+        g.txt(label, X(n._x), Y(n._d) + 4, { mono: true, s: 11, c: COL.bone, al: 'center' });
+        nodes(n.left); nodes(n.right);
+      } else {
+        g.glowDot(X(n._x), Y(n._d), on ? 8 : 6, colOf(n.pred), on ? 18 : 8);
+        g.txt(`${n.ones}/${n.n - n.ones}`, X(n._x), Y(n._d) + 20, { mono: true, s: 9.5, c: COL.dim, al: 'center' });
+      }
+    };
+    nodes(root); ctx.restore();
+  }
+  function drawPanel(t, g) {
+    const R = g.RP, { ctx } = g;
+    const a1 = win(t, 22.6, 40.4, .8);
+    if (a1 > 0) {
+      ctx.save(); ctx.globalAlpha = a1;
+      g.cap('HOW MIXED IS EACH GROUP?', R.x + 10, R.y + 12);
+      const L = ROOT_NO, Rr = ROOT_YES, w = R.w - 130;
+      mixBar(g, R.x + 12, R.y + 50, w, P.length, P.filter(p => p.c).length, `all ${P.length} points`);
+      mixBar(g, R.x + 12, R.y + 96, w, L.length, L.filter(p => p.c).length, `no side (${L.length})`);
+      mixBar(g, R.x + 12, R.y + 142, w, Rr.length, Rr.filter(p => p.c).length, `yes side (${Rr.length})`);
+      const ex = E(t, 30.4, 32);
+      if (ex > 0) { ctx.globalAlpha = a1 * ex; mixBar(g, R.x + 12, R.y + 196, w * .5, 10, 10, 'example: pure'); mixBar(g, R.x + 12, R.y + 242, w * .5, 10, 5, 'example: half and half'); }
+      ctx.restore();
+    }
+    const a2 = win(t, 40.8, 60.4, .8);
+    if (a2 > 0) {
+      const S = g.scaler(R, [-3.5, 3.5], [0, .55], { l: 34, r: 12, t: 30, b: 22 });
+      ctx.save(); ctx.globalAlpha = a2;
+      g.cap('MESS AFTER THE CUT (WEIGHTED GINI)', R.x + 10, R.y + 12);
+      [0, .25, .5].forEach(v => { g.line(S.ix, S.Y(v), S.ix + S.iw, S.Y(v), rgba(COL.bone, .07)); g.txt(fmt(v), S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' }); });
+      [[0, A, 41, 47.6], [1, B, 48.2, 53.8]].forEach(([f, col, t0, t1]) => {
+        const arr = SWEEP[f], u = E(t, t0, t1), m = Math.max(1, Math.floor(u * arr.length));
+        if (t < t0) return;
+        ctx.strokeStyle = col; ctx.lineWidth = 1.8; ctx.beginPath();
+        arr.slice(0, m).forEach((o, i) => i ? ctx.lineTo(S.X(o.thr), S.Y(o.s)) : ctx.moveTo(S.X(o.thr), S.Y(o.s))); ctx.stroke();
+        g.txt(`cut on ${FNAME[f]}`, S.ix + 8, S.iy + 14 + f * 16, { s: 11, c: col, w: 600 });
+      });
+      const best = E(t, 54.2, 55.4);
+      if (best > 0) {
+        ctx.globalAlpha = a2 * best;
+        g.glowDot(S.X(ROOT.thr), S.Y(ROOT.s), 6, COL.amber, 18);
+        g.txt(`best: ${FNAME[ROOT.f]} > ${fmt(ROOT.thr, 1)}, mess ${fmt(ROOT.s, 3)}`, S.X(ROOT.thr) + 10, S.Y(ROOT.s) - 10, { mono: true, s: 11.5, c: COL.amber });
+      }
+      ctx.restore();
+    }
+    const a3 = win(t, 60.6, 82.4, .8) + win(t, 96.4, 118.2, .8);
+    if (a3 > 0) {
+      const hl = t > 106.8 && t < 118 ? PATH.slice(0, 1 + Math.floor(Math.max(0, t - 107.2) / 1.6)) : null;
+      g.cap(t > 100 ? 'FOLLOW THE ANSWERS DOWN' : 'THE TREE', R.x + 10, R.y + 12, { a: a3 });
+      drawTree(g, R, T3, n => t >= 96.4 || (T_IV.has(n.id) && t >= T_IV.get(n.id)), Math.min(1, a3), hl);
+    }
+    const a4 = win(t, 82.6, 96.4, .8);
+    if (a4 > 0) {
+      const S = g.scaler(R, [.5, 8.5], [.6, 1.02], { l: 34, r: 12, t: 30, b: 22 });
+      ctx.save(); ctx.globalAlpha = a4;
+      g.cap('ACCURACY BY DEPTH', R.x + 10, R.y + 12);
+      [.6, .8, 1].forEach(v => { g.line(S.ix, S.Y(v), S.ix + S.iw, S.Y(v), rgba(COL.bone, .07)); g.txt(Math.round(v * 100) + '%', S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' }); });
+      DEPTHS.forEach(o => g.txt('' + o.d, S.X(o.d), S.iy + S.ih + 14, { mono: true, s: 10, al: 'center' }));
+      [['train', COL.bone, 'training points'], ['test', COL.amber, 'new points']].forEach(([k, col, name], j) => {
+        ctx.strokeStyle = col; ctx.lineWidth = 1.8; ctx.beginPath();
+        DEPTHS.forEach((o, i) => i ? ctx.lineTo(S.X(o.d), S.Y(o[k])) : ctx.moveTo(S.X(o.d), S.Y(o[k]))); ctx.stroke();
+        g.txt(name, S.ix + S.iw - 4, S.iy + S.ih - 10 - j * 16, { s: 11, c: col, al: 'right', w: 600 });
+      });
+      const bestD = DEPTHS.reduce((a, b) => b.test > a.test ? b : a);
+      g.glowDot(S.X(bestD.d), S.Y(bestD.test), 5, COL.amber, 14);
+      ctx.restore();
+    }
+  }
+
+  // ───────── math cards ─────────
+  const num = s => `<span class="num">${s}</span>`;
+  const frac = (a, b) => `<span class="fr"><span>${a}</span><span>${b}</span></span>`;
+  const MATH = [
+    { t0: 8.4, t1: 22, html: () => `<p class="lbl">A question</p>
+       <div class="eq sm">is ${FNAME[T3.f]} &gt; ${fmt(T3.thr, 1)}? &nbsp; yes → one side, no → the other</div>
+       <p class="note">Every question looks at one measurement and compares it with a threshold.</p>` },
+    { t0: 22.4, t1: 40, html: () => `<p class="lbl">Gini impurity</p>
+       <div class="eq sm">Gini = 1 − <i>p</i><sub>rose</sub><sup>2</sup> − <i>p</i><sub>blue</sub><sup>2</sup></div>
+       <p class="note">p is the share of each colour in the group. One colour only: 1 − 1 − 0 = 0. Half and half: 1 − 0.25 − 0.25 = 0.5.</p>` },
+    { t0: 40.4, t1: 60, html: () => `<p class="lbl">Score a cut</p>
+       <div class="eq sm">mess = ${frac('<i>n</i><sub>no</sub>', '<i>n</i>')} × Gini(no) + ${frac('<i>n</i><sub>yes</sub>', '<i>n</i>')} × Gini(yes)</div>
+       <div class="eq sm">best: ${FNAME[ROOT.f]} &gt; ${fmt(ROOT.thr, 1)} with mess ${num(fmt(ROOT.s, 3))}, down from ${num(fmt(gini(P), 3))}</div>` },
+    { t0: 60.4, t1: 82, html: () => `<p class="lbl">Repeat inside each side</p>
+       <div class="eq sm">split while the group is mixed and the depth limit allows</div>
+       <p class="note">A leaf predicts the majority colour of the training points that reached it.</p>` },
+    { t0: 82.4, t1: 100, html: () => { const bestD = DEPTHS.reduce((a, b) => b.test > a.test ? b : a), deep = DEPTHS[DEPTHS.length - 1];
+       return `<p class="lbl">Overfitting</p>
+       <div class="eq sm">depth ${deep.d}: training ${num(Math.round(deep.train * 100) + '%')} &nbsp; new points ${num(Math.round(deep.test * 100) + '%')}</div>
+       <div class="eq sm">depth ${bestD.d}: training ${num(Math.round(bestD.train * 100) + '%')} &nbsp; new points ${num(Math.round(bestD.test * 100) + '%')}</div>`; } },
+    { t0: 100.4, t1: 118, html: () => `<p class="lbl">Predicting</p>
+       <div class="eq sm">new point (${fmt(NEW.x, 1)}, ${fmt(NEW.y, 1)})</div>
+       <div class="eq sm">${PATH.slice(0, -1).map(n => `${q(n)} ${NEW[FEAT[n.f]] > n.thr ? 'yes' : 'no'}`).join(' → ')} → <span class="${PATH[PATH.length - 1].pred ? 'r' : 's'}">${PATH[PATH.length - 1].pred ? 'rose' : 'blue'}</span></div>` },
+    { t0: 118.4, t1: 132.5, html: () => `<p class="lbl">The whole method</p>
+       <div class="eq sm">1. find the cut with the least mess &nbsp; 2. split &nbsp; 3. repeat on each side</div>
+       <div class="eq sm">stop when pure or deep enough</div>` },
+  ];
+  const mood = t => t < 22 ? .45 : t < 40 ? .4 : t < 54 ? .35 : t < 82 ? .2 : t < 96 ? .75 : t < 114 ? .2 : .1;
+  const events = [{ t: 14.2, fn: pl => pl(659.25, .07) }, { t: 54.4, fn: pl => pl(880, .08) }]
+    .concat(I3.map(n => ({ t: T_IV.get(n.id), fn: (pl, note) => pl(note(.3 + n.depth * .2), .05) })))
+    .concat(PATH.map((n, i) => ({ t: 107.2 + i * 1.6, fn: (pl, note) => pl(note(.2 + i * .2), .06) })));
+  FilmKit.run({ DUR, CHAPTERS, SUBS, MATH, draw, mood, events, chord: [65.41, 98, 130.81, 164.81, 196], penta: [261.63, 293.66, 329.63, 392, 440, 523.25, 587.33, 659.25, 783.99] });
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!--
+  Lesson notes: Decision Trees.
+  Math: \( ... \) inline, \[ ... \] centered. Every <h2> appears in "On this page".
+-->
+
+<h2>The goal</h2>
+<p>A decision tree classifies a point by asking a series of yes-or-no questions, like the game Twenty Questions. Each question looks at one measurement and compares it with a threshold:</p>
+\[ \text{is } x_1 > 4.5\,? \]
+<p>Depending on the answer you go left (no) or right (yes) and ask the next question, until you reach an answer. Learning a tree means choosing <strong>which questions to ask, and in which order</strong>.</p>
+
+<h2>Step 1: measure the mess</h2>
+<p>A good question splits the points into groups that are each mostly one class. To compare questions we need a number for how mixed a group is. The usual choice is <strong>Gini impurity</strong>. With two classes, where \(p\) is the share of class 1 in the group:</p>
+\[ \text{Gini} = 1 - p^2 - (1 - p)^2 \]
+<table>
+  <thead><tr><th>Group</th><th>\(p\)</th><th>Gini</th></tr></thead>
+  <tbody>
+    <tr><td>all one class</td><td>0 or 1</td><td>\(1 - 1 - 0 = 0\): no mess</td></tr>
+    <tr><td>3 of one class, 1 of the other</td><td>0.25</td><td>\(1 - 0.0625 - 0.5625 = 0.375\)</td></tr>
+    <tr><td>half and half</td><td>0.5</td><td>\(1 - 0.25 - 0.25 = 0.5\): the most mess</td></tr>
+  </tbody>
+</table>
+<p>See these mix bars in <a href="films/decision-trees.html?t=22">Act II</a>.</p>
+
+<h2>Step 2: score a question</h2>
+<p>A question splits the group into a "no" side and a "yes" side. Its score is the Gini of each side, weighted by how many points went there:</p>
+\[ \text{mess} = \frac{n_{\text{no}}}{n} \times \text{Gini(no)} + \frac{n_{\text{yes}}}{n} \times \text{Gini(yes)} \]
+<p>Lower is better. A perfect question leaves both sides pure and scores 0.</p>
+
+<h2>Step 3: find the best question</h2>
+<p>Try every measurement, and for each one try every useful threshold: the halfway points between neighbouring values in the data. Score each candidate and keep the one with the least mess (<a href="films/decision-trees.html?t=40">Act III</a>).</p>
+
+<h2>A worked example by hand</h2>
+<p>Ten points with labels 0 and 1:</p>
+<table>
+  <thead><tr><th>\((x_1, x_2)\)</th><th>(2, 7)</th><th>(3, 6)</th><th>(4, 8)</th><th>(5, 3)</th><th>(6, 2)</th><th>(7, 4)</th><th>(6, 7)</th><th>(8, 6)</th><th>(3, 2)</th><th>(7, 8)</th></tr></thead>
+  <tbody><tr><td>label</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td></tr></tbody>
+</table>
+<p>Before any question, five of the ten are 1s, so \(p = 0.5\) and the Gini is \(0.5\).</p>
+<p><strong>Question: is \(x_1 > 4.5\)?</strong></p>
+<ul>
+  <li>No side: \((2,7), (3,6), (4,8), (3,2)\). All four are 0, so Gini \(= 0\).</li>
+  <li>Yes side: the other six, five 1s and one 0. \(p = 5/6\), so Gini \(= 1 - (5/6)^2 - (1/6)^2 = 0.278\).</li>
+</ul>
+\[ \text{mess} = \frac{4}{10} \times 0 + \frac{6}{10} \times 0.278 = 0.167 \]
+<p><strong>Question: is \(x_2 > 5\)?</strong></p>
+<ul>
+  <li>No side: \((5,3), (6,2), (7,4), (3,2)\), three 1s and one 0: Gini \(= 0.375\).</li>
+  <li>Yes side: six points, two 1s and four 0s: Gini \(= 1 - (1/3)^2 - (2/3)^2 = 0.444\).</li>
+</ul>
+\[ \text{mess} = \frac{4}{10} \times 0.375 + \frac{6}{10} \times 0.444 = 0.417 \]
+<p>The first question is much better. After checking every candidate, \(x_1 > 4.5\) turns out to be the best, so it becomes the <strong>root</strong> of the tree.</p>
+
+<h2>Step 4: grow the tree</h2>
+<p>Repeat the same search inside each side, using only the points that landed there. The no side above is already pure, so it becomes a <strong>leaf</strong> that answers 0. The yes side still has one 0 among five 1s, so we search for its best question, and so on.</p>
+<p>Stop splitting a group when:</p>
+<ul>
+  <li>it is pure (Gini is 0), or</li>
+  <li>the tree has reached a chosen maximum depth, or</li>
+  <li>no question reduces the mess.</li>
+</ul>
+<p>A leaf answers with the <strong>majority label</strong> of the training points that reached it. On the page, each question is a straight cut, so the tree carves the plane into boxes (<a href="films/decision-trees.html?t=60">Act IV</a>).</p>
+
+<h2>Too many questions</h2>
+<p>If you let it, a tree keeps splitting until every leaf is pure, even if that means drawing a tiny box around one noisy point. It then scores 100% on the training data but worse on new data: it has memorised the noise instead of learning the pattern. This is called <strong>overfitting</strong> (<a href="films/decision-trees.html?t=82">Act V</a>).</p>
+<p>The usual cure is to limit the depth, or require a minimum number of points in each leaf, and choose that limit by checking accuracy on points kept aside for testing.</p>
+
+<h2>Predicting</h2>
+<p>To classify a new point, start at the root, answer each question with the point's measurements, and follow the branches until you reach a leaf. The leaf's label is the answer.</p>
+<p>A great strength of trees is that you can read the reason for every answer: "because \(x_2 \le 1.0\), and \(x_1 > 0.2\), and \(x_2 > -0.5\)" (<a href="films/decision-trees.html?t=100">Act VI</a>).</p>
+
+<h2>Other ways to measure mess</h2>
+<p>Gini is not the only choice. Another common one is <strong>entropy</strong>:</p>
+\[ \text{entropy} = -p \log_2 p - (1 - p) \log_2 (1 - p) \]
+<p>It is also 0 for a pure group and largest (1) for half and half. The best split found with entropy is usually the same as with Gini. Choosing splits by how much entropy they remove is called <strong>information gain</strong>.</p>
+
+<h2>Symbols at a glance</h2>
+<table>
+  <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\(x_j > t\,?\)</td><td>a question: is measurement \(j\) greater than threshold \(t\)?</td></tr>
+    <tr><td>\(p\)</td><td>share of class 1 in a group</td></tr>
+    <tr><td>\(1 - p^2 - (1 - p)^2\)</td><td>Gini impurity: 0 when pure, 0.5 when half and half</td></tr>
+    <tr><td>\(n,\ n_{\text{no}},\ n_{\text{yes}}\)</td><td>points in the group, and on each side of a question</td></tr>
+    <tr><td>mess</td><td>size-weighted Gini of both sides: lower is a better question</td></tr>
+    <tr><td>leaf</td><td>an end of the tree, which answers with its majority label</td></tr>
+    <tr><td>depth</td><td>the most questions asked on the way to any leaf</td></tr>
+  </tbody>
+</table>

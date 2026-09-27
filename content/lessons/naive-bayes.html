@@ -1,0 +1,91 @@
+<!--
+  Lesson notes: Naive Bayes.
+  Math: \( ... \) inline, \[ ... \] centered. Every <h2> appears in "On this page".
+-->
+
+<h2>The goal</h2>
+<p>Given a message, decide whether it is spam. Naive Bayes does this by <strong>counting words</strong> in messages that were already sorted, and then weighing the evidence each word gives.</p>
+<p>The notation \(P(\ )\) means "the chance of". A vertical bar reads "given": \(P(\text{money} \mid \text{spam})\) is "the chance of seeing the word money, given that the message is spam".</p>
+
+<h2>The data</h2>
+<p>Seven messages that someone already sorted:</p>
+<table>
+  <thead><tr><th>Spam</th><th>Not spam (ham)</th></tr></thead>
+  <tbody>
+    <tr><td>win money now</td><td>meeting at noon</td></tr>
+    <tr><td>free money</td><td>lunch money</td></tr>
+    <tr><td>win free prize</td><td>free lunch at noon</td></tr>
+    <tr><td></td><td>see you now</td></tr>
+  </tbody>
+</table>
+<p>Spam has 8 words in total and ham has 12. There are 11 different words overall.</p>
+
+<h2>Step 1: the prior</h2>
+<p>Before reading a single word, how common is each class?</p>
+\[ P(\text{spam}) = \frac{3}{7} = 0.43 \qquad P(\text{ham}) = \frac{4}{7} = 0.57 \]
+<p>This is the <strong>prior</strong>: our belief before seeing any evidence (<a href="films/naive-bayes.html?t=15">Act I</a>).</p>
+
+<h2>Step 2: the chance of each word</h2>
+<p>For each class, count how often each word appears and divide by the total number of words in that class:</p>
+\[ P(\text{word} \mid \text{spam}) = \frac{\text{count of the word in spam}}{\text{all spam words}} \]
+<p>For example, "money" appears twice among the 8 spam words and once among the 12 ham words:</p>
+\[ P(\text{money} \mid \text{spam}) = \frac{2}{8} = 0.25 \qquad P(\text{money} \mid \text{ham}) = \frac{1}{12} = 0.083 \]
+<p>So "money" is three times more common in spam. It is a clue pointing toward spam (<a href="films/naive-bayes.html?t=22">Act II</a>).</p>
+
+<h2>Step 3: Bayes' rule</h2>
+<p>We know the chance of the words <em>given</em> the class. We want the reverse: the chance of the class given the words. Bayes' rule turns one into the other:</p>
+\[ P(\text{spam} \mid \text{message}) = \frac{P(\text{message} \mid \text{spam}) \times P(\text{spam})}{P(\text{message})} \]
+<p>The bottom, \(P(\text{message})\), is the same whichever class we are checking. So we can simply compute a <strong>score</strong> for each class and compare:</p>
+\[ \text{score}(\text{spam}) = P(\text{spam}) \times P(\text{message} \mid \text{spam}) \]
+<p>and turn the scores into a probability at the end by dividing by their total:</p>
+\[ P(\text{spam} \mid \text{message}) = \frac{\text{score(spam)}}{\text{score(spam)} + \text{score(ham)}} \]
+
+<h2>Step 4: the naive assumption</h2>
+<p>What is \(P(\text{message} \mid \text{spam})\) for a whole message? Naive Bayes makes a simplifying assumption: <strong>each word appears independently of the others</strong>. It ignores word order and which words tend to appear together. That is the "naive" part.</p>
+<p>With that assumption the chances simply multiply:</p>
+\[ P(\text{free money now} \mid \text{spam}) = P(\text{free} \mid \text{spam}) \times P(\text{money} \mid \text{spam}) \times P(\text{now} \mid \text{spam}) \]
+<p>The assumption is rarely exactly true, yet the method works surprisingly well, especially for text (<a href="films/naive-bayes.html?t=58">Act IV</a>).</p>
+
+<h2>A worked example by hand</h2>
+<p>Is "free money now" spam? Look up each word:</p>
+<table>
+  <thead><tr><th>Word</th><th>in spam</th><th>in ham</th></tr></thead>
+  <tbody>
+    <tr><td>free</td><td>\(2/8\)</td><td>\(1/12\)</td></tr>
+    <tr><td>money</td><td>\(2/8\)</td><td>\(1/12\)</td></tr>
+    <tr><td>now</td><td>\(1/8\)</td><td>\(1/12\)</td></tr>
+  </tbody>
+</table>
+\[ \text{score(spam)} = \frac{3}{7} \times \frac{2}{8} \times \frac{2}{8} \times \frac{1}{8} = 0.00335 \]
+\[ \text{score(ham)} = \frac{4}{7} \times \frac{1}{12} \times \frac{1}{12} \times \frac{1}{12} = 0.00033 \]
+\[ P(\text{spam} \mid \text{free money now}) = \frac{0.00335}{0.00335 + 0.00033} = 0.91 \]
+<p><strong>91% spam</strong> (<a href="films/naive-bayes.html?t=76">Act V</a>).</p>
+
+<h2>The zero problem and smoothing</h2>
+<p>Now try "win lunch". "Lunch" never appears in spam, and "win" never appears in ham:</p>
+\[ P(\text{lunch} \mid \text{spam}) = \frac{0}{8} = 0 \qquad P(\text{win} \mid \text{ham}) = \frac{0}{12} = 0 \]
+<p>One zero makes the whole product zero, so <em>both</em> scores become 0 and the model has no answer at all. Worse, a single word the model never saw in a class would veto that class completely, however strong the other clues are.</p>
+<p>The fix is <strong>add-one smoothing</strong> (also called Laplace smoothing): pretend every word appeared one extra time in every class.</p>
+\[ P(\text{word} \mid \text{class}) = \frac{\text{count} + 1}{\text{words in class} + V} \]
+<p>Here \(V\) is the number of different words, 11 in our data. Adding \(V\) to the bottom keeps the chances adding up to 1.</p>
+<p>With smoothing, "win lunch" gets</p>
+\[ \text{score(spam)} = \frac{3}{7} \times \frac{2 + 1}{8 + 11} \times \frac{0 + 1}{8 + 11} = 0.00356 \qquad \text{score(ham)} = \frac{4}{7} \times \frac{0 + 1}{12 + 11} \times \frac{2 + 1}{12 + 11} = 0.00324 \]
+<p>which gives 52% spam: nearly a coin toss, which is honest for such mixed evidence (<a href="films/naive-bayes.html?t=94">Act VI</a>). With smoothing, "free money now" comes out at 75% spam rather than 91%. Smoothing makes the model a little less extreme.</p>
+
+<h2>Long messages: use logarithms</h2>
+<p>A long message multiplies hundreds of small numbers, and a computer rounds the result down to exactly 0. The fix is to add logarithms instead of multiplying, because \(\log(a \times b) = \log a + \log b\):</p>
+\[ \log \text{score(spam)} = \log P(\text{spam}) + \log P(\text{word}_1 \mid \text{spam}) + \log P(\text{word}_2 \mid \text{spam}) + \dots \]
+<p>The class with the larger log score is the same class that has the larger score, so the decision doesn't change.</p>
+
+<h2>Symbols at a glance</h2>
+<table>
+  <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\(P(\text{spam})\)</td><td>the prior: share of messages that are spam</td></tr>
+    <tr><td>\(P(\text{word} \mid \text{spam})\)</td><td>chance of a word in a spam message</td></tr>
+    <tr><td>score(class)</td><td>prior times the chance of every word in the message</td></tr>
+    <tr><td>\(P(\text{spam} \mid \text{message})\)</td><td>the answer: score(spam) divided by the sum of both scores</td></tr>
+    <tr><td>\(V\)</td><td>number of different words seen (the vocabulary size)</td></tr>
+    <tr><td>\((\text{count} + 1) \div (\text{words in class} + V)\)</td><td>smoothed chance of a word</td></tr>
+  </tbody>
+</table>

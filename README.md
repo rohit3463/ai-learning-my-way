@@ -12,6 +12,7 @@ A static website for learning machine learning and AI through animated films, wo
 | `lesson.html` | Lesson page, `lesson.html?l=<slug>` |
 | `films.html` | Film library |
 | `films/*.html` | Standalone animated films (canvas + JavaScript). `?t=<seconds>` starts at a given time |
+| `films/film-kit.js` | Shared film engine (controls, subtitles, narration, sound, math cards). Films from Lesson 4 on define only their data and scenes and call `FilmKit.run(...)` |
 | `content/lessons.json` | The list of lessons, in order |
 | `content/lessons/<slug>.html` | Optional written notes for a lesson, in plain HTML. Math goes in `\( … \)` (inline) or `\[ … \]` (centered) and is rendered by KaTeX |
 | `content/labs/<slug>.js` | Optional hands-on coding lab for a lesson: small steps, each with starter code, hint, solution and Python tests. Enable with `"lab": "<slug>"` in `lessons.json` |
