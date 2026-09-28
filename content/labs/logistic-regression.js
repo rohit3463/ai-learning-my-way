@@ -209,6 +209,7 @@ def sigmoid(z):
         tests: [
           { name: 'one step from (0, 0) with η = 1 reaches (0.5, 0)', check: R`nw, nb = step(0, 0, xs, ys, 1); assert close(nw, 0.5, 1e-9) and close(nb, 0, 1e-9), f"got w = {nw}, b = {nb}, expected w = 0.5, b = 0"` },
           { name: 'the step lowers the loss', check: R`nw, nb = step(0, 0, xs, ys, 1); assert log_loss(nw, nb, xs, ys) < log_loss(0, 0, xs, ys), "the loss went up. Check the minus signs"` },
+          { name: 'b moves too', check: R`nw, nb = step(0, 1, xs, ys, 1); assert close(nw, 0.5, 1e-3) and close(nb, 0.769, 1e-3), f"got w = {nw:.3f}, b = {nb:.3f}, expected w = 0.5, b = 1 − 0.231 = 0.769. Did you update b with db?"` },
         ],
       },
       {

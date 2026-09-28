@@ -167,6 +167,7 @@ ys = [1, 1, -1, -1]`,
         tests: [
           { name: 'round 1 slopes are [−1, −1]', check: R`r = gradient_w([0, 0], 0, X, ys, 0.05); assert close(r[0], -1, 1e-9) and close(r[1], -1, 1e-9), f"got {r}, expected [-1, -1]"` },
           { name: 'with nobody pulling, only the penalty is left', check: R`r = gradient_w([0.5, 0.5], -1, X, ys, 0.05); assert close(r[0], 0.05, 1e-9) and close(r[1], 0.05, 1e-9), f"got {r}, expected [0.05, 0.05] = 2 × 0.05 × 0.5"` },
+          { name: 'divide by all points, even when only some pull', check: R`r = gradient_w([1, 1], -3.5, X, ys, 0.05); assert close(r[0], -1.15, 1e-9) and close(r[1], -0.65, 1e-9), f"got {r}, expected [0.1 − 5/4, 0.1 − 3/4] = [−1.15, −0.65]. Only A and B pull, but n is still 4"` },
         ],
       },
       {
@@ -208,6 +209,7 @@ ys = [1, 1, -1, -1]`,
         tests: [
           { name: 'one step reaches w = [0.1, 0.1], b = 0', check: R`nw, nb = step([0, 0], 0, X, ys, 0.05, 0.1); assert close(nw[0], 0.1, 1e-9) and close(nw[1], 0.1, 1e-9) and close(nb, 0, 1e-9), f"got w = {nw}, b = {nb}"` },
           { name: 'the step lowers the loss', check: R`nw, nb = step([0, 0], 0, X, ys, 0.05, 0.1); assert loss(nw, nb, X, ys, 0.05) < loss([0, 0], 0, X, ys, 0.05), "the loss went up. Check the minus signs"` },
+          { name: 'b moves too', check: R`nw, nb = step([1, 1], -3.5, X, ys, 0.05, 0.1); assert close(nw[0], 1.115, 1e-9) and close(nw[1], 1.065, 1e-9) and close(nb, -3.45, 1e-9), f"got w = {nw}, b = {nb}, expected w = [1.115, 1.065], b = −3.5 − 0.1 × (−0.5) = −3.45. Did you update b with gb?"` },
         ],
       },
       {
