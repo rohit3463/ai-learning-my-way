@@ -95,6 +95,26 @@
   <li><strong>Large \(\lambda\):</strong> width matters most. The street gets wider, even if a few points end up on it or on the wrong side.</li>
 </ul>
 
+<h3>λ in scikit-learn: the setting C</h3>
+<p>scikit-learn's <code>SVC</code> does not use \(\lambda\). It has a setting called <code>C</code> that plays the same role the other way round. For a linear SVM it finds the \(w\) and \(b\) that make this as small as possible:</p>
+\[ \tfrac{1}{2} \times (w_1^2 + w_2^2) + C \times (\text{cost}_1 + \text{cost}_2 + \dots + \text{cost}_n) \]
+<p>This is the same problem as our loss. Divide our \(L\) by \(2\lambda\) and you get \(\tfrac{1}{2}(w_1^2 + w_2^2) + \tfrac{1}{2\lambda n} \times (\text{cost}_1 + \dots + \text{cost}_n)\). Scaling a loss does not move its lowest point, so the two find the same street when</p>
+\[ C = \frac{1}{2 \lambda n} \]
+<p>For the worked example below, \(\lambda = 0.05\) and \(n = 4\) give \(C = 1 \div (2 \times 0.05 \times 4) = 2.5\). With that setting, <code>SVC(kernel="linear", C=2.5)</code> finds exactly the street we find by hand. The last step of the coding lab checks this.</p>
+<table>
+  <thead><tr><th><code>C</code></th><th>Same as</th><th>Street</th><th>Points on the street or wrong side</th></tr></thead>
+  <tbody>
+    <tr><td>large, such as 100</td><td>tiny \(\lambda\)</td><td>narrow</td><td>few: it tries hard to keep every point off (close to a "hard margin"), and can overfit noisy points</td></tr>
+    <tr><td>small, such as 0.01</td><td>large \(\lambda\)</td><td>wide</td><td>more are allowed (a very "soft" margin); too small and it underfits</td></tr>
+    <tr><td>1</td><td colspan="3">scikit-learn's default</td></tr>
+  </tbody>
+</table>
+<p>In practice you choose <code>C</code> by trying a range of values (0.01, 0.1, 1, 10, 100) and keeping the one that does best on data held back for testing.</p>
+<blockquote>
+  <p><strong>Two details worth knowing.</strong> First, <code>C</code> multiplies the <em>sum</em> of the costs, not their average, so the same <code>C</code> acts more strongly on a large dataset than a small one. That is why \(n\) appears in the conversion. Second, <code>SVC</code> does not use gradient descent. It solves an equivalent form of the problem (the "dual", through the libsvm library) in which every point gets a weight of influence between \(0\) and \(C\): zero for points safely off the street, somewhere in between for points exactly on the edges (the support vectors, listed in <code>model.support_vectors_</code>), and the full \(C\) for points on the street or the wrong side. So \(C\) is also the most influence any single point can have. That form is what makes curved borders possible with <code>kernel="rbf"</code>.</p>
+  <p>The related <code>LinearSVC</code> uses the <em>squared</em> hinge cost by default, so its <code>C</code> does not match this conversion exactly. Use <code>SVC(kernel="linear")</code> for a like-for-like comparison.</p>
+</blockquote>
+
 <h2>Step 4: the gradient</h2>
 <p>A point with \(m \ge 1\) has zero cost, and nudging the weights a little doesn't change that, so it contributes nothing to the slopes. Only points with \(m &lt; 1\) pull. Call them the <strong>pulling points</strong>.</p>
 <p>For a pulling point, the cost is \(1 - y \times (w_1 x_1 + w_2 x_2 + b)\). Its slope with respect to \(w_1\) is \(-y \times x_1\), with respect to \(w_2\) it is \(-y \times x_2\), and with respect to \(b\) it is \(-y\). The penalty \(\lambda \times w_j^2\) has slope \(2\lambda \times w_j\). Putting it together:</p>
@@ -177,6 +197,7 @@
     <tr><td>\(\max(0,\ 1 - m)\)</td><td>the hinge cost of one point</td></tr>
     <tr><td>\(2 \div \sqrt{w_1^2 + w_2^2}\)</td><td>the width of the street</td></tr>
     <tr><td>\(\lambda\)</td><td>how much we care about a wide street versus few mistakes</td></tr>
+    <tr><td><code>C</code></td><td>scikit-learn's version of the same trade-off, the other way round: \(C = 1 \div (2\lambda n)\)</td></tr>
     <tr><td>\(L\)</td><td>loss: penalty plus average hinge cost</td></tr>
     <tr><td>support vectors</td><td>the points on the edges of the street, which alone decide where it goes</td></tr>
     <tr><td>\(\eta\)</td><td>learning rate: how big each step is</td></tr>
