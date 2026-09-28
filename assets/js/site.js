@@ -20,7 +20,10 @@
     if (e.target.id !== 'theme') return;
     const next = currentTheme() === 'dark' ? 'light' : 'dark';
     root.dataset.theme = next; store.set('theme', next); syncThemeBtn();
+    const g = document.querySelector('iframe.giscus-frame');
+    if (g) g.contentWindow.postMessage({ giscus: { setConfig: { theme: giscusTheme() } } }, 'https://giscus.app');
   });
+  const giscusTheme = () => currentTheme() === 'dark' ? 'transparent_dark' : 'light';
   document.addEventListener('DOMContentLoaded', syncThemeBtn);
 
   // ── progress ──
@@ -169,7 +172,12 @@
             ${prev ? `<a class="prev" href="lesson.html?l=${prev.slug}"><span>← Previous</span><strong>${esc(prev.title)}</strong></a>` : ''}
             ${next ? `<a class="next" href="lesson.html?l=${next.slug}"><span>Next →</span><strong>${esc(next.title)}</strong></a>` : ''}
           </nav>
-        </div>`;
+        </div>
+        <section class="discuss" id="discuss" hidden>
+          <h2>Questions and feedback</h2>
+          <p>Stuck on a step, spotted a mistake, or have an idea for this lesson? Leave a comment or a reaction below. You sign in with GitHub, and every comment is saved as a public discussion on the project.</p>
+          <div id="giscus"></div>
+        </section>`;
 
       const prose = document.getElementById('prose');
       prose.querySelectorAll('table').forEach(t => { const w = document.createElement('div'); w.className = 'table-scroll'; t.before(w); w.appendChild(t); });
@@ -210,10 +218,30 @@
       };
       doneBtn.addEventListener('click', () => { progress.toggle(l.slug); syncDone(); });
       if (l.lab) loadLab(l, () => { progress.mark(l.slug); syncDone(); });
+      loadDiscussion(l, toc);
       if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
     } catch (err) {
       host.innerHTML = `<div class="error"><h1>Lesson not found</h1><p>${esc(err.message)}. <a href="./">Back to the learning path</a>.</p></div>`;
     }
+  }
+
+  // One GitHub Discussion per lesson, through giscus. Stays hidden until content/giscus.json has its IDs.
+  async function loadDiscussion(l, toc) {
+    let cfg;
+    try { cfg = await fetch('content/giscus.json', { cache: 'no-cache' }).then(r => r.json()); } catch { return; }
+    if (!cfg.repoId || !cfg.categoryId) return;
+    document.getElementById('discuss').hidden = false;
+    toc?.insertAdjacentHTML('beforeend', '<li><a href="#discuss">Questions and feedback</a></li>');
+    const s = document.createElement('script');
+    s.src = 'https://giscus.app/client.js';
+    Object.entries({
+      repo: cfg.repo, 'repo-id': cfg.repoId, category: cfg.category, 'category-id': cfg.categoryId,
+      mapping: 'specific', term: `${l.title} (${l.slug})`, strict: '1',
+      'reactions-enabled': '1', 'emit-metadata': '0', 'input-position': 'top',
+      theme: giscusTheme(), lang: 'en', loading: 'lazy',
+    }).forEach(([k, v]) => s.setAttribute('data-' + k, v));
+    s.crossOrigin = 'anonymous'; s.async = true;
+    document.getElementById('giscus').appendChild(s);
   }
 
   async function loadLab(l, onComplete) {

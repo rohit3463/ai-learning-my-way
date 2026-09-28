@@ -390,3 +390,9 @@ details.code-file pre { margin: 0 12px 12px; }
 .film-item { display: grid; gap: 8px; }
 .film-dl { margin: 0; font-size: 14px; }
 .film-links { white-space: nowrap; }
+
+/* ── questions and feedback (giscus) ── */
+.discuss { max-width: var(--measure); margin-top: 56px; padding-top: 8px; border-top: 1px solid var(--hair); }
+.discuss h2 { margin-top: 1em; }
+.discuss p { color: var(--dim); }
+#giscus { margin-top: 20px; min-height: 120px; }
