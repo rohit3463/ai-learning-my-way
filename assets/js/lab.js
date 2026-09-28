@@ -5,7 +5,7 @@
 (() => {
   const CM = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/';
   const WORKER_URL = 'assets/js/py-worker.js?v=2';
-  const TIMEOUT_MS = 8000;
+  const TIMEOUT_MS = 20000;
 
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const loadCSS = href => new Promise(r => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; l.onload = l.onerror = r; document.head.appendChild(l); });

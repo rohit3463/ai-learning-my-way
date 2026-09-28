@@ -1,0 +1,100 @@
+<!--
+  Lesson notes: Random Forests and Gradient Boosting.
+  Math: \( ... \) inline, \[ ... \] centered. Every <h2> appears in "On this page".
+-->
+
+<h2>The goal</h2>
+<p>A single decision tree grown all the way down fits its training data perfectly, but does worse on new data: it memorises noise (Lesson 6). This lesson shows two ways to fix that by combining <strong>many trees</strong> into one model, called an <strong>ensemble</strong>:</p>
+<ul>
+  <li><strong>Random forests</strong> grow many deep trees independently, each slightly different, and let them <em>vote</em>.</li>
+  <li><strong>Gradient boosting</strong> grows many tiny trees one after another, each one <em>correcting</em> the mistakes of those before it.</li>
+</ul>
+
+<h2>Why one deep tree is nervous</h2>
+<p>A deep tree keeps splitting until every leaf is pure, so it draws a little box around every noisy point. Change a handful of training points and the whole tree, and all its boxes, can come out different (<a href="films/random-forests.html?t=8">Act I</a>).</p>
+<p>That sensitivity has a name: <strong>high variance</strong>. The tree's answers depend a lot on which particular training points it happened to see. In the film's data the deep tree scores 100% on its training points but only 75% on new ones.</p>
+
+<h2>Step 1: bootstrap samples</h2>
+<p>To get many <em>different</em> trees from one dataset, give each tree its own random version of the data. A <strong>bootstrap sample</strong> draws \(n\) points from the \(n\) training points <em>with replacement</em>: after each draw the point goes back, so it can be drawn again.</p>
+<p>Some points get picked twice or more, and some are never picked. The chance that a particular point is missed on one draw is \(1 - \frac{1}{n}\), so the chance it is missed on all \(n\) draws is</p>
+\[ \left(1 - \frac{1}{n}\right)^n \approx 0.37 \quad \text{for large } n \]
+<p>So each sample leaves out about 37% of the points, called the <strong>out-of-bag</strong> points (<a href="films/random-forests.html?t=24">Act II</a>).</p>
+<blockquote><p><strong>A free test set.</strong> Because each tree never saw its out-of-bag points, you can test each tree on them. Averaged over the forest, this "out-of-bag accuracy" estimates performance on new data without setting any data aside.</p></blockquote>
+
+<h2>Step 2: random measurements</h2>
+<p>Bootstrap samples still share most of their points, so the trees can end up alike, especially if one measurement is very strong and every tree splits on it first. Random forests add a second source of variety: <strong>at every question, a tree may only consider a random subset of the measurements</strong>. With \(m\) measurements, a common choice is about \(\sqrt{m}\) of them per question (<a href="films/random-forests.html?t=42">Act III</a>).</p>
+
+<h2>Step 3: vote</h2>
+<p>To classify a new point, ask every tree and take the majority. With \(T\) trees:</p>
+\[ \text{share for class 1} = \frac{\text{trees answering 1}}{T} \qquad \text{prediction} = \begin{cases} 1 & \text{if the share} \ge 0.5 \\ 0 & \text{otherwise} \end{cases} \]
+<p>For numbers instead of classes, average the trees' answers instead of voting. The share of votes is also a handy confidence score: 0.95 means the trees nearly all agree.</p>
+
+<h3>Why voting helps</h3>
+<p>Each tree makes mistakes, but <em>different</em> trees make <em>different</em> mistakes, so the mistakes tend to cancel out in the vote while the real pattern, which every tree sees, adds up.</p>
+<p>A simple calculation shows the power of this. Suppose each of 25 trees is right 70% of the time, and their mistakes are completely independent. The majority is wrong only if 13 or more trees are wrong at once, which happens less than 2% of the time. Real trees aren't fully independent, which is exactly why forests work so hard to make them different, but the effect is still large. In the film, 40 trees reach 85% on new points against 75% for one deep tree (<a href="films/random-forests.html?t=60">Act IV</a>).</p>
+<p>Adding more trees never causes overfitting in a forest. Accuracy rises and then levels off, so the only cost of more trees is time.</p>
+
+<h2>Gradient boosting</h2>
+<p>Boosting builds its team the other way round. Instead of many strong, independent trees, it uses many <strong>weak</strong> trees, often <em>stumps</em> with a single question, and builds them <strong>in sequence</strong>, each one aimed at what the team so far still gets wrong (<a href="films/random-forests.html?t=80">Act V</a>).</p>
+<p>It is easiest to see with numbers to predict (regression):</p>
+<ol>
+  <li>Start with the simplest prediction: the average, \(F_0(x) = \bar{y}\).</li>
+  <li>Measure what is still wrong. The <strong>residual</strong> of each point is \(r = y - F(x)\).</li>
+  <li>Fit a small tree \(h\) to predict the residuals from \(x\).</li>
+  <li>Add a small part of it: \(F(x) \leftarrow F(x) + \eta \times h(x)\).</li>
+  <li>Repeat from step 2.</li>
+</ol>
+<p>The final model is the base plus every tree's small contribution:</p>
+\[ F(x) = F_0 + \eta \times h_1(x) + \eta \times h_2(x) + \dots + \eta \times h_M(x) \]
+<p>\(\eta\) is the <strong>learning rate</strong>, just as in gradient descent. Small steps, such as 0.1 or 0.3, with more trees usually work better than big steps with few trees.</p>
+<blockquote><p><strong>Why "gradient"?</strong> For squared error \(\frac{1}{2}(y - F)^2\), the slope with respect to the prediction \(F\) is \(-(y - F)\), which is minus the residual. So fitting a tree to the residuals and adding it is a step of gradient descent, taken not on weights but on the predictions themselves. With other losses (log loss for classification, for example) boosting fits trees to the matching gradient instead, which is where the name comes from.</p></blockquote>
+
+<h2>A worked example of boosting</h2>
+<p>Four points and a learning rate \(\eta = 0.5\):</p>
+<table>
+  <thead><tr><th>\(x\)</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead>
+  <tbody><tr><td>\(y\)</td><td>1</td><td>3</td><td>2</td><td>6</td></tr></tbody>
+</table>
+<p><strong>Start.</strong> \(F_0 = (1 + 3 + 2 + 6) \div 4 = 3\) for every point. The residuals are \(r = y - 3 = (-2, 0, -1, 3)\), and the squared error is \((4 + 0 + 1 + 9) \div 4 = 3.5\).</p>
+<p><strong>Fit a stump to the residuals.</strong> Try each cut between neighbouring \(x\) values and measure the squared error around each side's average:</p>
+<table>
+  <thead><tr><th>Cut</th><th>Left residuals, mean</th><th>Right residuals, mean</th><th>Squared error</th></tr></thead>
+  <tbody>
+    <tr><td>\(x \le 1.5\)</td><td>\(-2\); mean \(-2\)</td><td>\(0, -1, 3\); mean \(0.67\)</td><td>\(8.67\)</td></tr>
+    <tr><td>\(x \le 2.5\)</td><td>\(-2, 0\); mean \(-1\)</td><td>\(-1, 3\); mean \(1\)</td><td>\(10\)</td></tr>
+    <tr><td>\(x \le 3.5\)</td><td>\(-2, 0, -1\); mean \(-1\)</td><td>\(3\); mean \(3\)</td><td>\(2\)</td></tr>
+  </tbody>
+</table>
+<p>The best stump is "\(x \le 3.5\)? then \(-1\), otherwise \(3\)".</p>
+<p><strong>Add half of it.</strong> For \(x = 1, 2, 3\): \(F = 3 + 0.5 \times (-1) = 2.5\). For \(x = 4\): \(F = 3 + 0.5 \times 3 = 4.5\).</p>
+<p>The new residuals are \((-1.5, 0.5, -0.5, 1.5)\), and the squared error drops from <strong>3.5 to 1.25</strong> after a single tiny tree. The next stump will focus on what is left, here the split between \(x = 1\) and the rest.</p>
+
+<h2>Forest or boosting?</h2>
+<table>
+  <thead><tr><th></th><th>Random forest</th><th>Gradient boosting</th></tr></thead>
+  <tbody>
+    <tr><td>Trees</td><td>deep, fully grown</td><td>shallow, often a single question</td></tr>
+    <tr><td>Built</td><td>independently, side by side</td><td>one after another</td></tr>
+    <tr><td>Each tree learns</td><td>its own bootstrap sample</td><td>the errors the others left behind</td></tr>
+    <tr><td>Combined by</td><td>voting or averaging</td><td>adding up</td></tr>
+    <tr><td>Mainly reduces</td><td>variance (jitter)</td><td>bias (being too simple)</td></tr>
+    <tr><td>More trees</td><td>never overfits, only slower</td><td>can overfit, so stop early or use a small \(\eta\)</td></tr>
+    <tr><td>Settings to tune</td><td>few; the defaults often work</td><td>more: number of trees, \(\eta\), tree depth</td></tr>
+  </tbody>
+</table>
+<p>In practice, boosted trees (libraries such as XGBoost, LightGBM and CatBoost) are among the most accurate models for table-shaped data. Random forests are a strong, low-fuss default that is hard to get badly wrong (<a href="films/random-forests.html?t=112">Act VI</a>).</p>
+
+<h2>Symbols at a glance</h2>
+<table>
+  <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>\(n\)</td><td>number of training points</td></tr>
+    <tr><td>\((1 - 1/n)^n \approx 0.37\)</td><td>share of points a bootstrap sample leaves out</td></tr>
+    <tr><td>\(T\)</td><td>number of trees in a forest</td></tr>
+    <tr><td>\(F_0 = \bar{y}\)</td><td>boosting's starting prediction: the average</td></tr>
+    <tr><td>\(r = y - F(x)\)</td><td>residual: what is still wrong</td></tr>
+    <tr><td>\(h(x)\)</td><td>a small tree fitted to the residuals</td></tr>
+    <tr><td>\(\eta\)</td><td>learning rate: how much of each new tree to add</td></tr>
+    <tr><td>\(F(x) = F_0 + \eta h_1(x) + \dots\)</td><td>the boosted model</td></tr>
+  </tbody>
+</table>

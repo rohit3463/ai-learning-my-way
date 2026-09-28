@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Many Small Voices</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --void: #05070d;
+    --ink: #0b1120;
+    --bone: #eee6d6;
+    --dim: #8d93a6;
+    --amber: #f4b860;
+    --rose: #ef8193;
+    --star: #a9d6f5;
+    --lilac: #c4b3ff;
+    --hair: rgba(238, 230, 214, .16);
+    --bar: 24px;
+    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--void);
+    color: var(--bone);
+    font: 15px/1.45 var(--sans);
+    overflow: hidden;
+  }
+  .theatre { height: 100%; display: flex; flex-direction: column; }
+
+  .stage {
+    position: relative;
+    flex: 1;
+    min-height: 420px;
+    overflow: hidden;
+    background: var(--ink);
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas: "plot panel" "plot math" "sub sub";
+    gap: 14px clamp(20px, 3vw, 40px);
+    padding: calc(var(--bar) + 20px) clamp(16px, 4vw, 56px) calc(var(--bar) + 10px);
+  }
+  #film { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .slot, .math, .sub { position: relative; z-index: 1; min-height: 0; }
+  .plot { grid-area: plot; }
+  .panel { grid-area: panel; }
+
+  .math { grid-area: math; height: 9.4em; font-size: 16px; transition: none; }
+  .math .lbl, .kicker, .chapter .act {
+    font: 600 10.5px/1.2 var(--sans);
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0 0 .5em;
+  }
+  .eq { font-family: var(--serif); font-weight: 500; font-size: 1.55em; line-height: 1.3; white-space: nowrap; font-variant-numeric: lining-nums; }
+  .nt { text-transform: none; letter-spacing: 0; }
+  .eq.sm { font-size: 1.28em; white-space: normal; }
+  .eq i { font-style: italic; }
+  .eq sub, .eq sup { font-size: .6em; font-style: italic; }
+  .a { color: var(--amber); } .r { color: var(--rose); } .g { color: var(--lilac); } .s { color: var(--star); }
+  .num {
+    font: 500 .6em/1 var(--mono);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    padding: .18em .4em;
+    border-radius: 4px;
+    background: rgba(238, 230, 214, .08);
+    vertical-align: .18em;
+  }
+  .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .66em; line-height: 1.08; margin: 0 .1em; }
+  .fr > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .2em; }
+  .note { color: var(--dim); font-size: .9em; max-width: 46ch; margin: .45em 0 0; }
+
+  .sub {
+    grid-area: sub;
+    justify-self: center;
+    text-align: center;
+    max-width: 54ch;
+    min-height: 2.9em;
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.45;
+    text-wrap: balance;
+    text-shadow: 0 1px 14px #000, 0 0 2px #000;
+  }
+
+  .titlecard {
+    position: absolute; inset: 0; z-index: 2;
+    display: grid; place-content: center; gap: 14px;
+    text-align: center; pointer-events: none; padding-inline: 16px;
+  }
+  .titlecard h1 {
+    margin: 0;
+    font: italic 500 clamp(44px, 7.4vw, 104px)/1 var(--serif);
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    text-shadow: 0 0 48px rgba(244, 184, 96, .35);
+  }
+  .titlecard .by { font: italic 500 clamp(17px, 1.8vw, 22px)/1.3 var(--serif); color: var(--dim); }
+
+  .chapter {
+    position: absolute; z-index: 2; pointer-events: none;
+    left: clamp(16px, 4vw, 56px); top: calc(var(--bar) + 14px);
+  }
+  .chapter .act { color: var(--amber); }
+  .chapter .name { font: italic 500 clamp(28px, 3.2vw, 42px)/1.05 var(--serif); text-shadow: 0 2px 20px #000; }
+
+  .endcard {
+    position: absolute; inset: 0; z-index: 3;
+    display: grid; place-content: center; justify-items: center; gap: 16px;
+    padding-inline: 16px; pointer-events: none;
+  }
+  .endcard > * { pointer-events: auto; }
+  .endcard .fin { font: italic 500 clamp(34px, 4.6vw, 60px)/1 var(--serif); text-shadow: 0 0 40px rgba(244, 184, 96, .4); }
+
+  button {
+    font: 500 13px/1 var(--sans);
+    color: var(--bone);
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover { border-color: rgba(238, 230, 214, .4); }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  button.on, button[aria-pressed="true"] { color: var(--amber); border-color: rgba(244, 184, 96, .55); }
+  .endcard button { font-size: 14px; padding: 10px 20px; }
+
+  .controls { display: flex; align-items: center; gap: 12px; padding: 10px 16px 6px; }
+  .scrubwrap { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+  #scrub { width: 100%; accent-color: var(--amber); margin: 0; }
+  .ticks { position: absolute; inset: 0; pointer-events: none; }
+  .ticks span { position: absolute; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: rgba(238, 230, 214, .35); }
+  .home { font: 500 13px/1 var(--sans); color: var(--dim); white-space: nowrap; }
+  .home:hover { color: var(--amber); }
+  .time { font: 12px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--dim); }
+  .chapters { display: flex; gap: 6px; overflow-x: auto; padding: 4px 16px 12px; scrollbar-width: none; }
+  .chapters button { font-size: 12px; padding: 6px 11px; color: var(--dim); }
+  .chapters button.on { color: var(--amber); }
+
+  @media (max-aspect-ratio: 1/1), (max-width: 760px) {
+    .stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr) auto auto;
+      grid-template-areas: "plot" "panel" "math" "sub";
+      gap: 10px;
+    }
+    .math { font-size: 13px; height: 8.8em; }
+    .sub { font-size: 14.5px; }
+    .time, .home { display: none; }
+    .controls { flex-wrap: wrap; row-gap: 8px; }
+    .scrubwrap { order: -1; flex-basis: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="theatre">
+  <div class="stage" id="stage">
+    <canvas id="film" aria-label="Animated film about random forests and gradient boosting: bootstrap samples, voting, and residuals"></canvas>
+    <div class="slot plot" id="slotPlot"></div>
+    <div class="slot panel" id="slotPanel"></div>
+    <div class="math" id="math" aria-live="off"></div>
+    <div class="sub" id="sub"></div>
+
+    <div class="titlecard" id="titlecard">
+      <div class="kicker">A short film about random forests and gradient boosting</div>
+      <h1>Many Small Voices</h1>
+      <div class="by">one nervous tree, a whole forest, and the trees that learn from each other's mistakes</div>
+    </div>
+    <div class="chapter" id="chapter"><div class="act" id="chapAct"></div><div class="name" id="chapName"></div></div>
+    <div class="endcard" id="endcard" hidden>
+      <div class="fin">fin.</div>
+      <button id="replay" type="button">Watch again</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="play" type="button">Pause</button>
+    <div class="scrubwrap">
+      <input id="scrub" type="range" min="0" max="140" step="0.01" value="0" aria-label="Film position">
+      <div class="ticks" id="ticks"></div>
+    </div>
+    <span class="time" id="time">0:00 / 2:20</span>
+    <button id="sound" type="button" aria-pressed="false">Sound off</button>
+    <button id="narrate" type="button" aria-pressed="false">Narration off</button>
+    <a class="home" href="../" target="_top">All lessons</a>
+  </div>
+  <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
+</div>
+
+<script src="film-kit.js?v=1"></script>
+<script>
+(() => {
+  const { TAU, clamp, lerp, ease, E, win, fmt, COL, rgba, hexRGB, mixHex, mulberry32, gaussFrom } = FilmKit.util;
+  const A = COL.rose, B = COL.star, colOf = c => c ? A : B;
+  const rnd = mulberry32(4711), gauss = gaussFrom(rnd);
+
+  // ───────── forest data: a round region, with some noise ─────────
+  const truth = (x, y) => (x * x) / 1.25 + y * y < 2.6 ? 1 : 0;
+  function makePoints(n, flipP) { const out = []; for (let i = 0; i < n; i++) { const x = -3.2 + rnd() * 6.4, y = -2.2 + rnd() * 4.4; let c = truth(x, y); if (rnd() < flipP) c = 1 - c; out.push({ x, y, c }); } return out; }
+  const P = makePoints(110, .09), TEST = makePoints(500, .09);
+  const gini = pts => { if (!pts.length) return 0; const p = pts.reduce((s, q) => s + q.c, 0) / pts.length; return 1 - p * p - (1 - p) * (1 - p); };
+  const K = ['x', 'y'];
+  function build(pts, depth, maxDepth, box, r) {
+    const ones = pts.reduce((s, q) => s + q.c, 0), node = { box, pred: ones * 2 >= pts.length ? 1 : 0 };
+    if (depth >= maxDepth || gini(pts) === 0) return node;
+    const feats = r ? [Math.floor(r() * 2)] : [0, 1];
+    let best = null;
+    for (const f of feats) {
+      const v = [...new Set(pts.map(p => p[K[f]]))].sort((a, b) => a - b);
+      for (let i = 1; i < v.length; i++) {
+        const thr = (v[i] + v[i - 1]) / 2, L = pts.filter(p => p[K[f]] <= thr), R = pts.filter(p => p[K[f]] > thr);
+        const s = (L.length * gini(L) + R.length * gini(R)) / pts.length;
+        if (!best || s < best.s) best = { f, thr, s, L, R };
+      }
+    }
+    if (!best || best.s >= gini(pts) - 1e-12) return node;
+    const lb = { ...box }, rb = { ...box };
+    if (best.f === 0) { lb.x1 = best.thr; rb.x0 = best.thr; } else { lb.y1 = best.thr; rb.y0 = best.thr; }
+    node.f = best.f; node.thr = best.thr;
+    node.left = build(best.L, depth + 1, maxDepth, lb, r); node.right = build(best.R, depth + 1, maxDepth, rb, r);
+    return node;
+  }
+  const predict = (n, p) => { while (n.left) n = p[K[n.f]] <= n.thr ? n.left : n.right; return n.pred; };
+  const leaves = (n, out = []) => { if (n.left) { leaves(n.left, out); leaves(n.right, out); } else out.push(n); return out; };
+  const BOX = { x0: -3.5, x1: 3.5, y0: -2.5, y1: 2.5 };
+  const DEEP = build(P, 0, 30, BOX, null);
+  const NT = 40, BAGS = [], FOREST = [];
+  for (let i = 0; i < NT; i++) {
+    const r = mulberry32(900 + i), idx = P.map(() => Math.floor(r() * P.length));
+    BAGS.push(idx); FOREST.push(build(idx.map(j => P[j]), 0, 30, BOX, r));
+  }
+  const accOf = f => TEST.filter(p => f(p) === p.c).length / TEST.length;
+  const DEEP_TRAIN = P.filter(p => predict(DEEP, p) === p.c).length / P.length, DEEP_TEST = accOf(p => predict(DEEP, p));
+  const FACC = []; { const votes = TEST.map(() => 0); for (let n = 1; n <= NT; n++) { TEST.forEach((p, i) => votes[i] += predict(FOREST[n - 1], p)); FACC.push(TEST.filter((p, i) => (votes[i] * 2 >= n ? 1 : 0) === p.c).length / TEST.length); } }
+  const BAG0 = BAGS[0], COUNT0 = P.map((_, i) => BAG0.filter(j => j === i).length), OOB0 = COUNT0.filter(c => c === 0).length;
+
+  // ───────── boosting data: a wavy curve ─────────
+  const BN = 40, BX = [], BY = [];
+  for (let i = 0; i < BN; i++) { const x = -3 + 6 * (i + .5) / BN + (rnd() - .5) * .12; BX.push(x); BY.push(Math.sin(1.3 * x) + .3 * x + gauss() * .25); }
+  const ETA = .3, ROUNDS = 60, F0 = BY.reduce((s, v) => s + v, 0) / BN;
+  function stump(rs) {
+    let best = null;
+    for (let i = 1; i < BN; i++) {
+      const thr = (BX[i] + BX[i - 1]) / 2, L = [], R = [];
+      BX.forEach((x, j) => (x <= thr ? L : R).push(rs[j]));
+      const ml = L.reduce((s, v) => s + v, 0) / L.length, mr = R.reduce((s, v) => s + v, 0) / R.length;
+      const sse = L.reduce((s, v) => s + (v - ml) ** 2, 0) + R.reduce((s, v) => s + (v - mr) ** 2, 0);
+      if (!best || sse < best.sse) best = { thr, ml, mr, sse };
+    }
+    return best;
+  }
+  const STUMPS = [], FIT = [BX.map(() => F0)], MSE = [];
+  for (let m = 0; m < ROUNDS; m++) {
+    const F = FIT[m], rs = BY.map((y, j) => y - F[j]);
+    MSE.push(rs.reduce((s, v) => s + v * v, 0) / BN);
+    const s = stump(rs); STUMPS.push(s);
+    FIT.push(F.map((f, j) => f + ETA * (BX[j] <= s.thr ? s.ml : s.mr)));
+  }
+  MSE.push(BY.reduce((s, y, j) => s + (y - FIT[ROUNDS][j]) ** 2, 0) / BN);
+  const boostAt = (m, x) => { let f = F0; for (let k = 0; k < m; k++) { const s = STUMPS[k]; f += ETA * (x <= s.thr ? s.ml : s.mr); } return f; };
+  const roundAt = t => t < 92 ? 0 : t < 98 ? E(t, 95, 97.4) : t < 104 ? 1 + E(t, 98, 100.5) * 2 : 3 + (ROUNDS - 3) * Math.pow(E(t, 104, 111), 1.3);
+
+  const DUR = 140;
+  const CHAPTERS = [
+    { t: 0, act: '', name: 'Opening' },
+    { t: 8, act: 'Act I', name: 'One Nervous Tree' },
+    { t: 24, act: 'Act II', name: 'Pick With Replacement' },
+    { t: 42, act: 'Act III', name: 'Many Different Trees' },
+    { t: 60, act: 'Act IV', name: 'The Vote' },
+    { t: 80, act: 'Act V', name: 'Boosting' },
+    { t: 112, act: 'Act VI', name: 'Two Kinds of Teamwork' },
+    { t: 128, act: 'Epilogue', name: 'Many Small Voices' },
+  ];
+  const SUBS = [
+    [0.6, 7.4, 'One expert can be wrong. What about a whole crowd of them?'],
+    [8.6, 15.6, 'Grow a single decision tree all the way down, and it answers every training point perfectly.'],
+    [16.0, 23.4, 'But its borders are jittery, and change a few points, and the whole tree changes. It memorised the noise.'],
+    [24.6, 31.6, 'So give each tree its own view of the data. Draw points at random, with replacement.'],
+    [32.0, 41.4, 'Some points get picked twice, and about a third are never picked at all. Every sample is a little different.'],
+    [42.6, 49.6, 'At every question, each tree may also look at only one randomly chosen measurement.'],
+    [50.0, 59.4, 'The trees come out different, each one wrong in its own way.'],
+    [60.6, 67.6, 'Now let them vote. Where most trees say rose, the forest says rose.'],
+    [68.0, 79.4, 'Their individual mistakes cancel out. The border grows smooth, and the forest beats every single tree.'],
+    [80.6, 86.0, 'There is a second way to build a team of trees. Start with the simplest guess: the average.'],
+    [86.4, 91.6, 'Measure what is still wrong. These gaps are the residuals.'],
+    [92.0, 97.6, 'Fit one tiny tree, a single question, to those residuals, and add a small part of it.'],
+    [98.0, 103.6, 'Then measure what is still wrong, and fit the next tree to that.'],
+    [104.0, 111.4, 'Each tree fixes a little of what the others missed. That is boosting.'],
+    [112.6, 119.6, 'A forest grows many deep trees side by side, and averages away their nerves.'],
+    [120.0, 127.4, 'Boosting grows many tiny trees one after another, and adds up their corrections.'],
+    [128.6, 133.4, 'No single tree was wise.'],
+    [133.8, 139.4, 'But many small voices, each a little different, can find what none could find alone.'],
+  ];
+
+  // ───────── drawing ─────────
+  function plane(g) {
+    const R = g.RM, s = Math.min(R.w / 7.2, R.h / 5.2), cx = R.x + R.w / 2, cy = R.y + R.h / 2;
+    return { R, s, X: x => cx + x * s, Y: y => cy - y * s, inv: (px, py) => ({ x: (px - cx) / s, y: (cy - py) / s }) };
+  }
+  const voteCache = new Map();
+  function voteGrid(G) {           // per cell: number of the first n trees voting rose, for every n
+    const key = Math.round(G.R.w) + 'x' + Math.round(G.R.h);
+    if (voteCache.has(key)) return voteCache.get(key);
+    const fw = Math.max(8, Math.round(G.R.w / 5)), fh = Math.max(6, Math.round(G.R.h / 5)), cum = new Uint8Array(fw * fh * NT);
+    for (let j = 0; j < fh; j++) for (let i = 0; i < fw; i++) {
+      const q = G.inv(G.R.x + (i + .5) / fw * G.R.w, G.R.y + (j + .5) / fh * G.R.h);
+      let v = 0; for (let n = 0; n < NT; n++) { v += predict(FOREST[n], q); cum[(j * fw + i) * NT + n] = v; }
+    }
+    const out = { fw, fh, cum, c: document.createElement('canvas') }; out.c.width = fw; out.c.height = fh;
+    voteCache.set(key, out); return out;
+  }
+  function drawForestField(g, G, n, a) {
+    const vg = voteGrid(G), cx = vg.c.getContext('2d'), id = cx.createImageData(vg.fw, vg.fh), d = id.data, ca = hexRGB(A), cb = hexRGB(B);
+    for (let k = 0; k < vg.fw * vg.fh; k++) {
+      const share = vg.cum[k * NT + n - 1] / n, col = share >= .5 ? ca : cb, o = k * 4;
+      d[o] = col[0]; d[o + 1] = col[1]; d[o + 2] = col[2]; d[o + 3] = Math.round(255 * (.06 + .3 * Math.abs(2 * share - 1)));
+    }
+    cx.putImageData(id, 0, 0);
+    g.ctx.save(); g.ctx.globalAlpha = a; g.ctx.imageSmoothingEnabled = true; g.ctx.drawImage(vg.c, G.R.x, G.R.y, G.R.w, G.R.h); g.ctx.restore();
+  }
+  function drawTreeBoxes(g, G, tree, a) {
+    const { ctx } = g; ctx.save(); ctx.globalAlpha = a;
+    leaves(tree).forEach(l => { const b = l.box; ctx.fillStyle = rgba(colOf(l.pred), .2); ctx.fillRect(G.X(b.x0), G.Y(b.y1), (b.x1 - b.x0) * G.s, (b.y1 - b.y0) * G.s); });
+    ctx.restore();
+  }
+  function drawPoints(g, G, t, a, opts = {}) {
+    const { ctx } = g;
+    P.forEach((p, i) => {
+      let al = a, r = 3.6;
+      if (opts.bag) { const c = COUNT0[i], shown = opts.pickN > 0 ? BAG0.slice(0, opts.pickN).filter(j => j === i).length : c; al *= shown ? 1 : .25; r = 3.2 + Math.min(2, shown) * .8; }
+      ctx.globalAlpha = al; g.glowDot(G.X(p.x), G.Y(p.y), r, colOf(p.c), 10);
+      if (opts.bag && opts.pickN >= BAG0.length) {
+        const c = COUNT0[i];
+        if (c >= 2) g.txt('×' + c, G.X(p.x) + 6, G.Y(p.y) - 6, { mono: true, s: 10, c: COL.bone, a: al });
+        if (c === 0) { ctx.globalAlpha = a * .8; ctx.strokeStyle = COL.lilac; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(G.X(p.x), G.Y(p.y), 7, 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
+      }
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function draw(t, g) {
+    const { ctx } = g, R = g.RM;
+    ctx.save(); g.rrect(R.x, R.y, R.w, R.h, 10); ctx.clip();
+    const G = plane(g);
+    const forestA = E(t, 8.6, 10.5) * (1 - E(t, 79.4, 81));
+    if (forestA > 0) {
+      ctx.globalAlpha = forestA * .6; ctx.strokeStyle = rgba(COL.bone, .05);
+      for (let v = -4; v <= 4; v++) { g.line(G.X(v), R.y, G.X(v), R.y + R.h, rgba(COL.bone, .05)); g.line(R.x, G.Y(v), R.x + R.w, G.Y(v), rgba(COL.bone, .05)); }
+      ctx.globalAlpha = 1;
+      if (t < 24.2) {
+        const trees = [DEEP, FOREST[1], FOREST[2]], k = t < 16 ? 0 : t < 19.5 ? 1 : 2;
+        drawTreeBoxes(g, G, trees[k], forestA * E(t, 10, 12) * (t < 16 ? 1 : win(t, k === 1 ? 16 : 19.5, k === 1 ? 19.6 : 24.2, .4)));
+        drawPoints(g, G, t, forestA);
+      } else if (t < 42.2) {
+        const pickN = Math.floor(lerp(0, BAG0.length, E(t, 26, 33)));
+        drawPoints(g, G, t, forestA * win(t, 24, 42.2, .5), { bag: true, pickN: t > 33 ? BAG0.length : pickN });
+      } else if (t < 60.2) {
+        const k = Math.max(0, Math.min(5, Math.floor((t - 42.5) / 2.9)));
+        drawTreeBoxes(g, G, FOREST[k], win(t, 42.4, 60.2, .5));
+        drawPoints(g, G, t, forestA * .8);
+      } else {
+        const n = Math.max(1, Math.round(lerp(1, NT, Math.pow(E(t, 61, 74), 1.4))));
+        drawForestField(g, G, n, forestA);
+        drawPoints(g, G, t, forestA * .75);
+        g.txt(`${n} tree${n > 1 ? 's' : ''} voting`, R.x + R.w - 14, R.y + 26, { mono: true, s: 15, c: COL.amber, al: 'right', w: 600, a: forestA });
+      }
+    }
+    // ── boosting ──
+    const bA = win(t, 80.4, 112.4, .8);
+    if (bA > 0) {
+      const S = g.scaler(R, [-3.3, 3.3], [-2.3, 2.3], { l: 30, r: 16, t: 20, b: 26 });
+      const m = roundAt(t), mi = Math.floor(m), mf = m - mi;
+      const Fx = x => lerp(boostAt(mi, x), boostAt(Math.min(ROUNDS, mi + 1), x), ease(mf));
+      ctx.globalAlpha = bA;
+      g.line(S.ix, S.Y(0), S.ix + S.iw, S.Y(0), rgba(COL.bone, .2));
+      const thr = E(t, 86.5, 88.5);
+      BX.forEach((x, j) => {
+        const f = Fx(x);
+        if (thr > 0) { ctx.globalAlpha = bA * thr * .8; g.line(S.X(x), S.Y(f), S.X(x), S.Y(BY[j]), COL.rose, 1.4); }
+        ctx.globalAlpha = bA; g.glowDot(S.X(x), S.Y(BY[j]), 3.6, COL.star, 10);
+      });
+      ctx.globalAlpha = bA; ctx.strokeStyle = COL.amber; ctx.lineWidth = 2.6; ctx.shadowColor = COL.amber; ctx.shadowBlur = 12;
+      ctx.beginPath();
+      for (let i = 0; i <= 240; i++) { const x = lerp(-3.2, 3.2, i / 240); i ? ctx.lineTo(S.X(x), S.Y(Fx(x))) : ctx.moveTo(S.X(x), S.Y(Fx(x))); }
+      ctx.stroke(); ctx.shadowBlur = 0;
+      g.txt(`${Math.round(m)} tree${Math.round(m) === 1 ? '' : 's'} added`, S.ix + S.iw, S.iy + 14, { mono: true, s: 15, c: COL.amber, al: 'right', w: 600 });
+    }
+    // ── act VI: side by side ──
+    const cA = win(t, 112.4, 131, .8);
+    if (cA > 0) {
+      const half = { ...R, w: R.w / 2 - 8 }, Gl = { R: half, s: Math.min(half.w / 7.2, half.h / 5.2) };
+      Gl.X = x => half.x + half.w / 2 + x * Gl.s; Gl.Y = y => half.y + half.h / 2 - y * Gl.s; Gl.inv = (px, py) => ({ x: (px - half.x - half.w / 2) / Gl.s, y: (half.y + half.h / 2 - py) / Gl.s });
+      drawForestField(g, Gl, NT, cA);
+      drawPoints(g, Gl, t, cA * .8);
+      g.cap('FOREST · SIDE BY SIDE, AVERAGED', half.x + 10, half.y + 18, { c: COL.bone, a: cA });
+      const right = { x: R.x + R.w / 2 + 8, y: R.y, w: R.w / 2 - 8, h: R.h }, S = g.scaler(right, [-3.3, 3.3], [-2.3, 2.3], { l: 10, r: 10, t: 30, b: 16 });
+      ctx.globalAlpha = cA;
+      BX.forEach((x, j) => g.glowDot(S.X(x), S.Y(BY[j]), 2.6, COL.star, 6));
+      ctx.strokeStyle = COL.amber; ctx.lineWidth = 2.2; ctx.beginPath();
+      for (let i = 0; i <= 200; i++) { const x = lerp(-3.2, 3.2, i / 200); i ? ctx.lineTo(S.X(x), S.Y(boostAt(ROUNDS, x))) : ctx.moveTo(S.X(x), S.Y(boostAt(ROUNDS, x))); }
+      ctx.stroke();
+      g.cap('BOOSTING · ONE AFTER ANOTHER, ADDED', right.x + 10, right.y + 18, { c: COL.bone, a: cA });
+    }
+    ctx.restore();
+    const ep = E(t, 130, 132);
+    if (ep > 0) g.txt('many small voices', R.x + R.w / 2, R.y + R.h / 2, { serif: true, it: true, s: 40, c: COL.amber, al: 'center', w: 600, a: ep });
+    drawPanel(t, g);
+  }
+
+  function drawPanel(t, g) {
+    const R = g.RP, { ctx } = g;
+    const a1 = win(t, 12, 24.2, .8);
+    if (a1 > 0) {
+      ctx.save(); ctx.globalAlpha = a1;
+      g.cap('ONE DEEP TREE', R.x + 10, R.y + 12);
+      [['training points', DEEP_TRAIN, COL.bone], ['new points', DEEP_TEST, COL.rose]].forEach(([name, v, col], j) => {
+        const y = R.y + 44 + j * 50, w = (R.w - 150) * v;
+        g.txt(name, R.x + 12, y + 15, { s: 13, c: col, w: 600 });
+        ctx.fillStyle = rgba(col, .7); ctx.fillRect(R.x + 120, y, w, 20);
+        g.txt(Math.round(v * 100) + '%', R.x + 128 + w, y + 15, { mono: true, s: 12, c: COL.bone });
+      });
+      ctx.restore();
+    }
+    const a2 = win(t, 26, 42.2, .8);
+    if (a2 > 0) {
+      ctx.save(); ctx.globalAlpha = a2;
+      g.cap('ONE BOOTSTRAP SAMPLE', R.x + 10, R.y + 12);
+      const n = Math.floor(lerp(0, BAG0.length, E(t, 26, 33))), shown = t > 33 ? BAG0.length : n, picks = BAG0.slice(0, shown);
+      const uniq = new Set(picks).size;
+      g.txt(`${shown} draws from ${P.length} points`, R.x + 12, R.y + 50, { mono: true, s: 14, c: COL.bone });
+      g.txt(`${uniq} different points picked`, R.x + 12, R.y + 76, { mono: true, s: 14, c: COL.amber });
+      if (t > 33) {
+        g.txt(`${OOB0} never picked (${Math.round(OOB0 / P.length * 100)}%)`, R.x + 12, R.y + 102, { mono: true, s: 14, c: COL.lilac });
+        g.txt(`${COUNT0.filter(c => c >= 2).length} picked twice or more`, R.x + 12, R.y + 128, { mono: true, s: 14, c: COL.bone });
+      }
+      ctx.restore();
+    }
+    const a3 = win(t, 44, 60.2, .8);
+    if (a3 > 0) {
+      ctx.save(); ctx.globalAlpha = a3;
+      g.cap('SIX TREES, SIX DIFFERENT OPINIONS', R.x + 10, R.y + 12);
+      const cols = 3, gw = (R.w - 20) / cols, gh = Math.min(gw * .72, (R.h - 40) / 2);
+      for (let k = 0; k < 6; k++) {
+        const on = E(t, 44 + k * 2.4, 45 + k * 2.4); if (on <= 0) continue;
+        const cell = { x: R.x + 10 + (k % 3) * gw, y: R.y + 26 + Math.floor(k / 3) * (gh + 8), w: gw - 8, h: gh };
+        const s = Math.min(cell.w / 7, cell.h / 5), Gm = { s, X: x => cell.x + cell.w / 2 + x * s, Y: y => cell.y + cell.h / 2 - y * s };
+        ctx.globalAlpha = a3 * on;
+        ctx.strokeStyle = rgba(COL.bone, .15); ctx.strokeRect(cell.x, cell.y, cell.w, cell.h);
+        drawTreeBoxes(g, Gm, FOREST[k], a3 * on);
+        g.txt(`tree ${k + 1}`, cell.x + 6, cell.y + 14, { mono: true, s: 10, c: COL.bone, a: a3 * on });
+      }
+      ctx.restore();
+    }
+    const a4 = win(t, 61, 80.2, .8);
+    if (a4 > 0) {
+      const S = g.scaler(R, [0, NT], [.6, .9], { l: 34, r: 12, t: 30, b: 22 });
+      ctx.save(); ctx.globalAlpha = a4;
+      g.cap('ACCURACY ON NEW POINTS', R.x + 10, R.y + 12);
+      [.6, .7, .8, .9].forEach(v => { g.line(S.ix, S.Y(v), S.ix + S.iw, S.Y(v), rgba(COL.bone, .07)); g.txt(Math.round(v * 100) + '%', S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' }); });
+      [1, 10, 20, 30, 40].forEach(k => g.txt('' + k, S.X(k), S.iy + S.ih + 14, { mono: true, s: 10, al: 'center' }));
+      g.txt('trees', S.ix + S.iw, S.iy + S.ih + 14, { s: 10, al: 'right' });
+      g.dashed(S.ix, S.Y(DEEP_TEST), S.ix + S.iw, S.Y(DEEP_TEST), COL.rose, 1.4);
+      g.txt(`one deep tree ${Math.round(DEEP_TEST * 100)}%`, S.ix + S.iw - 4, S.Y(DEEP_TEST) + 14, { s: 11, c: COL.rose, al: 'right' });
+      const n = Math.max(1, Math.round(lerp(1, NT, Math.pow(E(t, 61, 74), 1.4))));
+      ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.8; ctx.beginPath();
+      FACC.slice(0, n).forEach((v, i) => i ? ctx.lineTo(S.X(i + 1), S.Y(v)) : ctx.moveTo(S.X(1), S.Y(v))); ctx.stroke();
+      g.glowDot(S.X(n), S.Y(FACC[n - 1]), 5, COL.amber, 14);
+      g.txt(`${Math.round(FACC[n - 1] * 100)}%`, S.X(n) + 8, S.Y(FACC[n - 1]) - 8, { mono: true, s: 12, c: COL.bone });
+      ctx.restore();
+    }
+    const a5 = win(t, 86.6, 104.4, .8);
+    if (a5 > 0) {
+      const S = g.scaler(R, [-3.3, 3.3], [-1.6, 1.6], { l: 30, r: 12, t: 30, b: 22 });
+      const m = Math.min(ROUNDS - 1, Math.floor(roundAt(t))), F = FIT[m], rs = BY.map((y, j) => y - F[j]), s = STUMPS[m];
+      ctx.save(); ctx.globalAlpha = a5;
+      g.cap(`WHAT IS STILL WRONG · ROUND ${m + 1}`, R.x + 10, R.y + 12);
+      g.line(S.ix, S.Y(0), S.ix + S.iw, S.Y(0), rgba(COL.bone, .3));
+      BX.forEach((x, j) => g.glowDot(S.X(x), S.Y(rs[j]), 3, COL.rose, 8));
+      const st = E(t, 92.6, 94.6);
+      if (st > 0) {
+        ctx.globalAlpha = a5 * st; ctx.strokeStyle = COL.mint; ctx.lineWidth = 2.4;
+        ctx.beginPath(); ctx.moveTo(S.X(-3.3), S.Y(s.ml)); ctx.lineTo(S.X(s.thr), S.Y(s.ml)); ctx.lineTo(S.X(s.thr), S.Y(s.mr)); ctx.lineTo(S.X(3.3), S.Y(s.mr)); ctx.stroke();
+        g.txt(`tiny tree: x ≤ ${fmt(s.thr, 2)} ? ${fmt(s.ml, 2)} : ${fmt(s.mr, 2)}`, S.ix + 6, S.iy + S.ih - 8, { mono: true, s: 11.5, c: COL.mint });
+      }
+      ctx.restore();
+    }
+    const a6 = win(t, 104.4, 112.4, .6);
+    if (a6 > 0) {
+      const S = g.scaler(R, [0, ROUNDS], [0, MSE[0] * 1.05], { l: 38, r: 12, t: 30, b: 22 });
+      const m = Math.min(ROUNDS, roundAt(t));
+      ctx.save(); ctx.globalAlpha = a6;
+      g.cap('SQUARED ERROR AFTER EACH TREE', R.x + 10, R.y + 12);
+      [0, MSE[0] / 2, MSE[0]].forEach(v => g.txt(v.toFixed(2), S.ix - 6, S.Y(v) + 3.5, { mono: true, s: 10, al: 'right' }));
+      ctx.strokeStyle = COL.amber; ctx.lineWidth = 1.8; ctx.beginPath();
+      for (let k = 0; k <= m; k++) k ? ctx.lineTo(S.X(k), S.Y(MSE[k])) : ctx.moveTo(S.X(0), S.Y(MSE[0])); ctx.stroke();
+      g.txt(`MSE ${MSE[Math.floor(m)].toFixed(3)}`, S.ix + S.iw, S.iy + 12, { mono: true, s: 12, c: COL.bone, al: 'right' });
+      ctx.restore();
+    }
+    const a7 = win(t, 113, 128.2, .8);
+    if (a7 > 0) {
+      ctx.save(); ctx.globalAlpha = a7;
+      g.cap('TWO KINDS OF TEAMWORK', R.x + 10, R.y + 12);
+      const rows = [['', 'random forest', 'boosting'], ['trees', 'deep, full-grown', 'tiny, one question'], ['built', 'side by side', 'one after another'], ['each learns', 'its own sample', 'the leftover errors'], ['combined by', 'voting / averaging', 'adding up'], ['fixes', 'jitter (variance)', 'bias']];
+      rows.forEach((r, i) => r.forEach((c, j) => g.txt(c, R.x + 12 + [0, .3, .66][j] * (R.w - 24), R.y + 46 + i * 28, { s: i ? 12.5 : 11, c: i ? (j ? COL.bone : COL.dim) : [COL.dim, COL.star, COL.amber][j], w: i ? 500 : 700 })));
+      ctx.restore();
+    }
+  }
+
+  const num = s => `<span class="num">${s}</span>`;
+  const frac = (a, b) => `<span class="fr"><span>${a}</span><span>${b}</span></span>`;
+  const MATH = [
+    { t0: 8.4, t1: 24, html: () => `<p class="lbl">One deep tree</p>
+       <div class="eq sm">training points ${num(Math.round(DEEP_TRAIN * 100) + '%')} &nbsp; new points ${num(Math.round(DEEP_TEST * 100) + '%')}</div>
+       <p class="note">Perfect on what it has seen, much worse on what it hasn't: high variance.</p>` },
+    { t0: 24.4, t1: 42, html: () => `<p class="lbl">Bootstrap sample</p>
+       <div class="eq sm">draw <i>n</i> points from <i>n</i>, with replacement</div>
+       <div class="eq sm">P(a point is never picked) = (1 − ${frac(1, '<i>n</i>')})<sup><i>n</i></sup> ≈ ${num('0.37')}</div>` },
+    { t0: 42.4, t1: 60, html: () => `<p class="lbl">Two kinds of randomness</p>
+       <div class="eq sm">1. each tree gets its own bootstrap sample</div>
+       <div class="eq sm">2. each question may only look at a random subset of the measurements</div>` },
+    { t0: 60.4, t1: 80, html: () => `<p class="lbl">The vote</p>
+       <div class="eq sm">share of trees saying rose ≥ 0.5 → rose</div>
+       <div class="eq sm">${NT} trees: ${num(Math.round(FACC[NT - 1] * 100) + '%')} on new points, vs ${num(Math.round(DEEP_TEST * 100) + '%')} for one deep tree</div>` },
+    { t0: 80.4, t1: 112, html: t => { const m = Math.min(ROUNDS, Math.floor(roundAt(t)));
+       return `<p class="lbl">Boosting${t > 92 ? ` · ${m} tree${m === 1 ? '' : 's'} · <span class="nt">η</span> = ${ETA}` : ''}</p>
+       <div class="eq sm"><i>F</i><sub>0</sub> = average of <i>y</i> = ${num(fmt(F0))}</div>
+       <div class="eq sm">residual <i>r</i> = <i>y</i> − <i>F</i>(<i>x</i>) &nbsp; fit a tiny tree <i>h</i> to <i>r</i></div>
+       <div class="eq sm"><i>F</i> ← <i>F</i> + <i>η</i> × <i>h</i>(<i>x</i>) &nbsp; squared error ${num(MSE[m].toFixed(3))}</div>`; } },
+    { t0: 112.4, t1: 128, html: () => `<p class="lbl">Forest or boosting?</p>
+       <div class="eq sm">forest: average many deep trees → steadier</div>
+       <div class="eq sm">boosting: add many tiny trees → more accurate, easier to overfit</div>` },
+    { t0: 128.4, t1: 140.5, html: () => `<p class="lbl">Ensembles</p>
+       <div class="eq sm">many weak, different models → one strong model</div>` },
+  ];
+  const mood = t => t < 24 ? .55 : t < 60 ? .45 : t < 74 ? lerp(.45, .1, E(t, 61, 74)) : t < 80 ? .1 : t < 104 ? .45 : t < 112 ? lerp(.45, .1, E(t, 104, 111)) : .1;
+  const events = [{ t: 16, fn: pl => pl(233.08, .06) }, { t: 19.5, fn: pl => pl(207.65, .06) }, { t: 33, fn: pl => pl(659.25, .07) },
+    ...[0, 1, 2, 3, 4, 5].map(k => ({ t: 44 + k * 2.4, fn: (pl, note) => pl(note(.2 + k * .12), .05) })), { t: 74, fn: pl => pl(880, .08) }, { t: 94.6, fn: pl => pl(587.33, .07) }];
+  const steppers = [{ k: t => roundAt(t), steps: ROUNDS, vel: k => .02 + .05 * Math.sqrt(MSE[Math.min(k, ROUNDS)] / MSE[0]) }];
+  FilmKit.run({ DUR, CHAPTERS, SUBS, MATH, draw, mood, events, steppers, chord: [82.41, 123.47, 164.81, 207.65, 246.94], penta: [329.63, 369.99, 415.3, 493.88, 554.37, 659.25, 739.99, 830.61, 987.77] });
+})();
+
+</script>
+</body>
+</html>

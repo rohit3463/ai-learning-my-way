@@ -118,6 +118,23 @@
       "videos": [],
       "lab": "decision-trees",
       "labVersion": 2
+    },
+    {
+      "slug": "random-forests",
+      "title": "Random Forests and Gradient Boosting",
+      "summary": "Many trees are wiser than one: bootstrap samples, voting forests, and boosting trees that learn from each other's mistakes.",
+      "minutes": 45,
+      "film": {
+        "file": "random-forests.html?v=1",
+        "title": "Many Small Voices",
+        "note": "2 min 20 s, best with sound and narration on",
+        "video": "videos/random-forests.mp4"
+      },
+      "doc": true,
+      "code": [],
+      "videos": [],
+      "lab": "random-forests",
+      "labVersion": 1
     }
   ]
 }
