@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="../../">
+<title>Lab test bench</title>
+<!-- Test bench for lab files that are not in lessons.json yet: tools/fixtures/lab.html?lab=demo-agent
+     (looks for tools/fixtures/<lab>.js, then content/labs/<lab>.js). Not linked from the site. -->
+<link rel="stylesheet" href="assets/css/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+<body>
+<main class="wrap"><section class="lab" id="lab"><p class="loading">Loading…</p></section></main>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="assets/js/lab.js"></script>
+<script>
+(async () => {
+  const name = new URLSearchParams(location.search).get('lab') || 'demo-agent';
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src + '?x=' + Date.now(); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  try { await load(`tools/fixtures/${name}.js`); } catch { await load(`content/labs/${name}.js`); }
+  const renderMath = el => window.renderMathInElement && renderMathInElement(el, { delimiters: [{ left: '\\[', right: '\\]', display: true }, { left: '\\(', right: '\\)', display: false }], throwOnError: false });
+  window.labCompleted = false;
+  await startLab(document.getElementById('lab'), { slug: 'test:' + name, lab: window.LABS[name], renderMath, onComplete: () => { window.labCompleted = true; } });
+})();
+</script>
+</body>
+</html>

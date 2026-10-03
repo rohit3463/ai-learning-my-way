@@ -1,4 +1,60 @@
 {
+  "tracks": [
+    {
+      "id": "ml",
+      "title": "Machine Learning → Deep Learning",
+      "short": "Machine learning",
+      "tagline": "From a straight line to a language model",
+      "summary": "Every model derived from first principles: a film for intuition, the full math, and code you write yourself, from linear regression to how large language models are built.",
+      "sections": [
+        {
+          "id": "classical",
+          "title": "Classical machine learning",
+          "summary": "The core models and how to judge them honestly."
+        },
+        {
+          "id": "deep",
+          "title": "Deep learning",
+          "summary": "Neural networks for images and text."
+        },
+        {
+          "id": "llm",
+          "title": "How LLMs are built",
+          "summary": "Attention, transformers, and training a language model."
+        }
+      ]
+    },
+    {
+      "id": "agents",
+      "title": "AI Engineering: Building Agents",
+      "short": "AI engineering",
+      "tagline": "From one API call to a production agent",
+      "summary": "How to build real products on top of large language models: prompts, tools, retrieval, agents, evaluation, security and shipping. Every lab runs a simulated model in your browser, so no API key is needed.",
+      "sections": [
+        {
+          "id": "basic",
+          "label": "B",
+          "level": "Level 1 · Basic",
+          "title": "Working with LLMs",
+          "summary": "Call a model, control its output, give it tools and your own documents."
+        },
+        {
+          "id": "intermediate",
+          "label": "I",
+          "level": "Level 2 · Intermediate",
+          "title": "Building agents",
+          "summary": "Agent loops, tool design, workflows, memory, retrieval, evaluation and multi-agent systems."
+        },
+        {
+          "id": "advanced",
+          "label": "P",
+          "level": "Level 3 · Advanced",
+          "title": "Production-grade agents",
+          "summary": "Reliability, security, observability, cost, evals in production, long-running agents and shipping."
+        }
+      ]
+    }
+  ],
   "lessons": [
     {
       "slug": "math-toolkit",
@@ -9,13 +65,16 @@
         "file": "math-toolkit.html?v=2",
         "title": "The Toolkit",
         "note": "2 min 18 s, best with sound and narration on",
-        "video": "videos/math-toolkit.mp4"
+        "video": "videos/math-toolkit.mp4",
+        "blurb": "The maths behind the course: vectors, distance, the dot product, matrices, derivatives and probability."
       },
       "doc": true,
       "code": [],
       "videos": [],
       "lab": "math-toolkit",
-      "labVersion": 1
+      "labVersion": 1,
+      "track": "ml",
+      "section": "classical"
     },
     {
       "slug": "linear-regression",
@@ -26,13 +85,17 @@
         "file": "linear-regression.html?v=5",
         "title": "The Line That Learned",
         "note": "2 min 12 s, best with sound and narration on",
-        "video": "videos/linear-regression.mp4"
+        "video": "videos/linear-regression.mp4",
+        "blurb": "Linear regression, squared error, the loss valley, learning rates and gradient descent. Best with sound on."
       },
       "doc": true,
       "code": [],
       "videos": [],
       "lab": "linear-regression",
-      "labVersion": 3
+      "labVersion": 4,
+      "track": "ml",
+      "section": "classical",
+      "exercises": 5
     },
     {
       "slug": "logistic-regression",
@@ -43,13 +106,16 @@
         "file": "logistic-regression.html?v=3",
         "title": "How Sure to Be",
         "note": "2 min 22 s, best with sound and narration on",
-        "video": "videos/logistic-regression.mp4"
+        "video": "videos/logistic-regression.mp4",
+        "blurb": "Logistic regression: the sigmoid, log loss, each point's pull on the curve, and the decision boundary in two dimensions."
       },
       "doc": true,
       "code": [],
       "videos": [],
       "lab": "logistic-regression",
-      "labVersion": 3
+      "labVersion": 3,
+      "track": "ml",
+      "section": "classical"
     },
     {
       "slug": "support-vector-machines",
@@ -60,13 +126,16 @@
         "file": "support-vector-machines.html?v=3",
         "title": "The Widest Street",
         "note": "2 min 22 s, best with sound and narration on",
-        "video": "videos/support-vector-machines.mp4"
+        "video": "videos/support-vector-machines.mp4",
+        "blurb": "Support vector machines: many borders, the widest street, support vectors, margins, the hinge cost and the soft margin."
       },
       "doc": true,
       "code": [],
       "videos": [],
       "lab": "support-vector-machines",
-      "labVersion": 3
+      "labVersion": 3,
+      "track": "ml",
+      "section": "classical"
     },
     {
       "slug": "k-nearest-neighbors",
@@ -77,13 +146,16 @@
         "file": "k-nearest-neighbors.html?v=2",
         "title": "Ask the Neighbours",
         "note": "2 min 10 s, best with sound and narration on",
-        "video": "videos/k-nearest-neighbors.mp4"
+        "video": "videos/k-nearest-neighbors.mp4",
+        "blurb": "K-nearest neighbours: distance, the vote, how k shapes the border, and rescaling."
       },
       "doc": true,
       "code": [],
       "videos": [],
       "lab": "k-nearest-neighbors",
-      "labVersion": 2
+      "labVersion": 2,
+      "track": "ml",
+      "section": "classical"
     },
     {
       "slug": "naive-bayes",
@@ -94,13 +166,16 @@
         "file": "naive-bayes.html?v=2",
         "title": "Counting Words",
         "note": "2 min 10 s, best with sound and narration on",
-        "video": "videos/naive-bayes.mp4"
+        "video": "videos/naive-bayes.mp4",
+        "blurb": "Naive Bayes: a spam filter from word counts, Bayes' rule, and the zero problem."
       },
       "doc": true,
       "code": [],
       "videos": [],
       "lab": "naive-bayes",
-      "labVersion": 2
+      "labVersion": 2,
+      "track": "ml",
+      "section": "classical"
     },
     {
       "slug": "decision-trees",
@@ -111,13 +186,16 @@
         "file": "decision-trees.html?v=2",
         "title": "Twenty Questions",
         "note": "2 min 12 s, best with sound and narration on",
-        "video": "videos/decision-trees.mp4"
+        "video": "videos/decision-trees.mp4",
+        "blurb": "Decision trees: Gini impurity, the best split, growing the tree and overfitting."
       },
       "doc": true,
       "code": [],
       "videos": [],
       "lab": "decision-trees",
-      "labVersion": 2
+      "labVersion": 2,
+      "track": "ml",
+      "section": "classical"
     },
     {
       "slug": "random-forests",
@@ -128,13 +206,16 @@
         "file": "random-forests.html?v=1",
         "title": "Many Small Voices",
         "note": "2 min 20 s, best with sound and narration on",
-        "video": "videos/random-forests.mp4"
+        "video": "videos/random-forests.mp4",
+        "blurb": "Random forests and gradient boosting: bootstrap samples, voting, and trees that learn from each other's mistakes."
       },
       "doc": true,
       "code": [],
       "videos": [],
       "lab": "random-forests",
-      "labVersion": 1
+      "labVersion": 1,
+      "track": "ml",
+      "section": "classical"
     },
     {
       "slug": "evaluating-models",
@@ -145,13 +226,326 @@
         "file": "evaluating-models.html?v=1",
         "title": "Honest Scores",
         "note": "2 min 10 s, best with sound and narration on",
-        "video": "videos/evaluating-models.mp4"
+        "video": "videos/evaluating-models.mp4",
+        "blurb": "Evaluating models: held-out data, cross-validation, the confusion matrix, precision and recall, ROC curves, and bias versus variance."
       },
       "doc": true,
       "code": [],
       "videos": [],
       "lab": "evaluating-models",
-      "labVersion": 1
+      "labVersion": 1,
+      "track": "ml",
+      "section": "classical"
+    },
+    {
+      "slug": "k-means",
+      "title": "K-Means Clustering",
+      "summary": "Finding groups with no labels at all: centres, assignments, the update loop, and choosing how many groups.",
+      "track": "ml",
+      "section": "classical",
+      "soon": true
+    },
+    {
+      "slug": "pca",
+      "title": "Principal Component Analysis",
+      "summary": "Squeezing many measurements into a few: variance, directions of spread, and projecting the data onto them.",
+      "track": "ml",
+      "section": "classical",
+      "soon": true
+    },
+    {
+      "slug": "project-classical-ml",
+      "title": "Project: An Honest Diagnosis Model",
+      "summary": "An end-to-end project on real medical measurements: explore, scale, compare the models you wrote, tune with cross-validation, choose a threshold for recall, and report one honest test score.",
+      "track": "ml",
+      "section": "classical",
+      "kind": "project",
+      "soon": true
+    },
+    {
+      "slug": "neural-networks",
+      "title": "Neural Networks and Backpropagation",
+      "summary": "Layers of tiny logistic regressions, and the chain rule that trains all of them at once.",
+      "track": "ml",
+      "section": "deep",
+      "soon": true
+    },
+    {
+      "slug": "training-deep-networks",
+      "title": "Training Deep Networks",
+      "summary": "Initialisation, momentum and Adam, batch norm, dropout, and reading a training curve.",
+      "track": "ml",
+      "section": "deep",
+      "soon": true
+    },
+    {
+      "slug": "convolutional-networks",
+      "title": "Convolutional Networks",
+      "summary": "How filters slide over images to find edges, textures and objects.",
+      "track": "ml",
+      "section": "deep",
+      "soon": true
+    },
+    {
+      "slug": "sequence-models",
+      "title": "Sequence Models",
+      "summary": "Reading in order: recurrent networks, memory, and why long sequences are hard.",
+      "track": "ml",
+      "section": "deep",
+      "soon": true
+    },
+    {
+      "slug": "word-embeddings",
+      "title": "Word Embeddings",
+      "summary": "Turning words into vectors whose distances carry meaning.",
+      "track": "ml",
+      "section": "deep",
+      "soon": true
+    },
+    {
+      "slug": "project-deep-learning",
+      "title": "Project: An Image Classifier from Scratch",
+      "summary": "Build, train and debug a small neural network for images, then compare it with a convolutional one.",
+      "track": "ml",
+      "section": "deep",
+      "kind": "project",
+      "soon": true
+    },
+    {
+      "slug": "attention",
+      "title": "Attention and Transformers",
+      "summary": "Every word looks at every other word: queries, keys, values, and the transformer block.",
+      "track": "ml",
+      "section": "llm",
+      "soon": true
+    },
+    {
+      "slug": "tokenization",
+      "title": "Tokenization",
+      "summary": "How text becomes numbers: characters, words, and byte-pair encoding.",
+      "track": "ml",
+      "section": "llm",
+      "soon": true
+    },
+    {
+      "slug": "pretraining",
+      "title": "Pretraining a Language Model",
+      "summary": "Next-token prediction at scale: the loss, the data, and what scaling buys.",
+      "track": "ml",
+      "section": "llm",
+      "soon": true
+    },
+    {
+      "slug": "fine-tuning",
+      "title": "Fine-Tuning and Alignment",
+      "summary": "From a text predictor to an assistant: instruction tuning, preference learning and RLHF.",
+      "track": "ml",
+      "section": "llm",
+      "soon": true
+    },
+    {
+      "slug": "project-tiny-gpt",
+      "title": "Project: A Tiny GPT",
+      "summary": "Write and train a small transformer that generates text, one component at a time.",
+      "track": "ml",
+      "section": "llm",
+      "kind": "project",
+      "soon": true
+    },
+    {
+      "slug": "how-llms-behave",
+      "title": "How an LLM Behaves",
+      "summary": "Tokens, next-token sampling, temperature, context windows, and why the same prompt can give different answers.",
+      "track": "agents",
+      "section": "basic",
+      "soon": true
+    },
+    {
+      "slug": "messages-api",
+      "title": "The Messages API",
+      "summary": "Calling Claude from code: roles, system prompts, multi-turn conversations, streaming, tokens and cost.",
+      "track": "agents",
+      "section": "basic",
+      "soon": true
+    },
+    {
+      "slug": "prompt-engineering",
+      "title": "Prompt Engineering",
+      "summary": "Clear instructions, examples, XML structure, step-by-step reasoning, and testing prompts instead of guessing.",
+      "track": "agents",
+      "section": "basic",
+      "soon": true
+    },
+    {
+      "slug": "structured-output",
+      "title": "Structured Output",
+      "summary": "Getting reliable JSON: schemas, validation, repair loops, and what to do when the model gets it wrong.",
+      "track": "agents",
+      "section": "basic",
+      "soon": true
+    },
+    {
+      "slug": "tool-use",
+      "title": "Tool Use",
+      "summary": "Letting the model call your functions: tool schemas, the tool-use round trip, and handling tool errors.",
+      "track": "agents",
+      "section": "basic",
+      "soon": true
+    },
+    {
+      "slug": "embeddings",
+      "title": "Embeddings and Semantic Search",
+      "summary": "Meaning as vectors: embedding text, cosine similarity, chunking documents and searching them.",
+      "track": "agents",
+      "section": "basic",
+      "soon": true
+    },
+    {
+      "slug": "rag",
+      "title": "Retrieval-Augmented Generation",
+      "summary": "Answering from your own documents: retrieve, ground, cite, and say \"I don't know\" when the answer is not there.",
+      "track": "agents",
+      "section": "basic",
+      "soon": true
+    },
+    {
+      "slug": "project-support-assistant",
+      "title": "Project: A Grounded Support Assistant",
+      "summary": "A help-desk assistant that answers only from a product handbook, cites its sources, returns structured tickets, and passes a test set.",
+      "track": "agents",
+      "section": "basic",
+      "kind": "project",
+      "soon": true
+    },
+    {
+      "slug": "agent-loop",
+      "title": "The Agent Loop",
+      "summary": "From one tool call to an agent: the loop, stopping conditions, step limits, and parallel tool calls.",
+      "track": "agents",
+      "section": "intermediate",
+      "soon": true
+    },
+    {
+      "slug": "designing-tools",
+      "title": "Designing Tools",
+      "summary": "Tools a model can use well: names, descriptions, inputs, useful errors, and keeping the toolset small.",
+      "track": "agents",
+      "section": "intermediate",
+      "soon": true
+    },
+    {
+      "slug": "workflow-patterns",
+      "title": "Workflow Patterns",
+      "summary": "Chaining, routing, parallel calls, orchestrator and workers, evaluator and optimiser: when a workflow beats an agent.",
+      "track": "agents",
+      "section": "intermediate",
+      "soon": true
+    },
+    {
+      "slug": "context-engineering",
+      "title": "Context Engineering and Memory",
+      "summary": "What goes into the context window: summaries, trimming, scratchpads, and long-term memory.",
+      "track": "agents",
+      "section": "intermediate",
+      "soon": true
+    },
+    {
+      "slug": "advanced-retrieval",
+      "title": "Advanced Retrieval",
+      "summary": "Hybrid search, reranking, query rewriting, and retrieval as a tool the agent chooses to use.",
+      "track": "agents",
+      "section": "intermediate",
+      "soon": true
+    },
+    {
+      "slug": "evaluating-llm-apps",
+      "title": "Evaluating LLM Apps",
+      "summary": "Test sets, graders, LLM-as-judge, and measuring an agent instead of eyeballing it.",
+      "track": "agents",
+      "section": "intermediate",
+      "soon": true
+    },
+    {
+      "slug": "multi-agent-mcp",
+      "title": "Multi-Agent Systems and MCP",
+      "summary": "Subagents, handoffs and shared tools through the Model Context Protocol.",
+      "track": "agents",
+      "section": "intermediate",
+      "soon": true
+    },
+    {
+      "slug": "project-research-agent",
+      "title": "Project: A Research Agent",
+      "summary": "An agent that plans, searches, reads and writes a cited report, with an evaluation suite that scores every version.",
+      "track": "agents",
+      "section": "intermediate",
+      "kind": "project",
+      "soon": true
+    },
+    {
+      "slug": "reliability",
+      "title": "Reliability Engineering",
+      "summary": "Retries with backoff, timeouts, fallbacks, idempotent tools, and agents that fail safely.",
+      "track": "agents",
+      "section": "advanced",
+      "soon": true
+    },
+    {
+      "slug": "security-safety",
+      "title": "Security and Safety",
+      "summary": "Prompt injection, untrusted content, least-privilege tools, human approval, and output guardrails.",
+      "track": "agents",
+      "section": "advanced",
+      "soon": true
+    },
+    {
+      "slug": "observability",
+      "title": "Observability",
+      "summary": "Traces, spans and structured logs for every model call and tool call, and debugging an agent from its trace.",
+      "track": "agents",
+      "section": "advanced",
+      "soon": true
+    },
+    {
+      "slug": "cost-latency",
+      "title": "Cost and Latency",
+      "summary": "Token budgets, prompt caching, model routing, batching and streaming.",
+      "track": "agents",
+      "section": "advanced",
+      "soon": true
+    },
+    {
+      "slug": "evals-in-production",
+      "title": "Evals in Production",
+      "summary": "Regression suites, online checks, feedback loops, and shipping prompt changes safely.",
+      "track": "agents",
+      "section": "advanced",
+      "soon": true
+    },
+    {
+      "slug": "long-running-agents",
+      "title": "Long-Running and Stateful Agents",
+      "summary": "Checkpoints, resumable runs, queues, and agents that work for hours.",
+      "track": "agents",
+      "section": "advanced",
+      "soon": true
+    },
+    {
+      "slug": "shipping-agents",
+      "title": "Shipping Agents",
+      "summary": "Putting it all together: an API service, configuration, rate limits, deployment and a launch checklist.",
+      "track": "agents",
+      "section": "advanced",
+      "soon": true
+    },
+    {
+      "slug": "project-production-agent",
+      "title": "Capstone: A Production Support Agent",
+      "summary": "A customer-support agent built to production standard: tools with guardrails, retries, traces, cost limits and an eval suite, scored against a readiness checklist.",
+      "track": "agents",
+      "section": "advanced",
+      "kind": "project",
+      "soon": true
     }
   ]
 }

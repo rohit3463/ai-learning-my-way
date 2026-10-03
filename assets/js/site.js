@@ -42,38 +42,140 @@
     return r.json();
   }
 
+  // Number every lesson inside its track. ML lessons count up across parts (00, 01, …);
+  // sections with a label count within the section (B1, B2, … I1, …). Projects are not numbered.
+  function catalog(data) {
+    const tracks = data.tracks || [{ id: 'ml', title: 'Learning path', short: 'Learning path', sections: [{ id: 'all', title: '' }] }];
+    tracks.forEach((t, ti) => {
+      let n = 0;
+      t.index = ti;
+      t.sections.forEach((sec, si) => {
+        let k = 0;
+        sec.track = t; sec.index = si;
+        sec.items = data.lessons.filter(l => (l.track || tracks[0].id) === t.id && (l.section || t.sections[0].id) === sec.id);
+        sec.items.forEach(l => {
+          l.trackObj = t; l.sectionObj = sec;
+          if (l.kind === 'project') { l.num = ''; l.label = 'Project'; }
+          else if (sec.label) { l.num = sec.label + (++k); l.label = l.num; }
+          else { l.num = String(n).padStart(2, '0'); l.label = `Lesson ${n++}`; }
+        });
+      });
+      t.items = t.sections.flatMap(s => s.items);
+      t.ready = t.items.filter(l => !l.soon);
+    });
+    return tracks;
+  }
+  const sectionName = sec => sec.level ? `${sec.level}: ${sec.title}` : `Part ${sec.index + 1}: ${sec.title}`;
+
   function chips(l) {
     const c = [];
+    if (l.soon) return '';
     if (l.film) c.push('<span class="chip film">Film</span>');
-    if (l.doc) c.push('<span class="chip math">Math</span>');
+    if (l.doc) c.push('<span class="chip math">' + (l.trackObj && l.trackObj.id === 'agents' ? 'Notes' : 'Math') + '</span>');
     if (l.code && l.code.length) c.push('<span class="chip code">Code</span>');
-    if (l.lab) c.push('<span class="chip code">Hands-on coding</span>');
+    if (l.lab) c.push(`<span class="chip code">${l.kind === 'project' ? 'Guided project' : 'Hands-on coding'}</span>`);
+    if (l.exercises) c.push(`<span class="chip ex">${l.exercises} exercises</span>`);
     if (l.videos && l.videos.length) c.push(`<span class="chip video">${l.videos.length} video${l.videos.length > 1 ? 's' : ''}</span>`);
     return `<div class="chips">${c.join('')}</div>`;
   }
 
   // ── home page ──
+  function stop(l, done) {
+    const cls = ['stop', done[l.slug] ? 'done' : '', l.soon ? 'soon' : '', l.kind === 'project' ? 'project' : ''].filter(Boolean).join(' ');
+    const title = l.soon ? esc(l.title) : `<a href="lesson.html?l=${encodeURIComponent(l.slug)}">${esc(l.title)}</a>`;
+    return `<li class="${cls}">
+      <div class="n">${l.kind === 'project' ? '<span class="proj-mark" aria-hidden="true">◆</span>' : esc(l.num)}</div>
+      <div>
+        <h3>${title}</h3>
+        <p>${esc(l.summary)}</p>
+        ${chips(l)}
+      </div>
+      <div class="meta">${l.soon ? 'Coming soon' : l.minutes ? `${l.minutes} min` : ''}</div>
+    </li>`;
+  }
+
   async function renderHome() {
-    const list = document.getElementById('path');
-    if (!list) return;
+    const host = document.getElementById('path');
+    if (!host) return;
     try {
       const data = await loadLessons();
+      const tracks = catalog(data);
       const done = progress.all();
-      list.innerHTML = data.lessons.map((l, i) => `
-        <li class="stop${done[l.slug] ? ' done' : ''}">
-          <div class="n">${String(i).padStart(2, '0')}</div>
-          <div>
-            <h3><a href="lesson.html?l=${encodeURIComponent(l.slug)}">${esc(l.title)}</a></h3>
-            <p>${esc(l.summary)}</p>
-            ${chips(l)}
-          </div>
-          <div class="meta">${l.minutes} min</div>
-        </li>`).join('');
-      const n = data.lessons.filter(l => done[l.slug]).length;
-      const note = document.getElementById('progress-note');
-      if (note) note.textContent = `${n} of ${data.lessons.length} done`;
+      const count = items => { const ready = items.filter(l => !l.soon); return { n: ready.filter(l => done[l.slug]).length, of: ready.length, planned: items.length }; };
+      const pick = () => {
+        const want = location.hash.slice(1) || store.get('track', tracks[0].id);
+        return tracks.find(t => t.id === want) || tracks[0];
+      };
+      const draw = () => {
+        const cur = pick();
+        document.getElementById('tracks').innerHTML = tracks.map(t => {
+          const c = count(t.items);
+          const pct = c.of ? Math.round(100 * c.n / c.of) : 0;
+          return `<button type="button" role="tab" class="track-card" data-track="${t.id}" aria-selected="${t === cur}">
+            <span class="eyebrow">Track ${t.index + 1}</span>
+            <strong>${esc(t.title)}</strong>
+            <span class="tagline">${esc(t.tagline || '')}</span>
+            <span class="bar" aria-hidden="true"><i style="width:${pct}%"></i></span>
+            <span class="count">${c.of ? `${c.n} of ${c.of} done` : 'Starting soon'} · ${c.planned} planned</span>
+          </button>`;
+        }).join('');
+        host.innerHTML = `
+          <p class="track-summary">${esc(cur.summary || '')}</p>
+          ${cur.sections.map(sec => {
+            const c = count(sec.items);
+            return `<section class="part" aria-labelledby="part-${cur.id}-${sec.id}">
+              <div class="section-head">
+                <div>
+                  <div class="eyebrow">${esc(sec.level || `Part ${sec.index + 1}`)}</div>
+                  <h2 id="part-${cur.id}-${sec.id}">${esc(sec.title)}</h2>
+                  ${sec.summary ? `<p class="part-sum">${esc(sec.summary)}</p>` : ''}
+                </div>
+                <span class="progress-note">${c.of ? `${c.n} of ${c.of} done` : 'Coming soon'}</span>
+              </div>
+              <ol class="path">${sec.items.map(l => stop(l, done)).join('')}</ol>
+            </section>`;
+          }).join('')}`;
+      };
+      document.getElementById('tracks').addEventListener('click', e => {
+        const b = e.target.closest('[data-track]');
+        if (!b) return;
+        store.set('track', b.dataset.track);
+        history.replaceState(null, '', '#' + b.dataset.track);
+        draw();
+      });
+      addEventListener('hashchange', draw);
+      draw();
     } catch (err) {
-      list.innerHTML = `<li class="error">${esc(err.message)}. If you opened this file directly, run a local server instead (see README).</li>`;
+      host.innerHTML = `<p class="error">${esc(err.message)}. If you opened this file directly, run a local server instead (see README).</p>`;
+    }
+  }
+
+  // ── films page ──
+  async function renderFilms() {
+    const host = document.getElementById('films');
+    if (!host) return;
+    try {
+      const tracks = catalog(await loadLessons());
+      host.innerHTML = tracks.map(t => {
+        const films = t.items.filter(l => l.film && !l.soon);
+        return `<section class="film-track">
+          <div class="eyebrow">Track ${t.index + 1}</div>
+          <h2>${esc(t.title)}</h2>
+          ${films.length ? `<div class="film-list">${films.map(l => `
+            <div class="film-item">
+              <a class="film-card" href="films/${esc(l.film.file)}">
+                <div class="poster">${esc(l.film.title)}</div>
+                <div>
+                  <h3>${esc(l.film.title)}</h3>
+                  <p>${esc(l.label)} · ${esc((l.film.note || '').split(',')[0])} · ${esc(l.film.blurb || l.summary)}</p>
+                </div>
+              </a>
+              ${l.film.video ? `<p class="film-dl"><a href="${esc(l.film.video)}" download>Download the video (MP4, 720p)</a></p>` : ''}
+            </div>`).join('')}</div>` : '<p class="film-empty">Films arrive with each lesson in this track.</p>'}
+        </section>`;
+      }).join('');
+    } catch (err) {
+      host.innerHTML = `<p class="error">${esc(err.message)}.</p>`;
     }
   }
 
@@ -126,10 +228,34 @@
     const slug = new URLSearchParams(location.search).get('l');
     try {
       const data = await loadLessons();
-      const idx = data.lessons.findIndex(l => l.slug === slug);
-      if (idx < 0) throw new Error(`No lesson called "${slug || ''}"`);
-      const l = data.lessons[idx], prev = data.lessons[idx - 1], next = data.lessons[idx + 1];
+      catalog(data);
+      const l = data.lessons.find(x => x.slug === slug);
+      if (!l) throw new Error(`No lesson called "${slug || ''}"`);
+      const ready = l.trackObj.ready, at = ready.indexOf(l);
+      const prev = at > 0 ? ready[at - 1] : null, next = at >= 0 ? ready[at + 1] : null;
       document.title = `${l.title} · Learning AI My Way`;
+      const crumbs = `<a href="./#${l.trackObj.id}">${esc(l.trackObj.short || l.trackObj.title)}</a> / ${esc(sectionName(l.sectionObj))} / ${esc(l.label)}`;
+      if (l.soon) {
+        host.innerHTML = `
+          <header class="lesson-head">
+            <div class="crumbs">${crumbs}</div>
+            <h1>${esc(l.title)}</h1>
+            <p class="lede">${esc(l.summary)}</p>
+          </header>
+          <div class="soon-note"><strong>This ${l.kind === 'project' ? 'project' : 'lesson'} is being written.</strong> It will have the same parts as every lesson: a film, the notes, a guided coding lab and exercises. Your progress on other lessons is kept.</div>
+          <div class="lesson-end">
+            <nav class="pager" aria-label="Lessons">
+              <a class="prev" href="./#${l.trackObj.id}"><span>← Back</span><strong>${esc(l.trackObj.title)}</strong></a>
+            </nav>
+          </div>
+          <section class="discuss" id="discuss" hidden>
+            <h2>Questions and feedback</h2>
+            <p>Is there something you would like this ${l.kind === 'project' ? 'project' : 'lesson'} to cover? Leave a comment below. You sign in with GitHub, and every comment is saved as a public discussion on the project.</p>
+            <div id="giscus"></div>
+          </section>`;
+        loadDiscussion(l, null);
+        return;
+      }
 
       // A lesson's written notes are optional: set "doc": true in lessons.json once content/lessons/<slug>.html exists.
       const body = l.doc ? await fetch(`content/lessons/${l.slug}.html`, { cache: 'no-cache' }).then(r => {
@@ -152,7 +278,7 @@
 
       host.innerHTML = `
         <header class="lesson-head">
-          <div class="crumbs"><a href="./">Learning path</a> / Lesson ${idx}</div>
+          <div class="crumbs">${crumbs}</div>
           <h1>${esc(l.title)}</h1>
           <p class="lede">${esc(l.summary)}</p>
           <div class="lesson-meta"><span>${l.minutes} min</span>${chips(l)}</div>
@@ -187,6 +313,7 @@
         toc.insertAdjacentHTML('beforeend', `<li><a href="#${h.id}">${esc(h.textContent)}</a></li>`);
       });
       if (l.lab) toc.insertAdjacentHTML('beforeend', '<li><a href="#build">Build it yourself</a></li>');
+      if (l.lab && l.exercises) toc.insertAdjacentHTML('beforeend', '<li><a href="#exercises">Exercises</a></li>');
       if (!toc.children.length) toc.closest('.toc').remove();
       renderMath(prose);
       enhanceCode(prose);
@@ -256,11 +383,11 @@
       const lab = window.LABS && window.LABS[l.lab];
       if (!lab || !window.startLab) throw new Error('The coding lab could not start');
       await window.startLab(host, { slug: l.slug, lab, renderMath, onComplete });
-      if (location.hash === '#build') document.getElementById('build')?.scrollIntoView();
+      if (location.hash === '#build' || location.hash === '#exercises') document.getElementById(location.hash.slice(1))?.scrollIntoView();
     } catch (err) {
       host.innerHTML = `<p class="error">${esc(err.message)}. Try reloading the page.</p>`;
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => { renderHome(); renderLesson(); });
+  document.addEventListener('DOMContentLoaded', () => { renderHome(); renderFilms(); renderLesson(); });
 })();
