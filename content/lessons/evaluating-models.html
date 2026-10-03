@@ -1,0 +1,114 @@
+<!--
+  Lesson notes: Evaluating Models.
+  Math: \( ... \) inline, \[ ... \] centered. Every <h2> appears in "On this page".
+-->
+
+<h2>The goal</h2>
+<p>Every model in this course has been trained to fit some data. The question that matters is different: <strong>how well will it do on data it has never seen?</strong> This lesson is about measuring that honestly, and about choosing the right number to measure.</p>
+
+<h2>Never grade a model on its homework</h2>
+<p>A model's score on its own training data is not a fair test. A 1-nearest-neighbour model, for example, is always right on its training points, because each point's nearest neighbour is itself. In the lab's data it scores <strong>100%</strong> on the 140 points it trained on, but only <strong>72%</strong> on 60 new ones (<a href="films/evaluating-models.html?t=8">Act I</a>).</p>
+<p>The gap between the two is the sign of <strong>overfitting</strong>: the model memorised its training data, including the noise, instead of learning the pattern.</p>
+
+<h2>Train, validation and test sets</h2>
+<p>So we split the data before training:</p>
+<ul>
+  <li><strong>Training set</strong> (often 60–80%): the model learns from this.</li>
+  <li><strong>Validation set</strong>: used to make choices, such as \(k\) in KNN, the depth of a tree, or \(C\) in an SVM.</li>
+  <li><strong>Test set</strong>: used <em>once</em>, at the very end, to report how good the final model is.</li>
+</ul>
+<p>Shuffle before splitting, so that each set is a fair mix (<a href="films/evaluating-models.html?t=22">Act II</a>).</p>
+<blockquote><p><strong>The quiet leak.</strong> If you try many settings and keep the one that scores best on the test set, the test set has become part of training. Your reported score will be too optimistic. Make choices on validation data, and touch the test set only once.</p></blockquote>
+
+<h2>Cross-validation</h2>
+<p>A single validation split is noisy: with only a few dozen points, a lucky or unlucky split can move the score by several percent. <strong>\(k\)-fold cross-validation</strong> uses the data more fully:</p>
+<ol>
+  <li>Cut the training data into \(k\) equal parts, called folds (5 or 10 is common).</li>
+  <li>For each fold in turn: train on the other \(k - 1\) folds, then score on this one.</li>
+  <li>Average the \(k\) scores.</li>
+</ol>
+\[ \text{CV score} = \frac{\text{score}_1 + \text{score}_2 + \dots + \text{score}_k}{k} \]
+<p>Every point is used for testing exactly once and for training \(k - 1\) times. In the lab, 5-fold cross-validation on the training set compares numbers of neighbours, and picks \(k = 9\) with a CV accuracy of 88.6%. Only then is the test set used, once, for the final score.</p>
+
+<h2>Four kinds of answer</h2>
+<p>For a yes-or-no question, call "yes" (for example "sick") the <strong>positive</strong> class. Every prediction falls into one of four boxes, arranged as the <strong>confusion matrix</strong>:</p>
+<table>
+  <thead><tr><th></th><th>truly positive</th><th>truly negative</th></tr></thead>
+  <tbody>
+    <tr><td><strong>predicted positive</strong></td><td>true positive (TP)</td><td>false positive (FP): a false alarm</td></tr>
+    <tr><td><strong>predicted negative</strong></td><td>false negative (FN): a miss</td><td>true negative (TN)</td></tr>
+  </tbody>
+</table>
+<p>For the lab's \(k = 15\) model on the 60 test points: TP = 23, FP = 6, FN = 10, TN = 21 (<a href="films/evaluating-models.html?t=40">Act III</a>).</p>
+
+<h2>Accuracy, precision and recall</h2>
+\[ \text{accuracy} = \frac{TP + TN}{\text{all}} = \frac{23 + 21}{60} = 0.73 \]
+\[ \text{precision} = \frac{TP}{TP + FP} = \frac{23}{29} = 0.79 \qquad \text{recall} = \frac{TP}{TP + FN} = \frac{23}{33} = 0.70 \]
+<ul>
+  <li><strong>Precision</strong>: when the model says yes, how often is it right? Low precision means many false alarms.</li>
+  <li><strong>Recall</strong> (also called sensitivity, or the true positive rate): of all the real yeses, how many did it find? Low recall means many misses.</li>
+</ul>
+<p>Which one matters more depends on the cost of each mistake. A cancer screening test needs high recall, because a missed case is far worse than a false alarm that leads to a second test. A spam filter needs high precision, because losing a real email is worse than letting one spam message through.</p>
+
+<h3>The F1 score</h3>
+<p>To combine the two into one number, use their <em>harmonic</em> mean:</p>
+\[ F_1 = \frac{2 \times \text{precision} \times \text{recall}}{\text{precision} + \text{recall}} \]
+<p>Unlike a plain average, it stays low when either one is low. A model with precision 1.0 but recall 0.1 has a plain average of 0.55, but an F1 of only 0.18.</p>
+
+<h2>When accuracy lies</h2>
+<p>When one class is rare, accuracy can be badly misleading. Suppose 5 people in 100 are sick. A lazy model that says "healthy" to everyone is <strong>95% accurate</strong>, and finds <strong>none</strong> of the sick people: its recall is 0 (<a href="films/evaluating-models.html?t=58">Act IV</a>).</p>
+<p>A real model that flags 12 people, 4 of them truly sick, has lower accuracy (91%) but recall 0.8. Its precision is only 0.33 (most of its alarms are false), which is often acceptable for a first screening step.</p>
+<p>So with unbalanced classes, always look at the confusion matrix, precision and recall, not accuracy alone. In the lab's rare-illness data, the lazy model scores 92% accuracy with recall 0.</p>
+
+<h2>Thresholds and the ROC curve</h2>
+<p>Most models produce a score, not just a yes or no: logistic regression gives a probability, KNN the share of neighbours voting yes, a forest the share of trees. "Yes" means the score is above some <strong>threshold</strong>, and 0.5 is just one choice (<a href="films/evaluating-models.html?t=74">Act V</a>).</p>
+<ul>
+  <li>Raise the threshold: fewer false alarms (higher precision), but more misses (lower recall).</li>
+  <li>Lower the threshold: more of the real positives caught (higher recall), but more false alarms.</li>
+</ul>
+<p>The <strong>ROC curve</strong> shows every threshold at once. For each threshold, plot</p>
+\[ \text{false positive rate} = \frac{FP}{FP + TN} \quad \text{against} \quad \text{true positive rate} = \frac{TP}{TP + FN} \]
+<p>A model that guesses at random lies along the diagonal. A perfect model goes straight up to the top-left corner. The <strong>area under the curve (AUC)</strong> sums the whole curve into one number: 1.0 is perfect and 0.5 is coin-tossing. It also has a neat meaning: the AUC is the chance that a randomly chosen positive gets a higher score than a randomly chosen negative. The lab's \(k = 15\) model has an AUC of 0.868.</p>
+<p>To compute the area from the points, add up the trapeziums between neighbouring points:</p>
+\[ \text{area} = (x_2 - x_1) \times \frac{y_1 + y_2}{2} \]
+
+<h2>Bias and variance</h2>
+<p>Why does a model do worse on new data? There are two opposite reasons (<a href="films/evaluating-models.html?t=96">Act VI</a>):</p>
+<ul>
+  <li><strong>Bias</strong>: the model is too simple to capture the real pattern, like a straight line through a curve, or KNN with a huge \(k\). It is wrong on training data and new data alike. This is <strong>underfitting</strong>.</li>
+  <li><strong>Variance</strong>: the model is so flexible it bends to fit the noise, like KNN with \(k = 1\) or a fully grown tree. It is excellent on training data and poor on new data. This is <strong>overfitting</strong>.</li>
+</ul>
+<p>As a model becomes more flexible, training error keeps falling. Test error falls at first, then rises again, tracing a U shape. The best model sits at the bottom of the U, and only held-out data can show where that is. Every setting you have met in this course moves a model along this curve:</p>
+<table>
+  <thead><tr><th>Setting</th><th>More flexible when…</th></tr></thead>
+  <tbody>
+    <tr><td>\(k\) in k-nearest neighbours</td><td>\(k\) is smaller</td></tr>
+    <tr><td>tree depth</td><td>the tree is deeper</td></tr>
+    <tr><td>\(C\) in an SVM (or \(\lambda\))</td><td>\(C\) is larger (\(\lambda\) is smaller)</td></tr>
+    <tr><td>boosting rounds</td><td>there are more rounds</td></tr>
+  </tbody>
+</table>
+
+<h2>The recipe</h2>
+<ol>
+  <li>Split off a test set first, and put it aside.</li>
+  <li>Choose settings with cross-validation on the rest.</li>
+  <li>Pick the measure that matches the real cost of mistakes: accuracy, precision, recall, F1 or AUC.</li>
+  <li>Retrain on all the non-test data with the chosen settings.</li>
+  <li>Report the score on the test set, once.</li>
+</ol>
+
+<h2>Symbols at a glance</h2>
+<table>
+  <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>TP, FP, FN, TN</td><td>true positives, false positives (false alarms), false negatives (misses), true negatives</td></tr>
+    <tr><td>\((TP + TN) \div \text{all}\)</td><td>accuracy</td></tr>
+    <tr><td>\(TP \div (TP + FP)\)</td><td>precision: how trustworthy a "yes" is</td></tr>
+    <tr><td>\(TP \div (TP + FN)\)</td><td>recall, or true positive rate: how many real yeses were found</td></tr>
+    <tr><td>\(FP \div (FP + TN)\)</td><td>false positive rate</td></tr>
+    <tr><td>\(F_1\)</td><td>harmonic mean of precision and recall</td></tr>
+    <tr><td>AUC</td><td>area under the ROC curve: 1 is perfect, 0.5 is a coin toss</td></tr>
+    <tr><td>\(k\)-fold CV</td><td>the average score over \(k\) train-and-test rounds</td></tr>
+  </tbody>
+</table>

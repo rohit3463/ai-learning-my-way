@@ -53,3 +53,13 @@ node youtube-meta.mjs ../../videos ..            # writes <slug>.youtube.txt
 ```
 
 The site's download links (`videos/*.mp4`) are 720p copies of those masters.
+
+## Authoring tools
+
+| Command (from the repo root) | What it does |
+|---|---|
+| `node tools/check-lab.mjs <slug> [--skip sklearn]` | Runs a lab in local Python: every step's solution must pass and every starter must fail |
+| `node tools/e2e-lesson.mjs <slug>` | Opens the lesson in headless Chrome, runs every lab step (including scikit-learn), then sweeps the film for script errors |
+| `python3 tools/build-film.py <slug> "<Title>" ... <seconds> <script.js>` | Wraps a film script that uses `films/film-kit.js` in the shared film page |
+
+The browser tools need `cd tools && npm install` and the site served on port 8766.

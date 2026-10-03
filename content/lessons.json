@@ -135,6 +135,23 @@
       "videos": [],
       "lab": "random-forests",
       "labVersion": 1
+    },
+    {
+      "slug": "evaluating-models",
+      "title": "Evaluating Models",
+      "summary": "Scoring a model honestly: train and test sets, cross-validation, the confusion matrix, precision and recall, ROC curves, and bias versus variance.",
+      "minutes": 45,
+      "film": {
+        "file": "evaluating-models.html?v=1",
+        "title": "Honest Scores",
+        "note": "2 min 10 s, best with sound and narration on",
+        "video": "videos/evaluating-models.mp4"
+      },
+      "doc": true,
+      "code": [],
+      "videos": [],
+      "lab": "evaluating-models",
+      "labVersion": 1
     }
   ]
 }
