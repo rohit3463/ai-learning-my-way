@@ -3,5 +3,5 @@
   "private": true,
   "type": "module",
   "description": "Renders the lesson films to YouTube-ready MP4 videos.",
-  "dependencies": { "puppeteer-core": "^23.11.1" }
+  "dependencies": { "puppeteer-core": "^25.16.0" }
 }
